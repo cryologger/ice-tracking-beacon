@@ -1,0 +1,20 @@
+Component,Manufacturer,Product,Quantity,Cost ($USD),Cost (£GPB),Cost ($CAD),URL
+Satellite modem,Rock Seven,RockBLOCK 9603,1,,£143.10,$243.27 ,http://www.rock7mobile.com/products-rockblock-9603
+Satellite modem antenna,Maxtena,M1600HCT-P-SMA,1,$67.69 ,,$88.00 ,http://www.richardsonrfpd.com/pages/Product-Details.aspx?productId=1142189
+Microcontroller,Adafruit,Pro Trinket - 3V 12MHz,1,$9.95 ,,$12.94 ,https://www.adafruit.com/products/2010
+GPS,Adafruit,Ultimate GPS Breakout - 66 channel w/10 Hz updates - Version 3,1,$39.95 ,,$51.94 ,https://www.adafruit.com/products/746
+EEPROM,Microchip,256K I2C EEPROM 24LC256,1,$1.95 ,,$2.54 ,https://www.sparkfun.com/products/525
+Accelerometer/Magnetometer,Adafruit,LSM303 - Triple-axis Accelerometer + Magnetometer (Compass) Board,1,$14.95 ,,$19.44 ,https://www.adafruit.com/products/1120
+Temperature/Pressure Sensor,Adafruit,MPL3115A2 - I2C Barometric Pressure/Altitude/Temperature Sensor,1,$9.95 ,,$12.94 ,https://www.adafruit.com/product/1893
+Real-time clock IC,Maxim,DS3231SN,1,,,$14.91 ,https://www.digikey.ca/product-detail/en/maxim-integrated/DS3231SN-T-R/DS3231SN-T-RCT-ND/3894827
+Real-time clock PCB,Adafruit,SMT Breakout PCB for SOIC-16,1,$1.32 ,,$1.71 ,https://www.adafruit.com/product/1207
+Real-time clock battery,Adafruit,20mm Coin Cell Breakout Board (CR2032),1,$2.50 ,,$3.25 ,https://www.adafruit.com/product/1870
+Step-down voltage regulator,Pololu,"5V, 2.5A Step-Down Voltage Regulator D24V22F5",1,$8.95 ,,$11.64 ,https://www.pololu.com/product/2858
+Power connector,Adafruit,Male DC Power adapter - 2.1mm plug to screw terminal block,1,$2.00 ,,$2.60 ,https://www.adafruit.com/product/369
+Power connector,Adafruit,Breadboard-friendly 2.1mm DC barrel jack,1,$0.95 ,,$1.24 ,https://www.adafruit.com/product/373
+Connector,Molex,SL PCB Header,1,,,$1.49 ,https://www.digikey.ca/product-detail/en/molex-connector-corporation/0705430040/WM4828-ND/313743
+PCB,Adafruit,Perma-Proto Full-sized Breadboard PCB - Single,1,$5.95 ,,$7.74 ,https://www.adafruit.com/product/1606
+Battery,Adafruit,CR2032 Lithium Coin Cell Battery,1,$0.95 ,,$1.24 ,https://www.adafruit.com/product/654
+Battery,Tadiran,Lithium Pulses Plus 7.2V 38Ah 273.6Wh (TLP-93131/B/AL1),1,,,$146.45 ,http://www.tadiranbat.com/assets/tlp-93121-b-al1.pdf
+Case,Nanuk,Nanuk 905,1,,,$64.75 ,https://www.nanuk.com/nanuk-905.php
+,,,,,Total,$688.04 ,
