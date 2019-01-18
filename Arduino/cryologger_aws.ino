@@ -1,11 +1,12 @@
 /*
     Title:          Cryologger - Automatic Weather Station (AWS)
-    Last modified:  January 2, 2019
+    Last modified:  January 17, 2019
     Author:         Adam Garbo
 
     Components:
     - Adafruit Feather M0 Adalogger
     - Adafruit DS3231 RTC Precision Featherwing
+    - SparkFun Atmospheric Sensor Breakout - BME280
     - Davis Instruments 7911 Anemomenter
     - Davis Instruments 7817 Thermistor
     - Rock Seven RockBLOCK 9603
@@ -20,6 +21,7 @@
 #include <math.h>               // https://www.nongnu.org/avr-libc/user-manual/group__avr__math.html
 #include <Statistic.h>          // https://github.com/RobTillaart/Arduino/tree/master/libraries/Statistic
 #include <SdFat.h>              // https://github.com/greiman/SdFat
+#include <SparkFunBME280.h>     // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
 #include <SPI.h>                // https://www.arduino.cc/en/Reference/SPI
 #include <Wire.h>               // https://www.arduino.cc/en/Reference/Wire
 #include <wiring_private.h>     // pinPeripheral() function
@@ -30,17 +32,17 @@
 #endif
 
 // Defined constants
-#define GPIO_PWR_PIN              A2
+#define GPIO_PWR_PIN              A3
 #define LED_PIN                   8
 #define RTC_INT_PIN               5
-#define ROCKBLOCK_EN_PIN          12
-#define ROCKBLOCK_SLEEP_PIN       6
+#define ROCKBLOCK_EN_PIN          6
+#define ROCKBLOCK_SLEEP_PIN       12
 #define ROCKBLOCK_RX_PIN          11
 #define ROCKBLOCK_TX_PIN          10
-#define THERMISTOR_PIN            A0
-#define WIND_SPEED_PIN            A5
-#define WIND_DIRECTION_PIN        A1
-#define VBAT_PIN                  A3
+#define THERMISTOR_PIN            A4
+#define WIND_SPEED_PIN            A1
+#define WIND_DIRECTION_PIN        A2
+#define VBAT_PIN                  A0
 
 #define DEBUG   true
 #define error(msg) sd.errorHalt(F(msg))  // Store SD error strings in flash to save RAM
@@ -56,6 +58,7 @@ void SERCOM1_Handler()
 }
 
 // Object instantiations
+BME280        mySensor;
 DS3232RTC     myRTC(false);     // Tell constructor not to initialize the I2C bus
 IridiumSBD    modem(IridiumSerial, ROCKBLOCK_SLEEP_PIN);
 SdFat         sd;               // File system object
@@ -64,18 +67,21 @@ time_t        t, unixtime, alarmTime;
 tmElements_t  tm;
 
 // Statistic objects
-Statistic batteryStats;       // Battery voltage statistics
-Statistic temperatureStats;   // Davis 7817 thermistor temperature statistics
-Statistic windSpeedStats;     // Anemometer wind speed statistics
-Statistic vnStats;            // Anemoeter north-south wind vector component (v) statistics
-Statistic veStats;            // Anemometer east-west wind vector component (u) statistics
+Statistic batteryStats;           // Battery voltage statistics
+Statistic temperatureIntStats;    // BME280 internal temperature statistics
+Statistic humidityStats;          // BME280 internal humidity statistics
+Statistic pressureStats;          // BME280 internal pressure statistics
+Statistic temperatureExtStats;    // Davis 7817 thermistor external temperature statistics
+Statistic windSpeedStats;         // Anemometer wind speed statistics
+Statistic vnStats;                // Anemoeter north-south wind vector component (v) statistics
+Statistic veStats;                // Anemometer east-west wind vector component (u) statistics
 
 // User defined global variable declarations
-uint32_t            sampleInterval          = 10;             // Sleep duration (in seconds) between data sample acquisitions (default = 5 minutes/300 seconds)
-uint16_t            averageInterval         = 360;             // Number of samples to be average in each RockBLOCK transmission
-uint16_t            transmitInterval        = 1;              // Number of message to be included in a single transmission (340 byte limit)
-uint16_t            maxRetransmitCounter    = 16;              // Maximum number of failed data transmissions to reattempt in a single message (340 byte limit)
-uint16_t            samplesPerFile          = 720;            // Maximum number of samples stored in a file before new log file creation
+uint32_t            sampleInterval          = 300;             // Sleep duration (in seconds) between data sample acquisitions. Default = 5 minutes (300 seconds)
+uint16_t            averageInterval         = 12;            // Number of samples to be averaged for each RockBLOCK transmission. Default = 12 (Hourly)
+uint16_t            transmitInterval        = 3;              // Number of message to be included in a single transmission (340 byte limit). Default = 3 (Every 3 hours)
+uint16_t            maxRetransmitCounter    = 10;              // Maximum number of failed data transmissions to reattempt in a single message (340 byte limit). Default: 10
+uint16_t            samplesPerFile          = 864;            // Maximum number of samples stored in a file before new log file creation (Default: 3 days * 288 samples per day)
 
 // Global variable declarations
 const uint8_t       chipSelect              = 4;              // MicroSD chip select pin
@@ -92,7 +98,10 @@ bool                logging                 = true;           // MicroSD initili
 bool                messageSent             = true;           // RockBLOCK transmission flag
 uint8_t             transmitBuffer[340]     = {};             // RockBLOCK transmission buffer
 char                fileName[12]            = "log000.csv";   // Log file naming convention
-float               temperature             = 0.0;            // Thermistor temperature in degrees Celsius (°C)
+float               humidityBme280          = 0.0;            // BME280 humidity (%)
+float               pressureBme280          = 0.0;            // BME280 pressure (Pa)
+float               temperature             = 0.0;            // Thermistor temperature (°C)
+float               temperatureBme280       = 0.0;            // BME280 temperature (°C)
 float               temperatureDs3231       = 0.0;            // Internal RTC temperature (°C)
 float               voltage                 = 0.0;            // Battery voltage in volts (V)
 float               windSpeed               = 0.0;            // Wind speed in metres per second (m/s)
@@ -114,15 +123,19 @@ typedef union
   struct
   {
     uint32_t    unixtime;             // Date and time in time_t format             (4 bytes)
-    int16_t     temperature;          // Mean thermistor temperature (°C)           (2 bytes) (temperature * 100)
+    int16_t     temperatureExt;       // Mean thermistor temperature (°C)           (2 bytes) (temperatureExternal * 100)
+    int16_t     temperatureInt;       // Mean internal temperature (°C)             (2 bytes) (temperatureInternal * 100)
+    uint16_t    humidity;             // Mean internal humidity (%)                 (2 bytes) (humidity * 100)
+    uint32_t    pressure;             // Mean internal pressure (Pa)                (4 bytes)
     uint16_t    windSpeed;            // Resultant mean wind speed (m/s)            (2 bytes) (windSpeed * 100)
     uint16_t    windDirection;        // Resultant mean wind direction (°)          (2 bytes)
     uint16_t    windGust;             // Maximum wind gust speed (m/s)              (2 bytes) (windGust * 100)
     uint16_t    windGustDirection;    // Maximum wind speed direction (°)           (2 bytes)
     uint16_t    voltage;              // Minimum battery voltage (mV)               (2 bytes) (voltage * 1000)
-    uint16_t    iterationCounter;     // RockBLOCK data transmission counter        (2 bytes)
     uint16_t    transmitDuration;     // Debugging variable                         (2 bytes)
-  } __attribute__((packed));                                                        // Total = 24 bytes
+    uint16_t    iterationCounter;     // RockBLOCK data transmission counter        (2 bytes)
+
+  } __attribute__((packed));                                                        // Total = 28 bytes
   uint8_t bytes[];
 } SBDMESSAGE;
 
@@ -153,6 +166,10 @@ void setup()
   modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE);
   modem.adjustSendReceiveTimeout(60);
   modem.adjustATTimeout(20);
+
+  // BME280
+  mySensor.beginI2C();
+  mySensor.setMode(MODE_SLEEP);
 
   // Initialize DS3231
   myRTC.begin();                                // Initialize the I2C bus
@@ -188,6 +205,7 @@ void setup()
   if (sd.begin(chipSelect, SPI_FULL_SPEED)) {
     logging = true;
     createLogFile();  // Create new log file
+    blink(LED_PIN, 10, 100);
   }
   else
   {
@@ -211,7 +229,7 @@ void loop()
     if (myRTC.alarm(ALARM_1))
     {
       sampleCounter++;
-      Serial.print(F("sampleCounter: ")); Serial.println(sampleCounter);
+
       resetWatchdog();    // Pet the dog
       myRTC.read(tm);     // Read current date and time
       t = makeTime(tm);   // Change the tm structure into time_t (seconds since epoch)
@@ -220,6 +238,7 @@ void loop()
       // Perform measurements
       readDs3231();
       readBattery();
+      readBme280();
       readThermistor();
       readAnemometer();
       logData();
@@ -267,7 +286,7 @@ void loop()
     alarmIsrWasCalled = false;
   }
   sleeping = true;
-  //LowPower.deepSleep();
+  LowPower.deepSleep();
 }
 
 // RTC interrupt service routine (ISR)
@@ -286,21 +305,33 @@ void readDs3231()
   message.unixtime = unixtime;
 }
 
-// Measure battery voltage from 100/100 kOhm divider
+// Measure battery voltage from 330kOhm/1MOhm divider
 void readBattery()
 {
-  for (uint8_t i = 0; i < 5; i++)
+  voltage = 0;
+  for (uint8_t i = 0; i < samplesToAverage; i++)
   {
-    analogRead(VBAT_PIN);
-    delay(1);
+    voltage += (analogRead(VBAT_PIN) - 5);
+    delay(10);
   }
-  voltage = analogRead(VBAT_PIN);
-  voltage *= 2;     // Divided by 2, so multiply back
+  voltage /= samplesToAverage;
+  voltage *= 4.0868; // Multiply back (1035000) + 335300 / 335300
   voltage *= 3.3;   // Multiply by 3.3V reference voltage
   voltage /= 1024;  // Convert to voltage
 
   // Add to statistics object
   batteryStats.add(voltage);
+}
+
+void readBme280() {
+  mySensor.setMode(MODE_FORCED);
+  temperatureBme280 = mySensor.readTempC();
+  humidityBme280 = mySensor.readFloatHumidity();
+  pressureBme280 = mySensor.readFloatPressure();
+
+  temperatureIntStats.add(temperatureBme280);
+  humidityStats.add(humidityBme280);
+  pressureStats.add(pressureBme280);
 }
 
 // Measure temperature from Davis Instruments 7817 thermistor
@@ -331,7 +362,7 @@ void readThermistor()
   temperature = steinhart;
 
   // Add to statistics object
-  temperatureStats.add(steinhart);
+  temperatureExtStats.add(steinhart);
 }
 
 // Measure wind speed and direction from Davis Instruments 7911 anemometer
@@ -370,10 +401,10 @@ void readAnemometer()
     windDirection += 360;
 
   // True wind direction
-  if (windDirection > 180)
-    windDirection -= 180;
-  else if (windDirection < 180)
-    windDirection += 180;
+  //if (windDirection > 180)
+  //  windDirection -= 180;
+  //else if (windDirection < 180)
+  //  windDirection += 180;
 
   // Wind gust and direction
   if ((windSpeed > 0) && (windSpeed * 100 > message.windGust))
@@ -454,7 +485,7 @@ void createLogFile()
       error("Set create time failed");
 
     // Write header to file
-    file.println("unixtime,batteryVoltage,temperatureDs3231,temperature,windSpeed,windDirection,freeRam,samplesSaved");
+    file.println("unixtime,batteryVoltage,temperatureDs3231,temperatureBme280,humidityBme280,pressureBme280,temperature,windSpeed,windDirection,freeRam,samplesSaved");
 
     // Close log file
     file.close();
@@ -485,6 +516,12 @@ void logData()
       file.write(",");
       file.print(temperatureDs3231);
       file.write(",");
+      file.print(temperatureBme280);
+      file.write(",");
+      file.print(humidityBme280);
+      file.write(",");
+      file.print(pressureBme280);
+      file.write(",");
       file.print(temperature);
       file.write(",");
       file.print(windSpeed);
@@ -503,6 +540,12 @@ void logData()
       Serial.print(voltage);
       Serial.print(",");
       Serial.print(temperatureDs3231);
+      Serial.print(",");
+      Serial.print(temperatureBme280);
+      Serial.print(",");
+      Serial.print(humidityBme280);
+      Serial.print(",");
+      Serial.print(pressureBme280);
       Serial.print(",");
       Serial.print(temperature);
       Serial.print(",");
@@ -546,109 +589,20 @@ void writeTimestamps()
 // Calculate statistics and clear objects
 void calculateStatistics()
 {
-  message.voltage = batteryStats.minimum() * 1000;          // Minimum battery voltage (mV)
-  message.temperature = temperatureStats.average() * 100;   // Minimum thermistor temperature (°C)
+  message.voltage = batteryStats.minimum() * 1000;                // Minimum battery voltage (mV)
+  message.temperatureExt = temperatureExtStats.average() * 100;   // Mean thermistor temperature (°C)
+  message.temperatureInt = temperatureIntStats.average() * 100;   // Mean BME280 temperature (°C)
+  message.humidity = humidityStats.average() * 100;               // Mean BME280 humidity (%)
+  message.pressure = pressureStats.average() * 100;               // Mean BME280 pressure (Pa)
 
   batteryStats.clear();
-  temperatureStats.clear();
+  temperatureExtStats.clear();
+  temperatureIntStats.clear();
+  humidityStats.clear();
+  pressureStats.clear();
   windSpeedStats.clear();
   veStats.clear();
   vnStats.clear();
-}
-
-// Print current time and date
-void printDateTime(time_t t)
-{
-  Serial.print((day(t) < 10) ? "0" : ""); Serial.print(day(t), DEC); Serial.print('/');
-  Serial.print((month(t) < 10) ? "0" : ""); Serial.print(month(t), DEC); Serial.print('/');
-  Serial.print(year(t), DEC); Serial.print(' ');
-  Serial.print((hour(t) < 10) ? "0" : ""); Serial.print(hour(t), DEC); Serial.print(':');
-  Serial.print((minute(t) < 10) ? "0" : ""); Serial.print(minute(t), DEC); Serial.print(':');
-  Serial.print((second(t) < 10) ? "0" : ""); Serial.println(second(t), DEC);
-}
-
-// Print statistics
-void printStatistics()
-{
-  Serial.println();
-  Serial.println(F("Statistics"));
-  Serial.println(F("============================================================================"));
-  Serial.print(F("Voltage\t\t"));
-  Serial.print(F("Samples: ")); Serial.print(batteryStats.count());
-  Serial.print(F("\tMin: "));   Serial.print(batteryStats.minimum());
-  Serial.print(F("\tMax: ")); Serial.print(batteryStats.maximum());
-  Serial.print(F("\tMean: ")); Serial.println(batteryStats.average());
-  Serial.print(F("Temperature\t"));
-  Serial.print(F("Samples: ")); Serial.print(temperatureStats.count());
-  Serial.print(F("\tMin: ")); Serial.print(temperatureStats.minimum());
-  Serial.print(F("\tMax: ")); Serial.print(temperatureStats.maximum());
-  Serial.print(F("\tMean: ")); Serial.println(temperatureStats.average());
-  Serial.print(F("Wind speed\t"));
-  Serial.print(F("Samples: ")); Serial.print(windSpeedStats.count());
-  Serial.print(F("\tMin: ")); Serial.print(windSpeedStats.minimum());
-  Serial.print(F("\tMax: ")); Serial.print(windSpeedStats.maximum());
-  Serial.print(F("\tMean: ")); Serial.println(windSpeedStats.average());
-  Serial.print(F("vn\t\t"));
-  Serial.print(F("Samples: ")); Serial.print(vnStats.count());
-  Serial.print(F("\tMin: ")); Serial.print(vnStats.minimum());
-  Serial.print(F("\tMax: ")); Serial.print(vnStats.maximum());
-  Serial.print(F("\tMean: ")); Serial.println(vnStats.average());
-  Serial.print(F("ve\t\t"));
-  Serial.print(F("Samples: ")); Serial.print(veStats.count());
-  Serial.print(F("\tMin: ")); Serial.print(veStats.minimum());
-  Serial.print(F("\tMax: ")); Serial.print(veStats.maximum());
-  Serial.print(F("\tMean: ")); Serial.println(veStats.average());
-}
-
-// Print union/structure
-void printUnion()
-{
-  Serial.println();
-  Serial.println(F("Union/structure"));
-  Serial.println(F("==================================="));
-  Serial.print(F("message.unixtime:\t")); Serial.println(message.unixtime);
-  Serial.print(F("temperature:\t\t")); Serial.println(message.temperature);
-  Serial.print(F("windSpeed:\t\t")); Serial.println(message.windSpeed);
-  Serial.print(F("windDirection:\t\t")); Serial.println(message.windDirection);
-  Serial.print(F("windGust:\t\t")); Serial.println(message.windGust);
-  Serial.print(F("windGustDirection:\t")); Serial.println(message.windGustDirection);
-  Serial.print(F("voltage:\t\t")); Serial.println(message.voltage);
-  Serial.print(F("iterationCounter:\t")); Serial.println(message.iterationCounter);
-  Serial.print(F("transmitDuration:\t")); Serial.println(message.transmitDuration);
-}
-
-// Print contents of union/structure
-void printUnionBinary()
-{
-  Serial.println();
-  Serial.println(F("Union/structure"));
-  Serial.println(F("========================="));
-  Serial.println(F("Byte\tHex\tBinary"));
-  for (uint16_t i = 0; i < sizeof(message); ++i)
-  {
-    Serial.print(i);
-    Serial.print("\t");
-    Serial.print(message.bytes[i], HEX);
-    Serial.print("\t");
-    Serial.println(message.bytes[i], BIN);
-  }
-}
-
-// Print contents of transmiff buffer array
-void printTransmitBuffer()
-{
-  Serial.println();
-  Serial.println(F("Transmit buffer"));
-  Serial.println(F("========================="));
-  Serial.println(F("Byte\tHex\tBinary"));
-  for (uint16_t i = 0; i < 340; i++)
-  {
-    Serial.print(i);
-    Serial.print("\t");
-    Serial.print(transmitBuffer[i], HEX);
-    Serial.print("\t");
-    Serial.println(transmitBuffer[i], BIN);
-  }
 }
 
 void writeBuffer()
@@ -664,6 +618,7 @@ void writeBuffer()
   printUnionBinary();
   printTransmitBuffer();
 
+  memset(message.bytes, 0x00, sizeof(message));   // Clear data stored in union
 }
 
 // Transmit data via the RockBLOCK 9603 satellite modem
@@ -717,8 +672,8 @@ void transmitData()
         // Check if inBuffer data is valid
         if ((sampleIntervalBuffer > 120  && sampleIntervalBuffer <= 2678400) && (transmitIntervalBuffer > 0  && transmitIntervalBuffer <= 100) && (maxRetransmitCounterBuffer > 0  && maxRetransmitCounterBuffer <= 10))
         {
-          averageInterval = averageIntervalBuffer;
           sampleInterval = sampleIntervalBuffer;
+          averageInterval = averageIntervalBuffer;
           transmitInterval = transmitIntervalBuffer;
           maxRetransmitCounter = maxRetransmitCounterBuffer;
         }
@@ -778,8 +733,9 @@ void transmitData()
 // RockBLOCK callback function
 bool ISBDCallback()   // This function can be repeatedly called during data transmission or GPS signal acquisition
 {
-  //blink(LED_BUILTIN, 2, 1000);
-  //digitalWrite(LED_PIN, (millis() / 1000) % 2 == 1 ? HIGH : LOW);
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, (millis() / 1000) % 2 == 1 ? HIGH : LOW);
+  pinMode(LED_BUILTIN, INPUT);
 
   uint32_t currentMillis = millis();
   if (currentMillis - previousMillis >= 2000)
@@ -816,6 +772,120 @@ void blink(uint8_t pin, uint16_t flashes, uint16_t duration)
     delay(duration);
     digitalWrite(pin, LOW);
     delay(duration);
+  }
+}
+
+// Print current time and date
+void printDateTime(time_t t)
+{
+  Serial.print((day(t) < 10) ? "0" : ""); Serial.print(day(t), DEC); Serial.print('/');
+  Serial.print((month(t) < 10) ? "0" : ""); Serial.print(month(t), DEC); Serial.print('/');
+  Serial.print(year(t), DEC); Serial.print(' ');
+  Serial.print((hour(t) < 10) ? "0" : ""); Serial.print(hour(t), DEC); Serial.print(':');
+  Serial.print((minute(t) < 10) ? "0" : ""); Serial.print(minute(t), DEC); Serial.print(':');
+  Serial.print((second(t) < 10) ? "0" : ""); Serial.println(second(t), DEC);
+}
+
+// Print statisticsitre
+void printStatistics()
+{
+  Serial.println();
+  Serial.println(F("Statistics"));
+  Serial.println(F("============================================================================"));
+  Serial.print(F("Voltage\t\t"));
+  Serial.print(F("Samples: ")); Serial.print(batteryStats.count());
+  Serial.print(F("\tMin: "));   Serial.print(batteryStats.minimum());
+  Serial.print(F("\tMax: ")); Serial.print(batteryStats.maximum());
+  Serial.print(F("\tMean: ")); Serial.println(batteryStats.average());
+  Serial.print(F("Temperature Ext\t"));
+  Serial.print(F("Samples: ")); Serial.print(temperatureExtStats.count());
+  Serial.print(F("\tMin: ")); Serial.print(temperatureExtStats.minimum());
+  Serial.print(F("\tMax: ")); Serial.print(temperatureExtStats.maximum());
+  Serial.print(F("\tMean: ")); Serial.println(temperatureExtStats.average());
+  Serial.print(F("Temperature Int\t"));
+  Serial.print(F("Samples: ")); Serial.print(temperatureIntStats.count());
+  Serial.print(F("\tMin: ")); Serial.print(temperatureIntStats.minimum());
+  Serial.print(F("\tMax: ")); Serial.print(temperatureIntStats.maximum());
+  Serial.print(F("\tMean: ")); Serial.println(temperatureIntStats.average());
+  Serial.print(F("Humidity\t"));
+  Serial.print(F("Samples: ")); Serial.print(humidityStats.count());
+  Serial.print(F("\tMin: ")); Serial.print(humidityStats.minimum());
+  Serial.print(F("\tMax: ")); Serial.print(humidityStats.maximum());
+  Serial.print(F("\tMean: ")); Serial.println(humidityStats.average());
+  Serial.print(F("Pressure\t"));
+  Serial.print(F("Samples: ")); Serial.print(pressureStats.count());
+  Serial.print(F("\tMin: ")); Serial.print(pressureStats.minimum());
+  Serial.print(F("\tMax: ")); Serial.print(pressureStats.maximum());
+  Serial.print(F("\tMean: ")); Serial.println(pressureStats.average());
+  Serial.print(F("Wind speed\t"));
+  Serial.print(F("Samples: ")); Serial.print(windSpeedStats.count());
+  Serial.print(F("\tMin: ")); Serial.print(windSpeedStats.minimum());
+  Serial.print(F("\tMax: ")); Serial.print(windSpeedStats.maximum());
+  Serial.print(F("\tMean: ")); Serial.println(windSpeedStats.average());
+  Serial.print(F("vn\t\t"));
+  Serial.print(F("Samples: ")); Serial.print(vnStats.count());
+  Serial.print(F("\tMin: ")); Serial.print(vnStats.minimum());
+  Serial.print(F("\tMax: ")); Serial.print(vnStats.maximum());
+  Serial.print(F("\tMean: ")); Serial.println(vnStats.average());
+  Serial.print(F("ve\t\t"));
+  Serial.print(F("Samples: ")); Serial.print(veStats.count());
+  Serial.print(F("\tMin: ")); Serial.print(veStats.minimum());
+  Serial.print(F("\tMax: ")); Serial.print(veStats.maximum());
+  Serial.print(F("\tMean: ")); Serial.println(veStats.average());
+}
+
+// Print union/structure
+void printUnion()
+{
+  Serial.println();
+  Serial.println(F("Union/structure"));
+  Serial.println(F("==================================="));
+  Serial.print(F("unixtime:\t\t")); Serial.println(message.unixtime);
+  Serial.print(F("temperatureExt:\t\t")); Serial.println(message.temperatureExt);
+  Serial.print(F("temperatureInt:\t\t")); Serial.println(message.temperatureInt);
+  Serial.print(F("humidity:\t\t")); Serial.println(message.humidity);
+  Serial.print(F("pressure:\t\t")); Serial.println(message.pressure);
+  Serial.print(F("windSpeed:\t\t")); Serial.println(message.windSpeed);
+  Serial.print(F("windDirection:\t\t")); Serial.println(message.windDirection);
+  Serial.print(F("windGust:\t\t")); Serial.println(message.windGust);
+  Serial.print(F("windGustDirection:\t")); Serial.println(message.windGustDirection);
+  Serial.print(F("voltage:\t\t")); Serial.println(message.voltage);
+  Serial.print(F("transmitDuration:\t")); Serial.println(message.transmitDuration);
+  Serial.print(F("iterationCounter:\t")); Serial.println(message.iterationCounter);
+
+}
+
+// Print contents of union/structure
+void printUnionBinary()
+{
+  Serial.println();
+  Serial.println(F("Union/structure"));
+  Serial.println(F("========================="));
+  Serial.println(F("Byte\tHex\tBinary"));
+  for (uint16_t i = 0; i < sizeof(message); ++i)
+  {
+    Serial.print(i);
+    Serial.print("\t");
+    Serial.print(message.bytes[i], HEX);
+    Serial.print("\t");
+    Serial.println(message.bytes[i], BIN);
+  }
+}
+
+// Print contents of transmiff buffer array
+void printTransmitBuffer()
+{
+  Serial.println();
+  Serial.println(F("Transmit buffer"));
+  Serial.println(F("========================="));
+  Serial.println(F("Byte\tHex\tBinary"));
+  for (uint16_t i = 0; i < 340; i++)
+  {
+    Serial.print(i);
+    Serial.print("\t");
+    Serial.print(transmitBuffer[i], HEX);
+    Serial.print("\t");
+    Serial.println(transmitBuffer[i], BIN);
   }
 }
 
