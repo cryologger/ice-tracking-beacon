@@ -1,12 +1,11 @@
 /*
     Title:          Cryologger - Automatic Weather Station (AWS)
-    Last modified:  January 17, 2019
+    Last modified:  January 20, 2019
     Author:         Adam Garbo
 
     Components:
     - Adafruit Feather M0 Adalogger
     - Adafruit DS3231 RTC Precision Featherwing
-    - SparkFun Atmospheric Sensor Breakout - BME280
     - Davis Instruments 7911 Anemomenter
     - Davis Instruments 7817 Thermistor
     - Rock Seven RockBLOCK 9603
@@ -44,8 +43,7 @@
 #define WIND_DIRECTION_PIN        A2
 #define VBAT_PIN                  A0
 
-#define DEBUG   true
-#define error(msg) sd.errorHalt(F(msg))  // Store SD error strings in flash to save RAM
+#define DEBUG   false
 
 // Create a new Serial instance. For more information see: https://www.arduino.cc/en/Tutorial/SamdSercom
 Uart Serial2 (&sercom1, ROCKBLOCK_RX_PIN, ROCKBLOCK_TX_PIN, SERCOM_RX_PAD_0, UART_TX_PAD_2);  // Create the new UART instance assigning it to pin 10 and 11
@@ -79,16 +77,16 @@ Statistic veStats;                // Anemometer east-west wind vector component 
 // User defined global variable declarations
 uint32_t            sampleInterval          = 300;             // Sleep duration (in seconds) between data sample acquisitions. Default = 5 minutes (300 seconds)
 uint16_t            averageInterval         = 12;            // Number of samples to be averaged for each RockBLOCK transmission. Default = 12 (Hourly)
-uint16_t            transmitInterval        = 3;              // Number of message to be included in a single transmission (340 byte limit). Default = 3 (Every 3 hours)
+uint16_t            transmitInterval        = 1;              // Number of message to be included in a single transmission (340 byte limit). Default = 3 (Every 3 hours)
 uint16_t            maxRetransmitCounter    = 10;              // Maximum number of failed data transmissions to reattempt in a single message (340 byte limit). Default: 10
-uint16_t            samplesPerFile          = 864;            // Maximum number of samples stored in a file before new log file creation (Default: 3 days * 288 samples per day)
+uint16_t            samplesPerFile          = 288;            // Maximum number of samples stored in a file before new log file creation (Default: 3 days * 288 samples per day)
 
 // Global variable declarations
 const uint8_t       chipSelect              = 4;              // MicroSD chip select pin
 const uint8_t       nominalTemperature      = 25;             // Thermistor temperature for nominal resistance (°C)
 const uint8_t       samplesToAverage        = 10;             // Thermistor samples to average
-const uint16_t      betaCoefficient         = 3850;           // Thermistor beta coefficient
-const uint16_t      seriesResistor          = 9870;           // Thermistor resistor divider value (Ohms)
+const uint16_t      betaCoefficient         = 3950;           // Thermistor beta coefficient
+const uint16_t      seriesResistor          = 10000;          // Thermistor resistor divider value (Ohms)
 const uint16_t      nominalResistance       = 10000;          // Thermistor nominal resistance at 25°C
 volatile bool       alarmIsrWasCalled       = false;          // RTC interrupt service routine (ISR) flag
 volatile bool       sleeping                = false;          // Watchdog Timer Early Warning interrupt flag
@@ -187,12 +185,12 @@ void setup()
 
   /*
       // Set the RTC time
-      tm.Hour = 9;
-      tm.Minute = 40;
+      tm.Hour = 16;
+      tm.Minute = 50;
       tm.Second = 0;
-      tm.Day = 24;
-      tm.Month = 12;
-      tm.Year = 2018 - 1970;    // tmElements_t.Year is the offset from 1970
+      tm.Day = 20;
+      tm.Month = 1;
+      tm.Year = 2019 - 1970;    // tmElements_t.Year is the offset from 1970
       time_t t = makeTime(tm);  // change the tm structure into time_t (seconds since epoch)
       myRTC.set(t);
   */
@@ -201,6 +199,7 @@ void setup()
   printDateTime(myRTC.get());
 
   Serial.print(F("messageSize: ")); Serial.println(messageSize);
+
   // Initialize microSD card
   if (sd.begin(chipSelect, SPI_FULL_SPEED)) {
     logging = true;
@@ -210,13 +209,13 @@ void setup()
   else
   {
     logging = false;  // Disable data logging if microSD initialization fails
-    sd.initErrorPrint();
+    Serial.println("Unable to initialize SD card");
     blink(LED_BUILTIN, 10, 100);
   }
 
   // Set alarm 1
-  myRTC.setAlarm(ALM1_MATCH_SECONDS, 0, 0, 0, 1);     // Set initial alarm to occur at seconds rollover
-  //myRTC.setAlarm(ALM1_MATCH_MINUTES, 0, 0, 0, 1);     // Set initial alarm to occur at minutes rollover
+  //myRTC.setAlarm(ALM1_MATCH_SECONDS, 0, 0, 0, 1);     // Set initial alarm to occur at seconds rollover
+  myRTC.setAlarm(ALM1_MATCH_MINUTES, 0, 0, 0, 1);     // Set initial alarm to occur at minutes rollover (start of new hour)
   myRTC.alarm(ALARM_1);                               // Ensure alarm 1 interrupt flag is cleared
   myRTC.alarmInterrupt(ALARM_1, true);                // Enable interrupt output for alarm 1
 }
@@ -286,7 +285,7 @@ void loop()
     alarmIsrWasCalled = false;
   }
   sleeping = true;
-  LowPower.deepSleep();
+  //LowPower.deepSleep();
 }
 
 // RTC interrupt service routine (ISR)
@@ -482,7 +481,7 @@ void createLogFile()
 
     // Set the file's creation date and time
     if (!file.timestamp(T_CREATE, (tm.Year + 1970), tm.Month, tm.Day, tm.Hour, tm.Minute, tm.Second))
-      error("Set create time failed");
+      Serial.println("Set create time failed");
 
     // Write header to file
     file.println("unixtime,batteryVoltage,temperatureDs3231,temperatureBme280,humidityBme280,pressureBme280,temperature,windSpeed,windDirection,freeRam,samplesSaved");
@@ -560,13 +559,13 @@ void logData()
     }
     else
     {
-      error("Unable to open file");
+      Serial.println("Unable to open file");
     }
 
     // Force data to SD and update the directory entry to avoid data loss
     if (!file.sync() || file.getWriteError())
     {
-      error("Write error");
+      Serial.println("Write error");
       delay(10000);
     }
   }
@@ -579,11 +578,11 @@ void writeTimestamps()
 
   // Set the file's last write/modification date and time
   if (!file.timestamp(T_WRITE, (tm.Year + 1970), tm.Month, tm.Day, tm.Hour, tm.Minute, tm.Second))
-    error("Set write time failed");
+    Serial.println("Set write time failed");
 
   // Set the file's last access date and time
   if (!file.timestamp(T_ACCESS, (tm.Year + 1970), tm.Month, tm.Day, tm.Hour, tm.Minute, tm.Second))
-    error("Set access time failed");
+    Serial.println("Set access time failed");
 }
 
 // Calculate statistics and clear objects
@@ -593,7 +592,7 @@ void calculateStatistics()
   message.temperatureExt = temperatureExtStats.average() * 100;   // Mean thermistor temperature (°C)
   message.temperatureInt = temperatureIntStats.average() * 100;   // Mean BME280 temperature (°C)
   message.humidity = humidityStats.average() * 100;               // Mean BME280 humidity (%)
-  message.pressure = pressureStats.average() * 100;               // Mean BME280 pressure (Pa)
+  message.pressure = pressureStats.average();               // Mean BME280 pressure (Pa)
 
   batteryStats.clear();
   temperatureExtStats.clear();
@@ -640,9 +639,23 @@ void transmitData()
   err = modem.begin();
   if (err == ISBD_SUCCESS)
   {
-    uint8_t inBuffer[8];   // Buffer to store incomming RockBLOCK transmission (340 byte limit per message)
+    uint8_t inBuffer[10];   // Buffer to store incomming RockBLOCK transmission (340 byte limit per message)
     size_t inBufferSize = sizeof(inBuffer);
     memset(inBuffer, 0x00, sizeof(inBuffer));   // Clear  inBuffer array
+
+#if DEBUG
+    // Iridium modem diagnostics
+    int signalQuality = -1;
+    err = modem.getSignalQuality(signalQuality);
+    if (err != ISBD_SUCCESS)
+    {
+      Serial.print("SignalQuality failed: error ");
+      Serial.println(err);
+      return;
+    }
+    Serial.print("Signal quality: ");
+    Serial.println(signalQuality);
+#endif
 
     // Transmit and receieve data in binary format
     err = modem.sendReceiveSBDBinary(transmitBuffer, (sizeof(message) * (messageCounter + (retransmitCounter * transmitInterval))), inBuffer, inBufferSize);
@@ -666,11 +679,11 @@ void transmitData()
         // Recompose variables using bitshift
         uint32_t sampleIntervalBuffer = (((uint32_t)inBuffer[3] << 0) & 0xFF) + (((uint32_t)inBuffer[2] << 8) & 0xFFFF) + (((uint32_t)inBuffer[1] << 16) & 0xFFFFFF) + (((uint32_t)inBuffer[0] << 24) & 0xFFFFFFFF);
         uint16_t averageIntervalBuffer  = (((uint16_t)inBuffer[5] << 0) & 0xFF) + (((uint16_t)inBuffer[4] << 8) & 0xFFFF);
-        uint16_t transmitIntervalBuffer  = (((uint16_t)inBuffer[5] << 0) & 0xFF) + (((uint16_t)inBuffer[4] << 8) & 0xFFFF);
-        uint16_t maxRetransmitCounterBuffer  = (((uint16_t)inBuffer[7] << 0) & 0xFF) + (((uint16_t)inBuffer[6] << 8) & 0xFFFF);
+        uint16_t transmitIntervalBuffer  = (((uint16_t)inBuffer[7] << 0) & 0xFF) + (((uint16_t)inBuffer[6] << 8) & 0xFFFF);
+        uint16_t maxRetransmitCounterBuffer  = (((uint16_t)inBuffer[9] << 0) & 0xFF) + (((uint16_t)inBuffer[8] << 8) & 0xFFFF);
 
-        // Check if inBuffer data is valid
-        if ((sampleIntervalBuffer > 120  && sampleIntervalBuffer <= 2678400) && (transmitIntervalBuffer > 0  && transmitIntervalBuffer <= 100) && (maxRetransmitCounterBuffer > 0  && maxRetransmitCounterBuffer <= 10))
+        // Check validity of incoming data
+        if ((sampleIntervalBuffer > 0  && sampleIntervalBuffer <= 86400) && (averageIntervalBuffer > 0  && averageIntervalBuffer <= 24) && (transmitIntervalBuffer > 0  && transmitIntervalBuffer <= 10) && (maxRetransmitCounterBuffer > 0  && maxRetransmitCounterBuffer <= 10))
         {
           sampleInterval = sampleIntervalBuffer;
           averageInterval = averageIntervalBuffer;
@@ -731,11 +744,13 @@ void transmitData()
 }
 
 // RockBLOCK callback function
-bool ISBDCallback()   // This function can be repeatedly called during data transmission or GPS signal acquisition
+bool ISBDCallback()   // This function can be repeatedly called during data transmission or GPS signal acquisitionb
 {
+#if DEBUG
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, (millis() / 1000) % 2 == 1 ? HIGH : LOW);
   pinMode(LED_BUILTIN, INPUT);
+#endif
 
   uint32_t currentMillis = millis();
   if (currentMillis - previousMillis >= 2000)
@@ -766,6 +781,7 @@ void ISBDDiagsCallback(IridiumSBD *device, char c)
 // LED activity indicator
 void blink(uint8_t pin, uint16_t flashes, uint16_t duration)
 {
+  pinMode(LED_BUILTIN, OUTPUT);
   for (uint16_t i = 0; i < flashes; i++)
   {
     digitalWrite(pin, HIGH);
@@ -773,6 +789,7 @@ void blink(uint8_t pin, uint16_t flashes, uint16_t duration)
     digitalWrite(pin, LOW);
     delay(duration);
   }
+  pinMode(LED_BUILTIN, INPUT);
 }
 
 // Print current time and date
