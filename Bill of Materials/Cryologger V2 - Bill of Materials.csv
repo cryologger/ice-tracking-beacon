@@ -1,0 +1,14 @@
+Component,Manufacturer,Product,Quantity,URL
+Satellite modem,Rock Seven,RockBLOCK 9603,1,http://www.rock7mobile.com/products-rockblock-9603
+Microcontroller,Adafruit,Feather M0 Basic Proto,1,https://www.adafruit.com/product/2772
+GPS,Adafruit,Ultimate GPS FeatherWing,1,https://www.adafruit.com/product/3133
+Accelerometer/Magnetometer,Pololu,LSM303D 3D Compass and Accelerometer Carrier with Voltage Regulator,1,https://www.pololu.com/product/2127
+Real-time clock (RTC),Adafruit,DS3231SN RTC FeatherWing,1,https://www.adafruit.com/product/3028
+Real-time clock battery,Adafruit,CR1220 12mm Diameter - 3V Lithium Coin Cell Battery,2,https://www.adafruit.com/product/380
+Step-down voltage regulator,Pololu,"3.3V, 600mA Step-Down Voltage Regulator D36V6F3",1,https://www.pololu.com/product/3791
+Power connector,Adafruit,Male DC Power adapter - 2.1mm plug to screw terminal block,1,https://www.adafruit.com/product/369
+Power connector,Adafruit,Breadboard-friendly 2.1mm DC barrel jack,1,https://www.adafruit.com/product/373
+PCB,Adafruit,FeatherWing Tripler,1,https://www.adafruit.com/product/3417
+Terminal block,Adafruit,"2.54mm/0.1"" Pitch Terminal Block - 5-pin",1,https://www.adafruit.com/product/2139
+Battery,Tadiran,Lithium Pulses Plus 7.2V 38Ah 273.6Wh (TLP-93131/B/AL1),1,http://www.tadiranbat.com/assets/tlp-93121-b-al1.pdf
+Case,Nanuk,Nanuk 903 Small series,1,https://www.nanuk.com/nanuk-904.php
