@@ -1,11 +1,11 @@
 /*
   Title:    Cryologger Ice Tracking Beacon (V3)
-  Date:     January 12, 2020
+  Date:     April 21, 2020
   Author:   Adam Garbo
 
   Components:
   - SparkFun Qwiic Micro - SAMD21 Development Board
-  - SparkFun Real Time Clock Module - RV-1805 (Qwiic)
+  - SparkFun Real Time Clock Module - RV-8803 (Qwiic)
   - SparkFun Atmospheric Sensor Breakout - BME280 (Qwiic)
   - SparkFun GPS Breakout - ZOE-M8Q (Qwiic)
   - SparkFun Qwiic Iridium 9603N
@@ -24,7 +24,7 @@
 #include <IridiumSBD.h>                     // https://github.com/PaulZC/IridiumSBD
 #include <SparkFunBME280.h>                 // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
 #include <SparkFunLSM9DS1.h>                // https://github.com/sparkfun/SparkFun_LSM9DS1_Arduino_Library
-#include <SparkFun_RV1805.h>                // https://github.com/sparkfun/SparkFun_RV-1805_Arduino_Library
+#include <SparkFun_RV8803.h>                // https://github.com/sparkfun/SparkFun_RV-8803_Arduino_Library
 #include <SparkFun_Ublox_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_Ublox_Arduino_Library
 #include <TimeLib.h>                        // https://github.com/PaulStoffregen/Time
 #include <Wire.h>                           // https://www.arduino.cc/en/Reference/Wire
@@ -40,7 +40,7 @@
 // Object instantiations
 BME280        bme280;             // I2C Address: 0x77
 IridiumSBD    modem(IridiumWire); // I2C Address: 0x63
-RV1805        rtc;                // I2C Address: 0x69
+RV8803        rtc;                // I2C Address: 0x69
 SFE_UBLOX_GPS gps;                // I2C Address: 0x42
 
 // User defined global variable declarations
