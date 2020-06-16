@@ -18,7 +18,7 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 ## Repository Contents
 * **/Arduino** - Contains the Arduino code.
 
-* **/Bill of Materials** - Iformation on all components used construction and their associated costs.
+* **/Bill of Materials** - Information on all components used construction and their associated costs.
 
 * **/Archive** - Contains information on previous iterations of the Cryologger design.
 
