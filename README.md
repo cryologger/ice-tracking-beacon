@@ -15,6 +15,24 @@ The Cryologger is based on the open-source Arduino platform (www.arduino.cc) and
 
 Planned for extended deployments in harsh Arctic conditions, the Cryologger can provide long-term measurements of GPS position, temperature, pressure, pitch, roll, tilt-compensated heading and battery voltage. Data are transmitted over the Iridium satellite network at specified intervals and can be remotely updated based on the desired sampling frequency.
 
+
+#### Measurements
+| Variable  | Unit | Comments |
+| --- | :---: | --- |
+| Datetime  |   | YYYY-MM-DD HH:MM:SS |
+| Temperature | °C  | Internal temperature |
+| Pressure | hPa | Internal pressure |
+| Pitch | °|  |
+| Roll | ° |  |
+| Heading | °  | Tilt-compensated heading (0-360°) |
+| Latitude | DD |  |
+| Longitude | DD |  |
+| Satellites | # | Number of satellites in view  |
+| HDOP |  | Horizonal dilution of precision |
+| Voltage | V | Battery voltage |
+| Transmit duration  | s | Length of Iridium transmission  |
+| Message counter |  | Number of transmitted messages |
+
 ## Repository Contents
 * **/Arduino** - Contains the Arduino code.
 
