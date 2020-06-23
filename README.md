@@ -34,11 +34,18 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 | Message counter |  | Number of transmitted messages |
 
 ## Repository Contents
+
+* **/Archive** - Contains information on previous versions of the Cryologger design.
+
 * **/Arduino** - Contains the Arduino code.
 
 * **/Bill of Materials** - Information on all components used construction and their associated costs.
 
-* **/Archive** - Contains information on previous iterations of the Cryologger design.
+* **/Documentation**
+
+* **/EAGLE**
+
+* **/Fusion 360**
 
 ## Documentation
 * Currently in progress
