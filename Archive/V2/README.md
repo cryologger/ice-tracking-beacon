@@ -1,4 +1,4 @@
-# Cryologger - Iceberg Tracking Beacon v1.0
+# Cryologger - Iceberg Tracking Beacon v2.0
 
 ## Background
 
@@ -10,7 +10,7 @@ A low-cost, open-source iceberg and ice island drift tracking beacon intended fo
 ## Measurements
 
 ## Repository Contents
-* **/Software** - Arduino deployment code, Python Iridium SBD server and SBD message decoding and PHP web design code, including Google Charts and Google Maps
+* **/Software** - Arduino deployment code
 
 * **/Hardware** - Autodesk Eagle & FUsion 360 PCB schematic, board and 3D design files
 
