@@ -20,6 +20,7 @@
 #include <SparkFun_Ublox_Arduino_Library.h> // http://librarymanager/All#SparkFun_Ublox_GPS
 #include <SdFat.h>                          // http://librarymanager/All#SdFat
 #include <SPI.h>
+#include <WDT.h>
 #include <Wire.h>
 
 // Defined constants
@@ -35,6 +36,7 @@
 
 // Object instantiations
 APM3_RTC      rtc;
+APM3_WDT      wdt;
 IridiumSBD    modem(IridiumWire);   // I2C Address: 0x63
 SdFat         sd;                   // File system object
 SdFile        file;                 // Log file
@@ -42,40 +44,54 @@ SFE_UBLOX_GPS gps;                  // I2C Address: 0x42
 
 // User defined global variable declarations
 byte          alarmSeconds          = 0;
-byte          alarmMinutes          = 5;
+byte          alarmMinutes          = 1;
 byte          alarmHours            = 0;
-unsigned int  transmitInterval      = 1;       // Number of message to be included in each RockBLOCK transmission (340 byte limit)
-unsigned int  maxRetransmitCounter  = 1;        // Maximum number of failed data transmissions to reattempt in a single message (340 byte limit)
+unsigned int  transmitInterval      = 5;       // Number of message to be included in each RockBLOCK transmission (340 byte limit)
+unsigned int  maxRetransmitCounter  = 5;        // Maximum number of failed data transmissions to reattempt in a single message (340 byte limit)
 
 // Global variable and constant declarations
-volatile bool alarmFlag           = false;   // RTC alarm flag
+volatile bool alarmFlag           = false;  // RTC ISR flag
+volatile bool watchdogFlag        = false;  // Watchdog Timer ISR flag
+volatile int  watchdogCounter     = 0;      // Watchdog interrupt counter
 bool          ledState            = LOW;    // LED flag for blinkLed()
-int           valFix              = 0;
-int           maxValFix           = 10;
+bool          rtcSyncFlag         = false;
+int           valFix              = 0;      // GNSS valid fix counter
+int           maxValFix           = 10;     // Max GNSS valid fix counter
+char          fileName[30]        = "";     // Keep a record of this file name so that it can be re-opened upon wakeup from sleep
+unsigned int  sdPowerDelay    = 100;    // Delay (in milliseconds) before disabling power to microSD
+unsigned int  qwiicPowerDelay   = 1000;   // Delay (in milliseconds) after enabling power to Qwiic connector
 
-char          transmitBuffer[340] = {};   // Qwiic Iridium 9603N transmission buffer
-unsigned int  messageCounter      = 0;    // Qwiic Iridium 9603N transmitted message counter
-unsigned int  retransmitCounter   = 0;    // Qwiic Iridium 9603N failed data transmission counter
-unsigned int  transmitCounter     = 0;    // Qwiic Iridium 9603N transmission interval counter
-unsigned long previousMillis      = 0;
+uint8_t       transmitBuffer[340] = {};     // Qwiic Iridium 9603N transmission buffer
+unsigned int  messageCounter      = 0;      // Qwiic Iridium 9603N transmitted message counter
+unsigned int  retransmitCounter   = 0;      // Qwiic Iridium 9603N failed data transmission counter
+unsigned int  transmitCounter     = 0;      // Qwiic Iridium 9603N transmission interval counter
+
+// Global
+unsigned long previousMillis      = 0;    // Global millis() timer
 
 // Union to store and send data byte-by-byte via Iridium
 typedef union {
   struct {
     uint32_t  unixtime;           // UNIX Epoch time                (4 bytes)
-    int32_t   latitude;           // Latitude (DD)                  (4 bytes)
-    int32_t   longitude;          // Longitude (DD)                 (4 bytes)
-    uint8_t   satellites;         // # of satellites                (1 byte)
-    uint8_t   pdop;               // PDOP                           (1 byte)
-    uint8_t   fix;                // Fix                            (1 byte)
+    //int32_t   latitude;           // Latitude (DD)                  (4 bytes)
+    //int32_t   longitude;          // Longitude (DD)                 (4 bytes)
+    //uint8_t   satellites;         // # of satellites                (1 byte)
+    //uint8_t   pdop;               // PDOP                           (1 byte)
+    //uint8_t   fix;                // Fix                            (1 byte)
     uint16_t  transmitDuration;   // Previous transmission duration (2 bytes)
     uint16_t  messageCounter;     // Message counter                (2 bytes)
   } __attribute__((packed));                                        // Total: (19 bytes)
-  uint8_t bytes[19];
+  uint8_t bytes[8];
 } SBDMESSAGE;
 
 SBDMESSAGE message;
-size_t messageSize = sizeof(message);   // Size (in bytes) of data message to be transmitted
+size_t messageSize = sizeof(message);   // Size (in bytes) of message to be transmitted
+
+// Devices onboard MicroMod Data Logging Carrier Board that may be online or offline.
+struct struct_online {
+  bool microSD = false;
+
+} online;
 
 void setup() {
 
@@ -89,25 +105,25 @@ void setup() {
   peripheralPowerOn(); // Enable power to peripherials
 
   Wire.begin(); // Initialize I2C
-  SPI.begin();  // Initialize SPI
+  SPI.begin(); // Initialize SPI
 
   Serial.begin(115200);
-  while (!Serial); // Wait for user to open Serial Monitor
-  //delay(10000); // Delay to allow user to open Serial Monitor
+  //while (!Serial); // Wait for user to open Serial Monitor
+  delay(5000); // Delay to allow user to open Serial Monitor
 
   Serial.println(F("-----------------------------------------"));
   Serial.println(F("Cryologger - Iceberg Tracking Beacon v3.0"));
   Serial.println(F("-----------------------------------------"));
 
-  Serial.print(F("Datetime: "));
-  printDateTime();
-  Serial.print(F("UNIX Epoch time: "));
-  Serial.println(rtc.getEpoch());
+  Serial.print(F("Datetime: ")); printDateTime();
+  Serial.print(F("UNIX Epoch time: ")); Serial.println(rtc.getEpoch());
 
   configureSd();      // Configure microSD
-  configureGnss();    // Configure u-blox SAM-M8Q receiver
-  configureIridium(); // Configure Qwiic Iridium 9603N
+  configureGnss();    // Configure Sparkfun u-blox SAM-M8Q receiver
+  configureIridium(); // Configure SparkFun Qwiic Iridium 9603N
   configureRtc();     // Configure real-time clock (RTC)
+  syncRtc();
+  configureWdt();     // Configure and start Watchdog Timer
 
   Serial.flush(); // Wait for transmission of serial data to complete
 }
@@ -116,56 +132,33 @@ void loop() {
 
   // Check if alarm flag was set
   if (alarmFlag) {
-
     alarmFlag = false; // Clear alarm flag
 
     // Print date and time of RTC alarm trigger
-    Serial.print("Alarm trigger: ");
-    printDateTime();
+    Serial.print("Alarm trigger: "); printDateTime();
 
+    readRtc(); // Read RTC
     
     readGnss(); // Read GNSS
-    transmitData(); // Transmit data
+    writeBuffer(); // Write data to buffer
 
-    // Set the RTC's rolling alarm
-    rtc.setAlarm((rtc.hour + alarmHours) % 24,
-                 (rtc.minute + alarmMinutes) % 60,
-                 (rtc.seconds + alarmSeconds) % 60,
-                 0, rtc.dayOfMonth, rtc.month);
-    rtc.setAlarmMode(4);
-
-    // Print next RTC alarm date and time
-    Serial.print("Next alarm: ");
-    printAlarm();
+    // Check if data is to be transmitted
+    if (transmitCounter == transmitInterval) {
+      transmitData(); // Transmit data
+      transmitCounter = 0; // Reset transmit counter
+    }
+    setRtcAlarm();
   }
 
-  blinkLed(1, 100);
+  // Check for watchdog interrupt
+  if (watchdogFlag) {
+    petDog();
+  }
+
+  blinkLed(1, 50);
 
   // Enter deep sleep and await RTC alarm interrupt
-  //goToSleep();
-}
-
-
-// Blink LED (non-blocking)
-void blinkLed(byte flashes, unsigned int interval) {
-
-  pinMode(LED_BUILTIN, OUTPUT);
-  byte i = 0;
-
-  while (i <= flashes * 2) {
-    unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis >= interval) {
-      previousMillis = currentMillis;
-      if (ledState == LOW) {
-        ledState = HIGH;
-      }
-      else {
-        ledState = LOW;
-      }
-      digitalWrite(LED_BUILTIN, ledState);
-      i++;
-    }
-  }
+  goToSleep();
 }
 
 // Interrupt handler for the RTC
@@ -176,4 +169,19 @@ extern "C" void am_rtc_isr(void)
 
   // Set alarm flag
   alarmFlag = true;
+}
+
+// Interrupt handler for the watchdog.
+extern "C" void am_watchdog_isr(void) {
+  
+  // Clear the watchdog interrupt
+  wdt.clear();
+
+  // Perform system reset after 10 watchdog interrupts (should not occur)
+  if (watchdogCounter < 15 ) {
+    wdt.restart(); // "Pet" the dog
+  }
+
+  watchdogFlag = true; // Set the watchdog flag
+  watchdogCounter++; // Increment watchdog interrupt counter
 }

@@ -1,6 +1,7 @@
 // Enter deep sleep
 void goToSleep() {
 
+  Serial.flush();       // Wait for transmission of serial data to complete
   Wire.end();           // Disable I2C
   SPI.end();            // Disable SPI
   Serial.end();         // Disable Serial
@@ -45,10 +46,9 @@ void goToSleep() {
 
   // Wake
   wakeUp();
-
 }
 
-// Wake from sleep
+// Wake from deep sleep
 void wakeUp() {
 
   // Enable power to SRAM, turn on entire Flash
@@ -58,21 +58,34 @@ void wakeUp() {
   am_hal_stimer_config(AM_HAL_STIMER_CFG_CLEAR | AM_HAL_STIMER_CFG_FREEZE);
   am_hal_stimer_config(AM_HAL_STIMER_HFRC_3MHZ);
 
+  Serial.begin(115200); // Enable Serial
   ap3_adc_setup();      // Enable power to ADC
   Wire.begin();         // Enable I2C
   SPI.begin();          // Enable SPI
-  Serial.begin(115200); // Enable Serial
-  qwiicPowerOn();       // Enable power to Qwiic connector
-  peripheralPowerOn();  // Enable power to peripherals
 
-  configureSd();      // Configure microSD
-  configureGnss();    // Configure u-blox SAM-M8Q receiver
-  configureIridium(); // Configure Qwiic Iridium 9603N
+  if (alarmFlag) {
+    qwiicPowerOn();       // Enable power to Qwiic connector
+    peripheralPowerOn();  // Enable power to peripherals
+
+    configureSd();      // Configure microSD
+    configureGnss();    // Configure u-blox SAM-M8Q receiver
+    configureIridium(); // Configure Qwiic Iridium 9603N
+  }
+
+}
+
+
+void qwiicPowerOnDelay() {
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis > qwiicPowerDelay) {
+    previousMillis = currentMillis;
+  }
 }
 
 // Enable power to Qwiic connector
 void qwiicPowerOn() {
   digitalWrite(PIN_QWIIC_POWER, HIGH);
+  qwiicPowerOnDelay();
 }
 
 // Disable power to Qwiic connector
@@ -88,4 +101,22 @@ void peripheralPowerOn() {
 // Disable power to peripherals
 void peripheralPowerOff() {
   digitalWrite(PIN_PWC_POWER, LOW);
+}
+
+
+// Blink LED (non-blocking)
+void blinkLed(byte ledFlashes, unsigned int ledDelay) {
+
+  pinMode(LED_BUILTIN, OUTPUT);
+  byte i = 0;
+
+  while (i <= ledFlashes * 2) {
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= ledDelay) {
+      previousMillis = currentMillis;
+      ledState = !ledState;
+      digitalWrite(LED_BUILTIN, ledState);
+      i++;
+    }
+  }
 }

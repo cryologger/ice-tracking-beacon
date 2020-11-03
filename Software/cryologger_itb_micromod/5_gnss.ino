@@ -1,4 +1,3 @@
-
 // Configure SparkFun GPS Breakout SAM-M8Q
 void configureGnss() {
     
@@ -21,7 +20,7 @@ void readGnss() {
   Serial.println(F("Beginning to listen for GNSS traffic..."));
 
   // Look for GNSS signal for up to 5 minutes
-  while ((valFix != maxValFix) && millis() - loopStartTime < 1UL * 60UL * 1000UL) {
+  while ((valFix != maxValFix) && millis() - loopStartTime < 1UL * 10UL * 1000UL) {
 #if DEBUG
     char datetime[20]; // GNSS datetime buffer
     snprintf(datetime, sizeof(datetime), "%04u-%02d-%02d %02d:%02d:%02d",
@@ -47,7 +46,7 @@ void readGnss() {
       valFix += 1; // Increment valFix
     }
 
-    // Have enough valid GNSS fixes been collected?
+    // Check if enough valid GNSS fixes have been collected
     if (valFix == maxValFix) {
       Serial.println(F("A GNSS fix was found!"));
 
@@ -64,17 +63,17 @@ void readGnss() {
       printDateTime();
 
       // Write data to union
-      message.latitude = gps.getLatitude();
-      message.longitude = gps.getLongitude();
-      message.satellites = gps.getSIV();
-      message.pdop = gps.getPDOP();
-      message.fix = gps.getFixType();
+      //message.latitude = gps.getLatitude();
+      //message.longitude = gps.getLongitude();
+      //message.satellites = gps.getSIV();
+      //message.pdop = gps.getPDOP();
+      //message.fix = gps.getFixType();
       break;
     }
     ISBDCallback();
   }
 
-  // Did we get a GNSS fix?
+  // Check if a GNSS fix was acquired
   if (valFix < maxValFix) {
     Serial.println(F("Warning: No GNSS fix was found"));
   }
