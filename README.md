@@ -1,5 +1,5 @@
 # Cryologger - Iceberg Tracking Beacon (ITB)
-![Image](https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/V2/Images/DSC_2436.JPG)
+![Image](https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/V2/Documentation/Images/DSC_2351.JPG)
 
 ## Background
 Icebergs and ice islands represent significant hazards to marine navigation and offshore infrastructure at a time when demand for access to Canada’s Arctic waters is increasing.
@@ -15,9 +15,19 @@ The Cryologger is based on the open-source Arduino platform (www.arduino.cc) and
 
 Planned for extended deployments in harsh Arctic conditions, the Cryologger can provide long-term measurements of GPS position, temperature, pressure, pitch, roll, tilt-compensated heading and battery voltage. Data are transmitted over the Iridium satellite network at specified intervals and can be remotely updated based on the desired sampling frequency.
 
+#### Materials
+
+| Component | Product |
+| --- | --- | 
+| Satellite transceiver | SparkFun Qwiic Iridium 9603N |
+| Processor | SparkFun MicroMod Artemis Processor |
+| Carrier Board | SparkFun MicroMod Data Logging Carrier Board |
+| GNSS | SparkFun GPS Breakout - Chip Antenna, SAM-M8Q (Qwiic) |
+| IMU | SparkFun 9DoF IMU Breakout - ICM-20948 (Qwiic) |
+| Voltage Regulator | SparkFun Buck-Boost Converter |
 
 #### Measurements
-| Variable  | Unit | Comments |
+| Variable | Unit | Comments |
 | --- | :---: | --- |
 | Datetime  |   | YYYY-MM-DD HH:MM:SS |
 | Temperature | °C  | Internal temperature |
@@ -37,15 +47,14 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 
 * **/Archive** - Contains information on previous versions of the Cryologger design.
 
-* **/Arduino** - Contains the Arduino code.
+* **/Software** - Contains the Arduino code.
 
 * **/Bill of Materials** - Information on all components used construction and their associated costs.
 
-* **/Documentation**
+* **/Documentation** - All project documents
 
-* **/EAGLE**
+* **/Hardware** - Autodesk EAGLE schematics and Fusion 360 design files
 
-* **/Fusion 360**
 
 ## Documentation
 * Currently in progress
