@@ -17,14 +17,14 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 
 #### Materials
 
-| Component | Product |
+| Component | Product | Cost (USD) |
 | --- | --- | 
-| Satellite transceiver | SparkFun Qwiic Iridium 9603N |
-| Processor | SparkFun MicroMod Artemis Processor |
-| Carrier Board | SparkFun MicroMod Data Logging Carrier Board |
-| GNSS | SparkFun GPS Breakout - Chip Antenna, SAM-M8Q (Qwiic) |
-| IMU | SparkFun 9DoF IMU Breakout - ICM-20948 (Qwiic) |
-| Voltage Regulator | SparkFun Buck-Boost Converter |
+| Satellite transceiver | SparkFun Qwiic Iridium 9603N | $249 |
+| Processor | SparkFun MicroMod Artemis Processor | $14.95 |
+| Carrier Board | SparkFun MicroMod Data Logging Carrier Board | $19.95 |
+| GNSS | SparkFun GPS Breakout - Chip Antenna, SAM-M8Q (Qwiic) | $39.95 |
+| IMU | SparkFun 9DoF IMU Breakout - ICM-20948 (Qwiic) | $16.95 |
+| Voltage Regulator | SparkFun Buck-Boost Converter | $9.95 |
 
 #### Measurements
 | Variable | Unit | Comments |
@@ -54,7 +54,6 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 * **/Documentation** - All project documents
 
 * **/Hardware** - Autodesk EAGLE schematics and Fusion 360 design files
-
 
 ## Documentation
 * Currently in progress
