@@ -18,7 +18,7 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 #### Materials
 
 | Component | Product | Cost (USD) |
-| --- | --- | 
+| --- | --- | :---: | 
 | Satellite transceiver | SparkFun Qwiic Iridium 9603N | $249 |
 | Processor | SparkFun MicroMod Artemis Processor | $14.95 |
 | Carrier Board | SparkFun MicroMod Data Logging Carrier Board | $19.95 |
