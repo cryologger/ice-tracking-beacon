@@ -10,11 +10,11 @@ void printUnion() {
   //Serial.print(F("pitch:\t\t\t")); Serial.println(message.pitch);
   //Serial.print(F("roll:\t\t\t")); Serial.println(message.roll);
   //Serial.print(F("heading:\t\t")); Serial.println(message.heading);
-  //Serial.print(F("latitude:\t\t")); Serial.println(message.latitude);
-  //Serial.print(F("longitude:\t\t")); Serial.println(message.longitude);
-  //Serial.print(F("satellites:\t\t")); Serial.println(message.satellites);
-  //Serial.print(F("pdop:\t\t\t")); Serial.println(message.pdop);
-  //Serial.print(F("fix:\t\t\t")); Serial.println(message.fix);
+  Serial.print(F("latitude:\t\t")); Serial.println(message.latitude);
+  Serial.print(F("longitude:\t\t")); Serial.println(message.longitude);
+  Serial.print(F("satellites:\t\t")); Serial.println(message.satellites);
+  Serial.print(F("pdop:\t\t\t")); Serial.println(message.pdop);
+  Serial.print(F("fix:\t\t\t")); Serial.println(message.fix);
   //Serial.print(F("voltage:\t\t")); Serial.println(message.voltage);
   Serial.print(F("transmitDuration:\t")); Serial.println(message.transmitDuration);
   Serial.print(F("messageCounter:\t\t")); Serial.println(message.messageCounter);

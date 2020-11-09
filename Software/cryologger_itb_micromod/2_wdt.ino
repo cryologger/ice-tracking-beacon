@@ -16,7 +16,8 @@ void configureWdt() {
 }
 
 void petDog() {
-  Serial.print("Watchdog interrupt: "); Serial.println(watchdogCounter);
+  wdt.restart();
+  Serial.printf("Watchdog interrupt: %d\n", watchdogCounter);
   watchdogFlag = false; // Clear watchdog flag
   watchdogCounter = 0; // Reset watchdog interrupt counter
 }

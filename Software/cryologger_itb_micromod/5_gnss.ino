@@ -1,9 +1,10 @@
 // Configure SparkFun GPS Breakout SAM-M8Q
 void configureGnss() {
-    
+
   if (gps.begin()) {
     gps.setI2COutput(COM_TYPE_UBX); // Set I2C port to output UBX only (turn off NMEA noise)
     gps.saveConfiguration();        // Save current settings to Flash and BBR
+    online.gnss = true;
   }
   else {
     Serial.println(F("Warning: u-blox SAM-M8Q not detected at default I2C address. Please check wiring."));
@@ -11,7 +12,7 @@ void configureGnss() {
   }
 }
 
-// Read the SparkFun u-blox SAM-M8Q
+// Read the GPS Breakout SAM-M8Q
 void readGnss() {
 
   unsigned long loopStartTime = millis(); // Loop timer
@@ -20,25 +21,14 @@ void readGnss() {
   Serial.println(F("Beginning to listen for GNSS traffic..."));
 
   // Look for GNSS signal for up to 5 minutes
-  while ((valFix != maxValFix) && millis() - loopStartTime < 1UL * 10UL * 1000UL) {
+  while ((valFix != maxValFix) && millis() - loopStartTime < 1UL * 60UL * 1000UL) {
+
 #if DEBUG
-    char datetime[20]; // GNSS datetime buffer
-    snprintf(datetime, sizeof(datetime), "%04u-%02d-%02d %02d:%02d:%02d",
-             gps.getYear(), gps.getMonth(), gps.getDay(),
-             gps.getHour(), gps.getMinute(), gps.getSecond());
-
-    float latitude = gps.getLatitude() / 10000000.0;
-    float longitude = gps.getLongitude() / 10000000.0;
-    float pdop = gps.getPDOP() / 100.0;
-    uint8_t fix = gps.getFixType();
-    uint8_t satellites = gps.getSIV();
-
-    Serial.print(datetime);
-    Serial.print(F(",")); Serial.print(latitude, 6);
-    Serial.print(F(",")); Serial.print(longitude, 6);
-    Serial.print(F(",")); Serial.print(satellites);
-    Serial.print(F(",")); Serial.print(fix);
-    Serial.print(F(",")); Serial.println(pdop, 2);
+    Serial.printf("%04u-%02d-%02d %02d:%02d:%02d,%.6f,%.6f,%d,%d,%.2f\n",
+                  gps.getYear(), gps.getMonth(), gps.getDay(),
+                  gps.getHour(), gps.getMinute(), gps.getSecond(),
+                  gps.getLatitude() / 10000000.0, gps.getLongitude() / 10000000.0,
+                  gps.getSIV(), gps.getFixType(), gps.getPDOP() / 100.0);
 #endif
 
     // Did we get a GPS fix?
@@ -51,26 +41,20 @@ void readGnss() {
       Serial.println(F("A GNSS fix was found!"));
 
       // Sync RTC with GNSS date and time
-      rtc.setTime(gps.getHour(),
-                  gps.getMinute(),
-                  gps.getSecond(),
-                  gps.getMillisecond() / 10,
-                  gps.getDay(),
-                  gps.getMonth(),
-                  gps.getYear() - 2000);
+      rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond(), gps.getMillisecond() / 10,
+                  gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
 
-      Serial.print("RTC time synced: ");
-      printDateTime();
+      Serial.print("RTC time synced: "); printDateTime();
 
       // Write data to union
-      //message.latitude = gps.getLatitude();
-      //message.longitude = gps.getLongitude();
-      //message.satellites = gps.getSIV();
-      //message.pdop = gps.getPDOP();
-      //message.fix = gps.getFixType();
+      message.latitude = gps.getLatitude();
+      message.longitude = gps.getLongitude();
+      message.satellites = gps.getSIV();
+      message.pdop = gps.getPDOP();
+      message.fix = gps.getFixType();
       break;
     }
-    ISBDCallback();
+    blinkLed(1,500);
   }
 
   // Check if a GNSS fix was acquired
@@ -82,6 +66,6 @@ void readGnss() {
   valFix = 0;
 
   unsigned long loopEndTime = millis() - loopStartTime;
-  Serial.print(F("readGnss() function execution: ")); Serial.print(loopEndTime); Serial.println(F(" ms"));
+  Serial.printf("readGnss() function execution: %d ms", loopEndTime);
 
 }

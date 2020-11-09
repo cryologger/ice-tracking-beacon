@@ -1,3 +1,9 @@
+
+
+void readBattery() {
+  
+}
+
 // Enter deep sleep
 void goToSleep() {
 
@@ -7,7 +13,7 @@ void goToSleep() {
   Serial.end();         // Disable Serial
   power_adc_disable();  // Disable power to ADC
 
-  // Force the peripherals off
+  // Force peripherals off
   am_hal_pwrctrl_periph_disable(AM_HAL_PWRCTRL_PERIPH_IOM0);
   am_hal_pwrctrl_periph_disable(AM_HAL_PWRCTRL_PERIPH_IOM1);
   am_hal_pwrctrl_periph_disable(AM_HAL_PWRCTRL_PERIPH_IOM2);
@@ -44,8 +50,13 @@ void goToSleep() {
   // Enter deep sleep
   am_hal_sysctrl_sleep(AM_HAL_SYSCTRL_SLEEP_DEEP);
 
-  // Wake
+  /*
+     Processor sleeps here and awaits RTC or WDT ISR
+  */
+  
+  // Wake up
   wakeUp();
+
 }
 
 // Wake from deep sleep
@@ -63,17 +74,17 @@ void wakeUp() {
   Wire.begin();         // Enable I2C
   SPI.begin();          // Enable SPI
 
+  // If alarm is triggered, enable power to system
   if (alarmFlag) {
     qwiicPowerOn();       // Enable power to Qwiic connector
     peripheralPowerOn();  // Enable power to peripherals
 
     configureSd();      // Configure microSD
-    configureGnss();    // Configure u-blox SAM-M8Q receiver
+    configureGnss();    // Configure SAM-M8Q receiver
     configureIridium(); // Configure Qwiic Iridium 9603N
   }
 
 }
-
 
 void qwiicPowerOnDelay() {
   unsigned long currentMillis = millis();
@@ -103,7 +114,6 @@ void peripheralPowerOff() {
   digitalWrite(PIN_PWC_POWER, LOW);
 }
 
-
 // Blink LED (non-blocking)
 void blinkLed(byte ledFlashes, unsigned int ledDelay) {
 
@@ -119,4 +129,5 @@ void blinkLed(byte ledFlashes, unsigned int ledDelay) {
       i++;
     }
   }
+  digitalWrite(LED_BUILTIN, LOW);
 }
