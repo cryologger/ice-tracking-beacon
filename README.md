@@ -7,8 +7,7 @@ Icebergs and ice islands represent significant hazards to marine navigation and 
 There is a growing demand for in situ iceberg tracking data to monitor their drift trajectory and improve predictions of ice hazard occurrence and behaviour, yet the high cost of commercial tracking devices often prevents monitoring at optimal spatial and temporal resolutions.
 
 ## Objective
-The goal of this project is to determine if the Cryologger, a tracking beacon based on inexpensive, open-source hardware and software, can provide a reliable and cost-effective platform for monitoring the drift of icebergs and ice islands
-in the Canadian Arctic.
+The goal of this project is to determine if the Cryologger, a tracking beacon based on inexpensive, open-source hardware and software, can provide a reliable and cost-effective platform for monitoring the drift of icebergs and ice islands in the Canadian Arctic.
 
 ## Design
 The Cryologger is based on the open-source Arduino platform (www.arduino.cc) and built using low-cost, do-it-yourself electronics that can be easily modified to meet the needs of the end-user. Code was written using the Arduino Integrated Development Environment (IDE) and benefits from the availability of community-generated libraries.
@@ -19,7 +18,7 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 
 | Component | Product | Cost (USD) |
 | --- | --- | :---: | 
-| Satellite transceiver | SparkFun Qwiic Iridium 9603N | $249 |
+| Satellite transceiver | SparkFun Qwiic Iridium 9603N | $249.95 |
 | Processor | SparkFun MicroMod Artemis Processor | $14.95 |
 | Carrier Board | SparkFun MicroMod Data Logging Carrier Board | $19.95 |
 | GNSS | SparkFun GPS Breakout - Chip Antenna, SAM-M8Q (Qwiic) | $39.95 |
@@ -38,7 +37,7 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 | Latitude | DD |  |
 | Longitude | DD |  |
 | Satellites | # | Number of satellites in view  |
-| HDOP |  | Horizonal dilution of precision |
+| PDOP |  | Horizonal dilution of precision |
 | Voltage | V | Battery voltage |
 | Transmit duration  | s | Length of Iridium transmission  |
 | Message counter |  | Number of transmitted messages |
