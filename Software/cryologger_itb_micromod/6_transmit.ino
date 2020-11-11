@@ -63,7 +63,7 @@ void transmitData() {
         Serial.println(F("Transmission successful!"));
       }
       else {
-        Serial.printf("Transmission failed: error %d", err);
+        Serial.printf("Transmission failed: error %d \n", err);
       }
 
     }
@@ -99,34 +99,42 @@ void transmitData() {
     unsigned long loopEndTime = millis() - loopStartTime;
     message.transmitDuration = loopEndTime / 1000;
 
-    Serial.printf("transmitData() function execution: %d ms", loopEndTime);
-    Serial.printf("transmitDuration: %d ", loopEndTime / 1000);
-    Serial.printf("retransmitCounter: %d", retransmitCounter);
+    Serial.printf("transmitData() function execution: %d ms \n", loopEndTime);
+    Serial.printf("transmitDuration: %d \n", loopEndTime / 1000);
+    Serial.printf("retransmitCounter: %d \n", retransmitCounter);
   }
 }
 
-// RockBLOCK callback function can be repeatedly called during transmission or GNSS signal acquisitionn
+
+// RockBLOCK callback function can be repeatedly called during transmission or GNSS signal acquisition
 bool ISBDCallback() {
-#if DEBUG
-  pinMode(LED_BUILTIN, OUTPUT);
+
   digitalWrite(LED_BUILTIN, (millis() / 1000) % 2 == 1 ? HIGH : LOW);
-#endif
-  //petDog();
+  
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis > 1000) {
+    previousMillis = currentMillis;
+    petDog();  // Reset the Watchdog Timer
+  }
   return true;
 }
-#if DIAGNOSTICS
-void ISBDConsoleCallback(IridiumSBD *device, char c)
-{
-  Serial.write(c);
-}
 
-void ISBDDiagsCallback(IridiumSBD *device, char c)
-{
+
+// Callback to sniff the conversation with the Iridium modem
+void ISBDConsoleCallback(IridiumSBD *device, char c) {
+#if DEBUG
   Serial.write(c);
-}
 #endif
+}
 
-// Write data from structure to transmit buffer
+// Callback to to monitor Iridium modem library's run state
+void ISBDDiagsCallback(IridiumSBD *device, char c) {
+#if DEBUG
+  Serial.write(c);
+#endif
+}
+
+// Write data to transmit buffer
 void writeBuffer() {
 
   messageCounter++;                         // Increment message counter
@@ -134,11 +142,11 @@ void writeBuffer() {
   transmitCounter++;                        // Increment data transmission counter
 
   // Concatenate current message with existing message(s) stored in transmit buffer
-  memcpy(transmitBuffer + (sizeof(message) * (transmitCounter + (retransmitCounter * transmitInterval) - 1)), message.bytes, sizeof(message)); // Copy message to transmit buffer
+  memcpy(transmitBuffer + (sizeof(message) * (transmitCounter + (retransmitCounter * transmitInterval) - 1)), message.bytes, sizeof(message));
 
 #if DEBUG
   printUnion();
-  printUnionBinary(); // Print union/structure in hex/binary
+  //printUnionBinary(); // Print union/structure in hex/binary
   //printTransmitBuffer();  // Print transmit buffer in hex/binary
 #endif
 }

@@ -1,8 +1,21 @@
+void printLine() {
+  for (byte i = 0; i < 79; i++) {
+    Serial.print("-");
+  }
+  Serial.println();
+}
+
+void printTab(byte _times) {
+  for (byte i = 0; i < _times; i++) {
+    Serial.print("\t");
+  }
+}
+
 // Print union/structure
 void printUnion() {
-  Serial.println(F("-----------------------------------"));
+  printLine();
   Serial.println(F("Union/structure"));
-  Serial.println(F("-----------------------------------"));
+  printLine();
   Serial.print(F("unixtime:\t\t")); Serial.println(message.unixtime);
   //Serial.print(F("temperature:\t\t")); Serial.println(message.temperature);
   //Serial.print(F("pressure:\t\t")); Serial.println(message.pressure);
@@ -18,13 +31,13 @@ void printUnion() {
   //Serial.print(F("voltage:\t\t")); Serial.println(message.voltage);
   Serial.print(F("transmitDuration:\t")); Serial.println(message.transmitDuration);
   Serial.print(F("messageCounter:\t\t")); Serial.println(message.messageCounter);
-  Serial.println(F("-----------------------------------"));
+  printLine();
 }
 
 // Print contents of union/structure
 void printUnionBinary() {
   Serial.println(F("Union/structure "));
-  Serial.println(F("-----------------------------------"));
+  printLine();
   Serial.println(F("Byte\tHex\tBinary"));
   for (int i = 0; i < sizeof(message); ++i) {
     Serial.print(i);
@@ -33,13 +46,13 @@ void printUnionBinary() {
     Serial.print("\t");
     Serial.println(message.bytes[i], BIN);
   }
-  Serial.println(F("-----------------------------------"));
+  printLine();
 }
 
 // Print contents of transmit buffer
 void printTransmitBuffer() {
   Serial.println(F("Transmit buffer"));
-  Serial.println(F("-----------------------------------"));
+  printLine();
   Serial.println(F("Byte\tHex\tBinary"));
   for (int i = 0; i < 340; i++) {
     Serial.print(i);

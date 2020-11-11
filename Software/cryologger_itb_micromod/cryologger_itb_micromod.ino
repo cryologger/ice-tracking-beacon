@@ -1,6 +1,6 @@
 /*
     Title:    Cryologger Ice Tracking Beacon (ITB) - Version 3
-    Date:     October 31, 2020
+    Date:     November 10, 2020
     Author:   Adam Garbo
 
     Components:
@@ -47,10 +47,10 @@ SFE_UBLOX_GPS gps;            // I2C Address: 0x42
 
 // User defined global variable declarations
 byte          alarmSeconds          = 0;
-byte          alarmMinutes          = 5;
+byte          alarmMinutes          = 1;
 byte          alarmHours            = 0;
-unsigned int  transmitInterval      = 2;    // Messages included in each RockBLOCK transmission (340 byte limit)
-unsigned int  maxRetransmitCounter  = 2;    // Maximum failed data transmissions reattempts in a single message (340 byte limit)
+unsigned int  transmitInterval      = 10;    // Messages included in each RockBLOCK transmission (340 byte limit)
+unsigned int  maxRetransmitCounter  = 0;    // Max failed data transmissions reattempts in a single message (340 byte limit)
 
 // Global variable and constant declarations
 volatile bool alarmFlag           = false;  // RTC ISR flag
@@ -60,9 +60,11 @@ bool          ledState            = LOW;    // LED flag for blinkLed()
 bool          rtcSyncFlag         = false;
 
 int           valFix              = 0;      // GNSS valid fix counter
-int           maxValFix           = 5;     // Maximum GNSS valid fix counter
+int           maxValFix           = 1;      // Max GNSS valid fix counter
 
 char          fileName[30]        = "";     // Keep a record of this file name so that it can be re-opened upon wakeup from sleep
+char          outputData[512];              // Factor of 512 for easier recording to SD in 512 chunks
+char          tempData[100];                // Temporary SD data buffer
 unsigned int  sdPowerDelay        = 100;    // Delay (in milliseconds) before disabling power to microSD
 unsigned int  qwiicPowerDelay     = 1000;   // Delay (in milliseconds) after enabling power to Qwiic connector
 
@@ -80,8 +82,8 @@ typedef union {
     int32_t   latitude;           // Latitude (DD)                  (4 bytes)
     int32_t   longitude;          // Longitude (DD)                 (4 bytes)
     uint8_t   satellites;         // # of satellites                (1 byte)
-    uint8_t   pdop;               // PDOP                           (1 byte)
     uint8_t   fix;                // Fix                            (1 byte)
+    uint8_t   pdop;               // PDOP                           (1 byte)
     uint16_t  transmitDuration;   // Previous transmission duration (2 bytes)
     uint16_t  messageCounter;     // Message counter                (2 bytes)
   } __attribute__((packed));                                        // Total: (19 bytes)
@@ -116,7 +118,9 @@ void setup() {
   //while (!Serial); // Wait for user to open Serial Monitor
   delay(5000); // Delay to allow user to open Serial Monitor
 
+  printLine();
   Serial.printf("Cryologger Iceberg Tracking Beacon v%d.%d\n", FIRMWARE_VERSION_MAJOR, FIRMWARE_VERSION_MINOR);
+  printLine();
 
   Serial.print(F("Datetime: ")); printDateTime();
 
@@ -124,9 +128,9 @@ void setup() {
   configureGnss();    // Configure Sparkfun SAM-M8Q
   configureIridium(); // Configure SparkFun Qwiic Iridium 9603N
   configureRtc();     // Configure real-time clock (RTC)
-  syncRtc();          // Synchronize RTC with GNSS
+  //syncRtc();          // Synchronize RTC with GNSS
   configureWdt();     // Configure and start Watchdog Timer
-  enableLogging();
+  createLogFile();
   Serial.flush(); // Wait for transmission of any serial data to complete
 }
 
@@ -143,6 +147,7 @@ void loop() {
 
     readGnss(); // Read GNSS
     writeBuffer(); // Write data to buffer
+    logData(); // Write data to SD
 
     // Check if data is to be transmitted
     if (transmitCounter == transmitInterval) {
@@ -158,10 +163,10 @@ void loop() {
   }
 
   // Blink LED
-  blinkLed(1, 50);
+  blinkLed(1, 500);
 
   // Enter deep sleep and await RTC alarm interrupt
-  goToSleep();
+  //goToSleep();
 }
 
 // Interrupt handler for the RTC
@@ -181,7 +186,7 @@ extern "C" void am_watchdog_isr(void) {
   wdt.clear();
 
   // Perform system reset after 15 watchdog interrupts (should not occur)
-  if (watchdogCounter < 15 ) {
+  if (watchdogCounter < 25 ) {
     wdt.restart(); // "Pet" the dog
   }
   watchdogFlag = true; // Set the watchdog flag

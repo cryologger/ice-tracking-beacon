@@ -26,13 +26,24 @@ void configureRtc() {
 
 void readRtc() {
 
+  unsigned long loopStartTime = millis(); // Loop timer
+
   unsigned long unixtime = rtc.getEpoch();
+
+  // Write data to SD buffer
+  sprintf(tempData, "20%02d-%02d-%02d %02d:%02d:%02d.%03d,",
+          rtc.year, rtc.month, rtc.dayOfMonth,
+          rtc.hour, rtc.minute, rtc.seconds, rtc.hundredths);
+  strcat(outputData, tempData);
 
   // Write data to union
   message.unixtime = unixtime;
 
-  Serial.print(F("Datetime: ")); printDateTime();
-  Serial.print(F("UNIX Epoch time: ")); Serial.println(unixtime);
+  Serial.print(F("readRtc: ")); printDateTime();
+  //Serial.print(F("Epoch time: ")); Serial.println(unixtime);
+  
+  unsigned long loopEndTime = millis() - loopStartTime;
+  Serial.printf("readGnss() function execution: %d ms\n", loopEndTime);
 }
 
 void setRtcAlarm() {
@@ -51,7 +62,7 @@ void setRtcAlarm() {
 }
 
 void syncRtc() {
-  
+
   unsigned long loopStartTime = millis(); // Loop timer
   bool dateValid = false;
   bool timeValid = false;
@@ -60,22 +71,23 @@ void syncRtc() {
   // Attempt to sync RTC with GNSS for up to 5 minutes
   Serial.println(F("Attempting to sync RTC with GNSS..."));
 
-  while ((!dateValid  || !timeValid) && millis() - loopStartTime < 1UL * 60UL * 1000UL) {
-    
+  while ((!gps.getDateValid() || !gps.getTimeValid()) && millis() - loopStartTime < 1UL * 60UL * 1000UL) {
+
     dateValid = gps.getDateValid();
     timeValid = gps.getTimeValid();
 
     // Sync RTC if GNSS date and time are valid
-    if (dateValid && timeValid) {
+    if (gps.getDateValid() && gps.getTimeValid()) {
       rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond(), gps.getMillisecond() / 10,
                   gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
 
       rtcSyncFlag = true; // Set flag
-      blinkLed(10,50);
+      blinkLed(10, 50);
       Serial.print(F("RTC time synced: ")); printDateTime();
     }
 
-    blinkLed(1,500);
+    blinkLed(1, 500);
+    petDog();
     //ISBDCallback();
   }
   if (rtcSyncFlag == false) {
