@@ -1,6 +1,6 @@
 /*
     Title:    Cryologger Ice Tracking Beacon (ITB) - Version 3
-    Date:     November 10, 2020
+    Date:     November 11, 2020
     Author:   Adam Garbo
 
     Components:
@@ -26,11 +26,7 @@
 
 // Defined constants
 #define DEBUG         true    // Output debug messages to Serial Monitor
-#define DIAGNOSTICS   false    // Output Iridium diagnostic messages to Serial Monitor
-
-// Firmware version
-#define FIRMWARE_VERSION_MAJOR 3
-#define FIRMWARE_VERSION_MINOR 0
+#define DIAGNOSTICS   false   // Output Iridium diagnostic messages to Serial Monitor
 
 // Pin definitions
 #define PIN_PWC_POWER           G1
@@ -49,18 +45,19 @@ SFE_UBLOX_GPS gps;            // I2C Address: 0x42
 byte          alarmSeconds          = 0;
 byte          alarmMinutes          = 1;
 byte          alarmHours            = 0;
-unsigned int  transmitInterval      = 10;    // Messages included in each RockBLOCK transmission (340 byte limit)
-unsigned int  maxRetransmitCounter  = 0;    // Max failed data transmissions reattempts in a single message (340 byte limit)
+unsigned int  transmitInterval      = 10;   // Number of messages to transmit in each Iridium transmission (340 byte limit)
+unsigned int  maxRetransmitCounter  = 0;    // Number of failed data transmissions to reattempt (340 byte limit)
 
 // Global variable and constant declarations
-volatile bool alarmFlag           = false;  // RTC ISR flag
-volatile bool watchdogFlag        = false;  // Watchdog Timer ISR flag
-volatile int  watchdogCounter     = 0;      // Watchdog interrupt counter
-bool          ledState            = LOW;    // LED flag for blinkLed()
-bool          rtcSyncFlag         = false;
+volatile bool alarmFlag             = false;  // Flag for alarm interrupt service routine
+volatile bool watchdogFlag          = false;  // Flag for Watchdog Timer interrupt service routine
+volatile int  watchdogCounter       = 0;      // Watchdog Timer interrupt counter
+bool          ledState              = LOW;    // Flag to toggle LED in blinkLed() function
+bool          rtcSyncFlag           = true;   // Flag to determine if RTC should be set using GNSS time
+bool          resetFlag             = 0;      // Flag to force system reset using Watchdog Timer
 
-int           valFix              = 0;      // GNSS valid fix counter
-int           maxValFix           = 1;      // Max GNSS valid fix counter
+int           valFix                = 0;      // GNSS valid fix counter
+int           maxValFix             = 1;      // Max GNSS valid fix counter
 
 char          fileName[30]        = "";     // Keep a record of this file name so that it can be re-opened upon wakeup from sleep
 char          outputData[512];              // Factor of 512 for easier recording to SD in 512 chunks
@@ -119,7 +116,7 @@ void setup() {
   delay(5000); // Delay to allow user to open Serial Monitor
 
   printLine();
-  Serial.printf("Cryologger Iceberg Tracking Beacon v%d.%d\n", FIRMWARE_VERSION_MAJOR, FIRMWARE_VERSION_MINOR);
+  Serial.println(F("Cryologger Iceberg Tracking Beacon"));
   printLine();
 
   Serial.print(F("Datetime: ")); printDateTime();
@@ -140,21 +137,12 @@ void loop() {
   if (alarmFlag) {
     alarmFlag = false; // Clear alarm flag
 
-    // Print date and time of RTC alarm trigger
-    Serial.print("Alarm trigger: "); printDateTime();
-
-    readRtc(); // Read RTC
-
-    readGnss(); // Read GNSS
-    writeBuffer(); // Write data to buffer
-    logData(); // Write data to SD
-
-    // Check if data is to be transmitted
-    if (transmitCounter == transmitInterval) {
-      transmitData(); // Transmit data
-      transmitCounter = 0; // Reset transmit counter
-    }
-    setRtcAlarm();
+    readRtc();      // Read RTC
+    readGnss();     // Read GNSS
+    writeBuffer();  // Write data to buffer
+    logData();      // Write data to SD
+    transmitData(); // Transmit data
+    setRtcAlarm();  // Set RTC alarm
   }
 
   // Check for watchdog interrupt
@@ -166,7 +154,7 @@ void loop() {
   blinkLed(1, 500);
 
   // Enter deep sleep and await RTC alarm interrupt
-  //goToSleep();
+  goToSleep();
 }
 
 // Interrupt handler for the RTC
@@ -179,7 +167,7 @@ extern "C" void am_rtc_isr(void) {
   alarmFlag = true;
 }
 
-// Interrupt handler for the watchdog.
+// Interrupt handler for the watchdog
 extern "C" void am_watchdog_isr(void) {
 
   // Clear the watchdog interrupt

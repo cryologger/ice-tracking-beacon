@@ -39,11 +39,11 @@ void readRtc() {
   // Write data to union
   message.unixtime = unixtime;
 
-  Serial.print(F("readRtc: ")); printDateTime();
+  Serial.print(F("readRtc(): ")); printDateTime();
   //Serial.print(F("Epoch time: ")); Serial.println(unixtime);
-  
+
   unsigned long loopEndTime = millis() - loopStartTime;
-  Serial.printf("readGnss() function execution: %d ms\n", loopEndTime);
+  Serial.print(F("readRtc() function execution: ")); Serial.println(loopEndTime);
 }
 
 void setRtcAlarm() {
@@ -71,13 +71,13 @@ void syncRtc() {
   // Attempt to sync RTC with GNSS for up to 5 minutes
   Serial.println(F("Attempting to sync RTC with GNSS..."));
 
-  while ((!gps.getDateValid() || !gps.getTimeValid()) && millis() - loopStartTime < 1UL * 60UL * 1000UL) {
+  while ((!dateValid || !timeValid) && millis() - loopStartTime < 1UL * 60UL * 1000UL) {
 
     dateValid = gps.getDateValid();
     timeValid = gps.getTimeValid();
 
-    // Sync RTC if GNSS date and time are valid
-    if (gps.getDateValid() && gps.getTimeValid()) {
+    // Sync RTC with GNSS if date and time are valid
+    if (dateValid && timeValid) {
       rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond(), gps.getMillisecond() / 10,
                   gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
 
@@ -86,9 +86,8 @@ void syncRtc() {
       Serial.print(F("RTC time synced: ")); printDateTime();
     }
 
-    blinkLed(1, 500);
-    petDog();
-    //ISBDCallback();
+    //blinkLed(1, 500);
+    ISBDCallback();
   }
   if (rtcSyncFlag == false) {
     Serial.println(F("Warning: RTC sync failed"));
@@ -98,16 +97,20 @@ void syncRtc() {
 // Print the RTC's current date and time
 void printDateTime() {
   rtc.getTime();
-  Serial.printf("20%02d-%02d-%02d %02d:%02d:%02d.%03d\n",
-                rtc.year, rtc.month, rtc.dayOfMonth,
-                rtc.hour, rtc.minute, rtc.seconds, rtc.hundredths);
+  char dateTimeBuffer[25];
+  sprintf(dateTimeBuffer, "20%02d-%02d-%02d %02d:%02d:%02d",
+          rtc.year, rtc.month, rtc.dayOfMonth,
+          rtc.hour, rtc.minute, rtc.seconds, rtc.hundredths);
+  Serial.println(dateTimeBuffer);
 }
 
 // Print the RTC's alarm
 void printAlarm() {
   rtc.getAlarm();
-  Serial.printf("2020-%02d-%02d %02d:%02d:%02d.%03d\n",
-                rtc.alarmMonth, rtc.alarmDayOfMonth,
-                rtc.alarmHour, rtc.alarmMinute,
-                rtc.alarmSeconds, rtc.alarmHundredths);
+  char alarmBuffer[25];
+  sprintf(alarmBuffer, "20%02d-%02d-%02d %02d:%02d:%02d",
+          rtc.alarmMonth, rtc.alarmDayOfMonth,
+          rtc.alarmHour, rtc.alarmMinute,
+          rtc.alarmSeconds, rtc.alarmHundredths);
+  Serial.println(alarmBuffer);
 }

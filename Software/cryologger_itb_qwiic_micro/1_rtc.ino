@@ -1,20 +1,30 @@
 void configureRtc() {
+
+  // Initialize RTC
   rtc.begin();
 
+  // Manually set date and time
   //rtc.setTime(12, 55, 0); // hours, minutes, seconds
   //rtc.setDate(11, 11, 20); // day, month, year
 
+  // Set initial alarm to occur on seconds rollover
   rtc.setAlarmTime(0, 0, 0);
+  rtc.setAlarmDate(0, 0, 0);
   rtc.enableAlarm(rtc.MATCH_SS);
 
+  // Attach alarm to interrupt service routine
   rtc.attachInterrupt(alarmIsr);
 
+  // Print initial datetime and alarm
   printDateTime();
   printAlarm();
 }
 
 void readRtc() {
 
+  unsigned long loopStartTime = millis(); // Loop timer
+
+  // Get UNIX Epoch time
   unixtime = rtc.getEpoch();
 
   // Write data to union
@@ -22,6 +32,22 @@ void readRtc() {
 
   Serial.print(F("Datetime: ")); printDateTime();
   Serial.print(F("UNIX Epoch time: ")); Serial.println(unixtime);
+
+  unsigned long loopEndTime = millis() - loopStartTime;
+  Serial.print(F("readRtc() function execution: ")); Serial.print(loopEndTime); Serial.println(F(" ms"));
+}
+
+void setRtcAlarm() {
+
+  // Set the RTC's rolling alarm
+  rtc.setAlarmTime((rtc.getHours() + alarmHours) % 24,
+                   (rtc.getMinutes() + alarmMinutes) % 60,
+                   0);
+  rtc.setAlarmDate(rtc.getDay(), rtc.getMonth(), rtc.getYear());
+  rtc.enableAlarm(rtc.MATCH_HHMMSS);
+
+  // Print the next RTC alarm date and time
+  Serial.print("Next alarm: "); printAlarm();
 }
 
 void syncRtc() {
@@ -34,22 +60,20 @@ void syncRtc() {
   // Attempt to sync RTC with GNSS for up to 5 minutes
   Serial.println(F("Attempting to sync RTC with GNSS..."));
 
-  while ((!dateValid  || !timeValid) && millis() - loopStartTime < 1UL * 60UL * 1000UL) {
+  while ((!dateValid || !timeValid) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
 
     dateValid = gps.getDateValid();
     timeValid = gps.getTimeValid();
 
-    // Sync RTC if GNSS date and time are valid
+    // Sync RTC with GNSS if date and time are valid
     if (dateValid && timeValid) {
       rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond());
       rtc.setDate(gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
+      Serial.print("RTC time synced: "); printDateTime();
       rtcSyncFlag = true; // Set flag
       blinkLed(10, 50);
-      Serial.print(F("RTC time synced: ")); printDateTime();
     }
-
-    blinkLed(1, 500);
-    //ISBDCallback();
+    ISBDCallback();
   }
   if (!rtcSyncFlag) {
     Serial.println(F("Warning: RTC sync failed"));
@@ -78,25 +102,3 @@ void printAlarm() {
           rtc.getAlarmHours(), rtc.getAlarmMinutes(), rtc.getAlarmSeconds());
   Serial.println(alarmBuffer);
 }
-
-
-
-/*
-  // Convert date and time to Unix Epoch time
-  uint32_t getEpoch() {
-
-  // Update the local array with the RTC registers
-  rtc.updateTime();
-
-  // Convert to Unix epoch (tm to time_t)
-  tmElements_t tm;
-  tm.Second = rtc.getSeconds();
-  tm.Minute = rtc.getMinutes();
-  tm.Hour   = rtc.getHours();
-  tm.Day    = rtc.getDate();
-  tm.Month  = rtc.getMonth();
-  tm.Year   = rtc.getYear() + 30; // Offset from 2000 - 1970
-  time_t t = makeTime(tm);
-
-  return t;
-  }

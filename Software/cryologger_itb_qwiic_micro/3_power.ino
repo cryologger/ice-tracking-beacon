@@ -1,8 +1,26 @@
+void configurePower() {
+  if (!mySwitch.begin()) {
+    Serial.println(F("Warning: Qwiic Power Switch not detected at default I2C address. Please check wiring."));
+  }
+}
+
+void qwiicPowerOn() {
+  mySwitch.powerOn();
+}
+
+void qwiicPowerOff() {
+  mySwitch.powerOff();
+}
+
 // Enter deep sleep
 void goToSleep() {
-
-
-  mySwitch.powerOff();  // Disable power
+#if DEBUG
+  Serial.println(F("Entering deep sleep..."));
+  Serial.flush();
+  Serial.end();
+  USBDevice.detach();
+#endif
+  qwiicPowerOff();      // Disable power
   LowPower.deepSleep(); // Enter deep sleep
 
   // Wake up
@@ -12,14 +30,16 @@ void goToSleep() {
 // Wake from deep sleep
 void wakeUp() {
 
-  // If alarm is triggered, enable power to system
+  // Reestablish Serial if alarm trigger
   if (alarmFlag) {
-
-    
+#if DEBUG
+    USBDevice.attach();
+    while (!Serial);
+    delay(5000);
+    Serial.begin(115200);
+#endif
   }
-
 }
-
 
 // Blink LED (non-blocking)
 void blinkLed(byte ledFlashes, unsigned int ledDelay) {
@@ -27,9 +47,9 @@ void blinkLed(byte ledFlashes, unsigned int ledDelay) {
   pinMode(LED_BUILTIN, OUTPUT);
   byte i = 0;
 
-  while (i <= ledFlashes * 2) {
+  while (i < ledFlashes * 2) {
     unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis >= ledDelay) {
+    if (currentMillis - previousMillis > ledDelay) {
       previousMillis = currentMillis;
       ledState = !ledState;
       digitalWrite(LED_BUILTIN, ledState);

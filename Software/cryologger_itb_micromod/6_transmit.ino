@@ -16,7 +16,9 @@ void configureIridium() {
 // Transmit data using SparkFun Qwiic Iridium 9603N
 void transmitData() {
 
-  if (online.iridium) {
+  // Check if data can and should be transmitted
+  if ((online.iridium) && (transmitCounter == transmitInterval)) {
+
     unsigned long loopStartTime = millis(); // Loop timer
     int err;
 
@@ -63,12 +65,12 @@ void transmitData() {
         Serial.println(F("Transmission successful!"));
       }
       else {
-        Serial.printf("Transmission failed: error %d \n", err);
+        Serial.print(F("Transmission failed: error ")); Serial.println(err);
       }
 
     }
     else {
-      Serial.printf("Begin failed: error %d", err);
+      Serial.print(F("Begin failed: error")); Serial.println(err);
       if (err == ISBD_NO_MODEM_DETECTED) {
         Serial.println(F("Warning: Qwiic Iridium 9603N not detected. Please check wiring."));
       }
@@ -96,12 +98,13 @@ void transmitData() {
     modem.enableSuperCapCharger(false); // Disable the supercapacitor charger
     modem.enable841lowPower(true);      // Enable the ATtiny841 low power mode
 
+    transmitCounter = 0;  // Reset transmit counter
     unsigned long loopEndTime = millis() - loopStartTime;
     message.transmitDuration = loopEndTime / 1000;
 
-    Serial.printf("transmitData() function execution: %d ms \n", loopEndTime);
-    Serial.printf("transmitDuration: %d \n", loopEndTime / 1000);
-    Serial.printf("retransmitCounter: %d \n", retransmitCounter);
+    Serial.print(F("transmitData() function execution: ")); Serial.println(loopEndTime); Serial.println(" ms");
+    Serial.print(F("transmitDuration: %d ")); Serial.println(loopEndTime / 1000);
+    Serial.print(F("retransmitCounter: ")); Serial.println(retransmitCounter);
   }
 }
 
@@ -109,8 +112,8 @@ void transmitData() {
 // RockBLOCK callback function can be repeatedly called during transmission or GNSS signal acquisition
 bool ISBDCallback() {
 
-  digitalWrite(LED_BUILTIN, (millis() / 1000) % 2 == 1 ? HIGH : LOW);
-  
+  digitalWrite(LED_BUILTIN, (millis() / 500) % 2 == 1 ? HIGH : LOW);
+
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis > 1000) {
     previousMillis = currentMillis;
