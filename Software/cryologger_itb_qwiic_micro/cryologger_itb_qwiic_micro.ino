@@ -1,6 +1,6 @@
 /*
     Title:    Cryologger Ice Tracking Beacon (ITB) - Version 3
-    Date:     November 13, 2020
+    Date:     November 14, 2020
     Author:   Adam Garbo
 
     Components:
@@ -27,6 +27,7 @@
 #include <SparkFun_Ublox_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_Ublox_Arduino_Library
 #include <SparkFun_Qwiic_Power_Switch_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_Qwiic_Power_Switch_Arduino_Library
 #include <SparkFunBME280.h>                 // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
+#include <SAMD_AnalogCorrection.h>          // https://github.com/arduino/ArduinoCore-samd/tree/master/libraries/SAMD_AnalogCorrection
 #include <RTCZero.h>                        // https://github.com/arduino-libraries/RTCZero
 #include <IridiumSBD.h>                     // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
 #include <ArduinoLowPower.h>                // https://github.com/arduino-libraries/ArduinoLowPower
@@ -105,6 +106,11 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
 
+  // Set analog resolution to 12-bits
+  analogReadResolution(12);
+  // Apply ADC gain and offset error calibration correction
+  analogReadCorrection(17, 2057);
+  
   Wire.begin(); // Initialize I2C
   //SPI1.begin(); // Initialize SPI
 
@@ -150,8 +156,8 @@ void loop() {
   }
 
   // Blink LED
-  blinkLed(1, 100);
+  blinkLed(1, 1000);
 
-  // Enter deep sleep and await RTC alarm interrupt
-  goToSleep();
+  // Enter deep sleep and await WDT or RTC alarm interrupt
+  //goToSleep();
 }

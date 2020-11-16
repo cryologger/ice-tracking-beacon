@@ -11,7 +11,7 @@ void printTab(byte _times) {
   }
 }
 
-// Print union/structure
+// Print contents of union/structure
 void printUnion() {
   printLine();
   Serial.println(F("Union/structure"));
@@ -34,7 +34,7 @@ void printUnion() {
   printLine();
 }
 
-// Print contents of union/structure
+// Print contents of union/structure in binary and hexadecimal
 void printUnionBinary() {
   Serial.println(F("Union/structure "));
   printLine();
@@ -49,7 +49,7 @@ void printUnionBinary() {
   printLine();
 }
 
-// Print contents of transmit buffer
+// Print contents of transmit buffer in binary and hexadecimal
 void printTransmitBuffer() {
   Serial.println(F("Transmit buffer"));
   printLine();

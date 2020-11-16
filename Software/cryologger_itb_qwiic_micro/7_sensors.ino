@@ -1,3 +1,4 @@
+// Configure attached sensors
 void configureSensors() {
   // SparkFun BME280 Configuration
   if (bme280.beginI2C()) {
@@ -9,7 +10,7 @@ void configureSensors() {
   }
 }
 
-// Read SparkFun BME280
+// Read attached sensors
 void readSensors() {
 
   // Start loop timer

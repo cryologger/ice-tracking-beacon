@@ -7,7 +7,7 @@ void configureGnss() {
 
   if (gps.begin()) {
     gps.setI2COutput(COM_TYPE_UBX); // Set I2C port to output UBX only (turn off NMEA noise)
-    gps.saveConfiguration();        // Save current settings to Flash and BBR
+    //gps.saveConfiguration();        // Save current settings to Flash and BBR
     online.gnss = true;
   }
   else {
@@ -20,8 +20,12 @@ void configureGnss() {
 // Read SparkFun GPS Breakout SAM-M8Q
 void readGnss() {
 
-  configureGnss();
-  
+  if (!online.gnss) {
+
+    configureGnss();
+
+  }
+
   if (online.gnss) {
 
     unsigned long loopStartTime = millis(); // Loop timer
@@ -31,7 +35,7 @@ void readGnss() {
     Serial.println(F("Beginning to listen for GNSS traffic..."));
 
     // Look for GNSS signal for up to 5 minutes
-    while ((valFix != maxValFix) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
+    while ((valFix != maxValFix) && millis() - loopStartTime < 1UL * 10UL * 1000UL) {
 
 #if DEBUG
       char gnssBuffer[100];

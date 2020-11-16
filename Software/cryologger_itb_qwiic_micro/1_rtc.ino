@@ -60,7 +60,7 @@ void syncRtc() {
   // Attempt to sync RTC with GNSS for up to 5 minutes
   Serial.println(F("Attempting to sync RTC with GNSS..."));
 
-  while ((!dateValid || !timeValid) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
+  while ((!dateValid || !timeValid) && millis() - loopStartTime < 1UL * 10UL * 1000UL) {
 
     dateValid = gps.getDateValid();
     timeValid = gps.getTimeValid();
@@ -70,8 +70,7 @@ void syncRtc() {
       rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond());
       rtc.setDate(gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
       Serial.print("RTC time synced: "); printDateTime();
-      rtcSyncFlag = true; // Set flag
-      blinkLed(10, 50);
+      blinkLed(10, 50); // Blink LED to indicate RTC sync
     }
     ISBDCallback();
   }

@@ -1,13 +1,16 @@
-void configurePower() {
+// Configure the SparkFun Qwiic Power Switch
+void configureQwiicPower() {
   if (!mySwitch.begin()) {
     Serial.println(F("Warning: Qwiic Power Switch not detected at default I2C address. Please check wiring."));
   }
 }
 
+// Enable power to the SparkFun Qwiic Power Switch
 void qwiicPowerOn() {
   mySwitch.powerOn();
 }
 
+// Disable power to the SparkFun Qwiic Power Switch
 void qwiicPowerOff() {
   mySwitch.powerOff();
 }
@@ -30,11 +33,11 @@ void goToSleep() {
 // Wake from deep sleep
 void wakeUp() {
 
-  // Reestablish Serial if alarm trigger
+  // Re-establish Serial upon alarm trigger
   if (alarmFlag) {
 #if DEBUG
     USBDevice.attach();
-    while (!Serial);
+    //while (!Serial);
     delay(5000);
     Serial.begin(115200);
 #endif
