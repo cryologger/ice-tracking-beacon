@@ -17,9 +17,9 @@ void printUnion() {
   Serial.println(F("Union/structure"));
   printLine();
   Serial.print(F("unixtime:\t\t")); Serial.println(message.unixtime);
-  //Serial.print(F("temperature:\t\t")); Serial.println(message.temperature);
-  //Serial.print(F("pressure:\t\t")); Serial.println(message.pressure);
-  //Serial.print(F("humidity:\t\t")); Serial.println(message.humidity);
+  Serial.print(F("temperature:\t\t")); Serial.println(message.temperature);
+  Serial.print(F("humidity:\t\t")); Serial.println(message.humidity);
+  Serial.print(F("pressure:\t\t")); Serial.println(message.pressure);
   //Serial.print(F("pitch:\t\t\t")); Serial.println(message.pitch);
   //Serial.print(F("roll:\t\t\t")); Serial.println(message.roll);
   //Serial.print(F("heading:\t\t")); Serial.println(message.heading);

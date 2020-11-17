@@ -7,17 +7,6 @@ void configureRtc() {
   //rtc.setTime(12, 55, 0); // hours, minutes, seconds
   //rtc.setDate(11, 11, 20); // day, month, year
 
-  // Set initial alarm to occur on seconds rollover
-  rtc.setAlarmTime(0, 0, 0);
-  rtc.setAlarmDate(0, 0, 0);
-  rtc.enableAlarm(rtc.MATCH_SS);
-
-  // Attach alarm to interrupt service routine
-  rtc.attachInterrupt(alarmIsr);
-
-  // Print initial datetime and alarm
-  printDateTime();
-  printAlarm();
 }
 
 void readRtc() {
@@ -30,6 +19,7 @@ void readRtc() {
   // Write data to union
   message.unixtime = unixtime;
 
+  Serial.println();
   Serial.print(F("Datetime: ")); printDateTime();
   Serial.print(F("UNIX Epoch time: ")); Serial.println(unixtime);
 
@@ -52,6 +42,8 @@ void setRtcAlarm() {
 
 void syncRtc() {
 
+  setPixelColour(blue);
+
   unsigned long loopStartTime = millis(); // Loop timer
   bool dateValid = false;
   bool timeValid = false;
@@ -60,7 +52,7 @@ void syncRtc() {
   // Attempt to sync RTC with GNSS for up to 5 minutes
   Serial.println(F("Attempting to sync RTC with GNSS..."));
 
-  while ((!dateValid || !timeValid) && millis() - loopStartTime < 1UL * 10UL * 1000UL) {
+  while ((!dateValid || !timeValid) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
 
     dateValid = gps.getDateValid();
     timeValid = gps.getTimeValid();
@@ -70,13 +62,28 @@ void syncRtc() {
       rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond());
       rtc.setDate(gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
       Serial.print("RTC time synced: "); printDateTime();
-      blinkLed(10, 50); // Blink LED to indicate RTC sync
+      //blinkLed(5, 50); // Blink LED to indicate RTC sync
+      rtcSyncFlag = true;
+      setPixelColour(green);
     }
     ISBDCallback();
   }
   if (!rtcSyncFlag) {
     Serial.println(F("Warning: RTC sync failed"));
+    setPixelColour(red);
   }
+
+  // Set initial alarm to occur on seconds rollover
+  rtc.setAlarmTime(0, 0, 0);
+  rtc.setAlarmDate(0, 0, 0);
+  rtc.enableAlarm(rtc.MATCH_MMSS);
+
+  // Attach alarm to interrupt service routine
+  rtc.attachInterrupt(alarmIsr);
+
+  // Print initial datetime and alarm
+  Serial.print("Datetime: "); printTab(1); printDateTime();
+  Serial.print("Alarm: "); printTab(2); printAlarm();
 }
 
 // RTC alarm interrupt service routine

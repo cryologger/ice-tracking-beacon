@@ -22,37 +22,41 @@
 */
 
 // Libraries
-#include <Wire.h>                           // https://www.arduino.cc/en/Reference/Wire
-#include <SPIMemory.h>                      // https://github.com/Marzogh/SPIMemory
-#include <SparkFun_Ublox_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_Ublox_Arduino_Library
-#include <SparkFun_Qwiic_Power_Switch_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_Qwiic_Power_Switch_Arduino_Library
-#include <SparkFunBME280.h>                 // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
-#include <SAMD_AnalogCorrection.h>          // https://github.com/arduino/ArduinoCore-samd/tree/master/libraries/SAMD_AnalogCorrection
-#include <RTCZero.h>                        // https://github.com/arduino-libraries/RTCZero
-#include <IridiumSBD.h>                     // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
-#include <ArduinoLowPower.h>                // https://github.com/arduino-libraries/ArduinoLowPower
+#include <Wire.h>                                         // https://www.arduino.cc/en/Reference/Wire
+//#include <SPIMemory.h>                                    // https://github.com/Marzogh/SPIMemory
+#include <SparkFun_Ublox_Arduino_Library.h>               // https://github.com/sparkfun/SparkFun_Ublox_Arduino_Library
+#include <SparkFun_Qwiic_Power_Switch_Arduino_Library.h>  // https://github.com/sparkfun/SparkFun_Qwiic_Power_Switch_Arduino_Library
+#include <SparkFunBME280.h>                               // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
+#include <SAMD_AnalogCorrection.h>                        // https://github.com/arduino/ArduinoCore-samd/tree/master/libraries/SAMD_AnalogCorrection
+#include <RTCZero.h>                                      // https://github.com/arduino-libraries/RTCZero
+#include <IridiumSBD.h>                                   // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
+#include <ICM_20948.h>                                    // https://github.com/sparkfun/SparkFun_ICM-20948_ArduinoLibrary
+#include <ArduinoLowPower.h>                              // https://github.com/arduino-libraries/ArduinoLowPower
+#include <Adafruit_NeoPixel.h>
 
 // Defined constants
-#define Serial        SerialUSB   // Required by SparkFun Qwiic Micro 
+#define Serial  SerialUSB   // Required by SparkFun Qwiic Micro 
 
 #define DEBUG         true        // Output debugging messages to Serial Monitor
-#define DIAGNOSTICS   false        // Output Iridium diagnostic messages to Serial Monitor
+#define DIAGNOSTICS   true        // Output Iridium diagnostic messages to Serial Monitor
 
 // Object instantiations
-BME280        bme280;             // I2C Address: 0x77
-IridiumSBD    modem(Wire);        // I2C Address: 0x63
-QWIIC_POWER   mySwitch;           // I2C Address: 0x41
-RTCZero       rtc;
-SFE_UBLOX_GPS gps;                // I2C Address: 0x42
-//SPIFlash      flash(21, &SPI1);
+Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
+BME280            bme280;           // I2C Address: 0x77
+ICM_20948_I2C     imu;              // I2C Address: 0x69
+IridiumSBD        modem(Wire);      // I2C Address: 0x63
+QWIIC_POWER       mySwitch;         // I2C Address: 0x41
+RTCZero           rtc;
+SFE_UBLOX_GPS     gps;              // I2C Address: 0x42
+//SPIFlash          flash(21, &SPI1); //
 
 // User defined global variable declarations
 unsigned long alarmInterval         = 60;     // RTC sleep duration in seconds (Default: 3600 seconds)
 byte          alarmSeconds          = 0;
-byte          alarmMinutes          = 1;
+byte          alarmMinutes          = 15;
 byte          alarmHours            = 0;
-byte          transmitInterval      = 1;     // Number of messages to transmit in each Iridium transmission (340 byte limit)
-byte          maxRetransmitCounter  = 1;      // Number of failed data transmissions to reattempt (340 byte limit)
+byte          transmitInterval      = 10;     // Number of messages to transmit in each Iridium transmission (340 byte limit)
+byte          maxRetransmitCounter  = 0;      // Number of failed data transmissions to reattempt (340 byte limit)
 
 // Global variable and constant declarations
 volatile bool alarmFlag             = false;  // Flag for alarm interrupt service routine
@@ -75,10 +79,22 @@ unsigned long previousMillis      = 0;        // Global millis() timer
 time_t        alarmTime           = 0;
 time_t        unixtime            = 0;
 
+// NeoPixel colour definitons
+uint32_t white    = pixels.Color(32, 32, 32);
+uint32_t red      = pixels.Color(32, 0, 0);
+uint32_t green    = pixels.Color(0, 32, 0);
+uint32_t blue     = pixels.Color(0, 0, 32);
+uint32_t cyan     = pixels.Color(0, 32, 32);
+uint32_t magenta  = pixels.Color(32, 0, 32);
+uint32_t yellow   = pixels.Color(32, 32, 0);
+
 // Union to store and send data byte-by-byte via Iridium
 typedef union {
   struct {
     uint32_t  unixtime;           // UNIX Epoch time                (4 bytes)
+    int16_t   temperature;        // Temperature (°C)               (2 bytes)
+    uint16_t  humidity;           // Humidity (%)                   (2 bytes)
+    uint32_t  pressure;           // Pressure (Pa)                  (4 bytes)
     int32_t   latitude;           // Latitude (DD)                  (4 bytes)
     int32_t   longitude;          // Longitude (DD)                 (4 bytes)
     uint8_t   satellites;         // # of satellites                (1 byte)
@@ -95,8 +111,9 @@ size_t messageSize = sizeof(message);   // Size (in bytes) of message to be tran
 
 // Devices that may be online or offline.
 struct struct_online {
-  bool iridium = false;
+  bool imu = false;
   bool gnss = false;
+  bool iridium = false;
 } online;
 
 // Setup
@@ -110,7 +127,7 @@ void setup() {
   analogReadResolution(12);
   // Apply ADC gain and offset error calibration correction
   analogReadCorrection(17, 2057);
-  
+
   Wire.begin(); // Initialize I2C
   //SPI1.begin(); // Initialize SPI
 
@@ -118,18 +135,24 @@ void setup() {
   //while (!Serial); // Wait for user to open Serial Monitor
   delay(5000); // Delay to allow user to open Serial Monitor
 
+  Serial.println();
   printLine();
   Serial.println(F("Cryologger Iceberg Tracking Beacon"));
   printLine();
 
   // Configure
+  configureNeoPixel();
   configureWdt();         // Configure Watchdog Timer
   configureQwiicPower();  // Configure Qwiic Power Switch
   configureRtc();         // Configure real-time clock (RTC)
   configureGnss();        // Configure Sparkfun SAM-M8Q
+  configureImu();         // Configure SparkFun ICM-20948
+  configureSensors();
   configureIridium();     // Configure SparkFun Qwiic Iridium 9603N
   syncRtc();              // Synchronize RTC with GNSS
 
+  setPixelColour(white);
+  delay(2000);
   Serial.flush(); // Wait for transmission of any serial data to complete
 }
 
@@ -143,8 +166,10 @@ void loop() {
     // Perform measurements
     readRtc();          // Read RTC
     petDog();           // Pet the Watchdog Timer
-    //readSensors();      // Read sensors
+    readSensors();      // Read sensors
+    readImu();          // Read IMU
     readGnss();         // Read GNSS
+    qwiicPowerOff();
     writeBuffer();      // Write data to buffer
     transmitData();     // Transmit data
     setRtcAlarm();      // Set RTC alarm
@@ -156,8 +181,8 @@ void loop() {
   }
 
   // Blink LED
-  blinkLed(1, 1000);
+  blinkLed(1, 100);
 
   // Enter deep sleep and await WDT or RTC alarm interrupt
-  //goToSleep();
+  goToSleep();
 }

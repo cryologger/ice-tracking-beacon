@@ -40,6 +40,12 @@ void wakeUp() {
     //while (!Serial);
     delay(5000);
     Serial.begin(115200);
+    qwiicPowerOn();
+    configureNeoPixel();
+    configureGnss();        // Configure Sparkfun SAM-M8Q
+    configureImu();         // Configure SparkFun ICM-20948
+    configureSensors();
+    configureIridium();     // Configure SparkFun Qwiic Iridium 9603N
 #endif
   }
 }

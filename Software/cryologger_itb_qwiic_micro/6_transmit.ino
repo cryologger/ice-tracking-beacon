@@ -10,7 +10,6 @@ void configureIridium() {
   else {
     Serial.println(F("Warning: Qwiic Iridium 9603N not detected! Please check wiring."));
     online.iridium = false;
-    //while (1);
   }
 }
 
@@ -28,9 +27,8 @@ void transmitData() {
 
     // Wait for supercapacitor charger PGOOD signal to go HIGH for up to 2 minutes
     while ((!modem.checkSuperCapCharger()) && millis() - loopStartTime < 2UL * 60UL * 1000UL) {
-      Serial.println(F("Waiting for supercapacitors to charge..."));
-      blinkLed(1, 1000);
-      petDog();
+      //Serial.println(F("Waiting for supercapacitors to charge..."));
+      ISBDCallback();
     }
     Serial.println(F("Supercapacitors charged!"));
 
@@ -72,10 +70,8 @@ void transmitData() {
           // Print inBuffer size and values of each incoming byte of data
           Serial.print(F("Inbound buffer size is: ")); Serial.println(inBufferSize);
           for (uint8_t i = 0; i < inBufferSize; i++) {
-            Serial.print(F("Address: "));
-            Serial.print(i);
-            Serial.print(F("\tValue: "));
-            Serial.println(inBuffer[i], HEX);
+            Serial.print(F("Address: ")); Serial.print(i);
+            Serial.print(F("\tValue: ")); Serial.println(inBuffer[i], HEX);
           }
 
           // Recompose bits using bitshift
@@ -144,12 +140,13 @@ void transmitData() {
     Serial.print(F("transmitData() function execution: ")); Serial.print(loopEndTime); Serial.println(" ms");
     Serial.print(F("transmitDuration: ")); Serial.println(loopEndTime / 1000);
     Serial.print(F("retransmitCounter: ")); Serial.println(retransmitCounter);
-  }
-  // Check if reset flag was transmitted
-  if (resetFlag) {
-    Serial.println(F("Forced system reset..."));
-    digitalWrite(LED_BUILTIN, HIGH);  // Turn on LED
-    while (1);                        // Wait for Watchdog Timer to reset system
+
+    // Check if reset flag was transmitted
+    if (resetFlag) {
+      Serial.println(F("Forced system reset..."));
+      digitalWrite(LED_BUILTIN, HIGH);  // Turn on LED
+      while (1);                        // Wait for Watchdog Timer to reset system
+    }
   }
 }
 

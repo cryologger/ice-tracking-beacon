@@ -1,10 +1,6 @@
 // Configure SparkFun GPS Breakout SAM-M8Q
 void configureGnss() {
-
-  Serial.println(F("Powering up the GNSS..."));
-  qwiicPowerOn(); // Enable Qwiic power
-  blinkLed(1, 1000); // Non-blocking delay
-
+  blinkLed(1, 1000);
   if (gps.begin()) {
     gps.setI2COutput(COM_TYPE_UBX); // Set I2C port to output UBX only (turn off NMEA noise)
     //gps.saveConfiguration();        // Save current settings to Flash and BBR
@@ -13,18 +9,13 @@ void configureGnss() {
   else {
     Serial.println(F("Warning: SAM-M8Q not detected at default I2C address. Please check wiring."));
     online.gnss = false;
-    //while (1);
   }
 }
 
 // Read SparkFun GPS Breakout SAM-M8Q
 void readGnss() {
 
-  if (!online.gnss) {
-
-    configureGnss();
-
-  }
+  setPixelColour(magenta);
 
   if (online.gnss) {
 
@@ -34,8 +25,9 @@ void readGnss() {
     // Begin listening to the GNSS
     Serial.println(F("Beginning to listen for GNSS traffic..."));
 
+    blinkLed(2, 1000); // Non-blocking delay to allow GNSS receiver to boot
     // Look for GNSS signal for up to 5 minutes
-    while ((valFix != maxValFix) && millis() - loopStartTime < 1UL * 10UL * 1000UL) {
+    while ((valFix != maxValFix) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
 
 #if DEBUG
       char gnssBuffer[100];
@@ -78,6 +70,7 @@ void readGnss() {
           rtc.setDate(gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
           Serial.print("RTC time synced: "); printDateTime();
         }
+        setPixelColour(green);
       }
       ISBDCallback();
     }
@@ -85,6 +78,7 @@ void readGnss() {
     // Check if a GNSS fix was acquired
     if (valFix < maxValFix) {
       Serial.println(F("Warning: No GNSS fix was found"));
+      setPixelColour(red);
     }
 
     unsigned long loopEndTime = millis() - loopStartTime;
