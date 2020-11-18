@@ -15,7 +15,7 @@ void configureGnss() {
 // Read SparkFun GPS Breakout SAM-M8Q
 void readGnss() {
 
-  setPixelColour(magenta);
+  setPixelColour(cyan);
 
   if (online.gnss) {
 
@@ -60,7 +60,6 @@ void readGnss() {
         message.latitude = latitude;
         message.longitude = longitude;
         message.satellites = satellites;
-        message.fix = fix;
         message.pdop = pdop;
         break;
 

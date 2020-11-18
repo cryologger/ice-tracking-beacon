@@ -1,12 +1,22 @@
+/*
+   RTC Alarm Modes:
+   MATCH_OFF            // Never
+   MATCH_SS             // Every Minute
+   MATCH_MMSS           // Every Hour
+   MATCH_HHMMSS         // Every Day
+   MATCH_DHHMMSS        // Every Month
+   MATCH_MMDDHHMMSS     // Every Year
+   MATCH_YYMMDDHHMMSS   // Once, on a specific date and a specific time
+*/
+
 void configureRtc() {
 
   // Initialize RTC
   rtc.begin();
 
-  // Manually set date and time
-  //rtc.setTime(12, 55, 0); // hours, minutes, seconds
-  //rtc.setDate(11, 11, 20); // day, month, year
-
+  // Manually set time and date
+  //rtc.setTime(23, 58, 0); // (hours, minutes, seconds)
+  //rtc.setDate(11, 11, 20); // (day, month, year)
 }
 
 void readRtc() {
@@ -19,9 +29,8 @@ void readRtc() {
   // Write data to union
   message.unixtime = unixtime;
 
-  Serial.println();
-  Serial.print(F("Datetime: ")); printDateTime();
-  Serial.print(F("UNIX Epoch time: ")); Serial.println(unixtime);
+  //Serial.print(F("Datetime: ")); printDateTime();
+  //Serial.print(F("UNIX Epoch time: ")); Serial.println(unixtime);
 
   unsigned long loopEndTime = millis() - loopStartTime;
   Serial.print(F("readRtc() function execution: ")); Serial.print(loopEndTime); Serial.println(F(" ms"));
@@ -29,20 +38,40 @@ void readRtc() {
 
 void setRtcAlarm() {
 
-  // Set the RTC's rolling alarm
-  rtc.setAlarmTime((rtc.getHours() + alarmHours) % 24,
-                   (rtc.getMinutes() + alarmMinutes) % 60,
-                   0);
-  rtc.setAlarmDate(rtc.getDay(), rtc.getMonth(), rtc.getYear());
+  // Calculate next alarm
+  alarmTime = unixtime + alarmInterval;
+
+  // Check if alarm was set in the past
+  if (alarmTime < rtc.getEpoch()) {
+    unixtime = rtc.getEpoch(); // Get UNIX Epoch time
+    alarmTime = unixtime + alarmInterval; // Recalculate next alarm
+    Serial.println(F("Warning: RTC alarm set in the past"));
+  }
+
+  // Set alarm time and date
+  rtc.setAlarmTime(hour(alarmTime), minute(alarmTime), 0);
+  rtc.setAlarmDate(day(alarmTime), month(alarmTime), year(alarmTime) - 2000);
+
+  // Enable alarm
   rtc.enableAlarm(rtc.MATCH_HHMMSS);
 
   // Print the next RTC alarm date and time
+  Serial.print("Current time: "); printDateTime();
   Serial.print("Next alarm: "); printAlarm();
 }
 
+// Set RTC rolling alarms
+void setRtcRollingAlarm() {
+
+  rtc.setAlarmTime((rtc.getHours() + alarmHours) % 24,
+                   (rtc.getMinutes() + alarmMinutes) % 60,
+                   (rtc.getSeconds() + alarmSeconds) % 60);
+  rtc.setAlarmDate(rtc.getDay(), rtc.getMonth(), rtc.getYear());
+  rtc.enableAlarm(rtc.MATCH_HHMMSS);
+}
 void syncRtc() {
 
-  setPixelColour(blue);
+  setPixelColour(pink);
 
   unsigned long loopStartTime = millis(); // Loop timer
   bool dateValid = false;

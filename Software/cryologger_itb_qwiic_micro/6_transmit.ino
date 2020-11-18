@@ -2,8 +2,8 @@
 void configureIridium() {
 
   if (modem.isConnected()) {
-    modem.adjustATTimeout(20);          // Set AT timeout (Default = 20 seconds)
-    modem.adjustSendReceiveTimeout(60); // Set send/receive timeout (Default = 300 seconds)
+    modem.adjustATTimeout(30);          // Set AT timeout (Default = 20 seconds)
+    modem.adjustSendReceiveTimeout(180); // Set send/receive timeout (Default = 300 seconds)
     modem.enable841lowPower(true);      // Enable ATtiny841 low-power mode
     online.iridium = true;
   }
@@ -159,6 +159,7 @@ bool ISBDCallback() {
   if (currentMillis - previousMillis > 1000) {
     previousMillis = currentMillis;
     petDog();  // Reset the Watchdog Timer
+    readBattery();
   }
   return true;
 }
@@ -192,4 +193,24 @@ void writeBuffer() {
   printUnionBinary(); // Print union/structure in hex/binary
   //printTransmitBuffer();  // Print transmit buffer in hex/binary
 #endif
+}
+
+// Call user function 1
+void userFunction1() {
+
+}
+
+// Call user function 2
+void userFunction2() {
+
+}
+
+// Call user function 3
+void userFunction3() {
+
+}
+
+// Call user function 4
+void userFunction4() {
+
 }

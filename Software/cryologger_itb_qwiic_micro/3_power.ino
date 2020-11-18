@@ -1,3 +1,32 @@
+// Read battery voltage from voltage divider
+void readBattery() {
+
+  unsigned long loopStartTime = millis(); // Loop timer
+  int reading = 0;
+  byte samples = 30;
+  
+  for (byte i = 0; i < samples; ++i) {
+    reading += analogRead(VBAT_PIN); // Read VIN across a 1/10 resistor divider
+    delay(1);
+  }
+
+  voltage = (float)reading / samples * 3.3 * ((R2 + R1) / R2) / 4096.0; // Convert 1/10 VIN to VIN (12-bit resolution)
+
+  // Write minimum battery voltage value to union
+  if (message.voltage == 0) {
+    message.voltage = voltage * 1000;
+  }
+  else if ((voltage * 1000) < message.voltage) {
+    message.voltage = voltage * 1000;
+  }
+
+  // print out the value you read:
+  //Serial.print(F("Voltage: ")); Serial.println(voltage);
+
+  unsigned long loopEndTime = millis() - loopStartTime;
+  Serial.print(F("readBattery() function execution: ")); Serial.print(loopEndTime); Serial.println(F(" ms"));
+}
+
 // Configure the SparkFun Qwiic Power Switch
 void configureQwiicPower() {
   if (!mySwitch.begin()) {
@@ -35,6 +64,7 @@ void wakeUp() {
 
   // Re-establish Serial upon alarm trigger
   if (alarmFlag) {
+    readRtc();          // Read RTC
 #if DEBUG
     USBDevice.attach();
     //while (!Serial);

@@ -19,7 +19,15 @@ void setPixelColour(uint32_t colour) {
     pixels.setPixelColor(0, magenta);
   else if (colour == yellow)
     pixels.setPixelColor(0, yellow);
+  else if (colour == purple)
+    pixels.setPixelColor(0, purple);
+  else if (colour == orange)
+    pixels.setPixelColor(0, orange);
+  else if (colour == pink)
+    pixels.setPixelColor(0, pink);
+  else if (colour == lime)
+    pixels.setPixelColor(0, lime);
 
   pixels.show();   // Send the updated pixel colors to the hardware
-  delay(2000);
+  delay(3000);
 }
