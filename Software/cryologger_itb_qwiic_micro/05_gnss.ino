@@ -1,32 +1,36 @@
 // Configure SparkFun GPS Breakout SAM-M8Q
 void configureGnss() {
-
+  blinkLed(1, 1000);
   if (gps.begin()) {
     gps.setI2COutput(COM_TYPE_UBX); // Set I2C port to output UBX only (turn off NMEA noise)
-    gps.saveConfiguration();        // Save current settings to Flash and BBR
+    //gps.saveConfiguration();        // Save current settings to Flash and BBR
     online.gnss = true;
   }
   else {
     Serial.println(F("Warning: SAM-M8Q not detected at default I2C address. Please check wiring."));
     online.gnss = false;
-    //while (1);
   }
 }
 
-// Read the GPS Breakout SAM-M8Q
+// Read SparkFun GPS Breakout SAM-M8Q
 void readGnss() {
 
+  setPixelColour(cyan);
+
   if (online.gnss) {
+
     unsigned long loopStartTime = millis(); // Loop timer
+    valFix = 0; // Reset fix counter
 
     // Begin listening to the GNSS
     Serial.println(F("Beginning to listen for GNSS traffic..."));
 
+    blinkLed(2, 1000); // Non-blocking delay to allow GNSS receiver to boot
     // Look for GNSS signal for up to 5 minutes
-    while ((valFix != maxValFix) && millis() - loopStartTime < 1UL * 60UL * 1000UL) {
+    while ((valFix != maxValFix) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
 
 #if DEBUG
-      char gnssBuffer[75];
+      char gnssBuffer[100];
       sprintf(gnssBuffer, "%04u-%02d-%02d %02d:%02d:%02d,%ld,%ld,%d,%d,%d",
               gps.getYear(), gps.getMonth(), gps.getDay(),
               gps.getHour(), gps.getMinute(), gps.getSecond(),
@@ -52,25 +56,20 @@ void readGnss() {
         byte fix = gps.getFixType();
         unsigned int pdop = gps.getPDOP();
 
-        // Write data to SD buffer
-        sprintf(tempData, "%ld,%ld,%d,%d,%d,\n", latitude, longitude, satellites, fix, pdop);
-        strcat(outputData, tempData);
-
         // Write data to union
         message.latitude = latitude;
         message.longitude = longitude;
         message.satellites = satellites;
-        message.fix = fix;
         message.pdop = pdop;
         break;
 
         // Sync RTC with GNSS if date and time are valid
         if (gps.getDateValid() && gps.getTimeValid()) {
-          rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond(), gps.getMillisecond() / 10,
-                      gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
+          rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond());
+          rtc.setDate(gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
           Serial.print("RTC time synced: "); printDateTime();
         }
-
+        setPixelColour(green);
       }
       ISBDCallback();
     }
@@ -78,14 +77,8 @@ void readGnss() {
     // Check if a GNSS fix was acquired
     if (valFix < maxValFix) {
       Serial.println(F("Warning: No GNSS fix was found"));
-
-      // Write e data to SD buffer
-      sprintf(tempData, "%ld,%ld,%d,%d,%d,\n", 0, 0, 0, 0, 0);
-      strcat(outputData, tempData);
+      setPixelColour(red);
     }
-
-    // Reset valFix counter
-    valFix = 0;
 
     unsigned long loopEndTime = millis() - loopStartTime;
     Serial.print(F("readGnss() function execution: ")); Serial.print(loopEndTime); Serial.println(" ms");
