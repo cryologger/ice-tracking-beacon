@@ -4,7 +4,7 @@ void readBattery() {
   unsigned long loopStartTime = millis(); // Loop timer
   int reading = 0;
   byte samples = 30;
-  
+
   for (byte i = 0; i < samples; ++i) {
     reading += analogRead(VBAT_PIN); // Read VIN across a 1/10 resistor divider
     delay(1);
@@ -23,8 +23,11 @@ void readBattery() {
   // print out the value you read:
   //Serial.print(F("Voltage: ")); Serial.println(voltage);
 
+
   unsigned long loopEndTime = millis() - loopStartTime;
+#if DEBUG
   Serial.print(F("readBattery() function execution: ")); Serial.print(loopEndTime); Serial.println(F(" ms"));
+#endif
 }
 
 // Configure the SparkFun Qwiic Power Switch
@@ -62,21 +65,21 @@ void goToSleep() {
 // Wake from deep sleep
 void wakeUp() {
 
-  // Re-establish Serial upon alarm trigger
   if (alarmFlag) {
-    readRtc();          // Read RTC
+    readRtc(); // Read RTC
 #if DEBUG
+    // Re-establish Serial
     USBDevice.attach();
-    //while (!Serial);
-    delay(5000);
     Serial.begin(115200);
+    //while (!Serial);
+    blinkLed(5, 500); // Non-blocking delay to allow user to open Serial Monitor
+#endif
     qwiicPowerOn();
     configureNeoPixel();
     configureGnss();        // Configure Sparkfun SAM-M8Q
     configureImu();         // Configure SparkFun ICM-20948
-    configureSensors();
+    configureSensors();     // Configure attached sensors
     configureIridium();     // Configure SparkFun Qwiic Iridium 9603N
-#endif
   }
 }
 

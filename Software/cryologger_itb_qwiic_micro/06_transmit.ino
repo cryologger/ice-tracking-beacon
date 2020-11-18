@@ -152,9 +152,9 @@ void transmitData() {
 
 // RockBLOCK callback function can be repeatedly called during transmission or GNSS signal acquisition
 bool ISBDCallback() {
-#if DEBUG
+//#if DEBUG
   digitalWrite(LED_BUILTIN, (millis() / 1000) % 2 == 1 ? HIGH : LOW);
-#endif
+//#endif
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis > 1000) {
     previousMillis = currentMillis;

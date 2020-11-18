@@ -1,3 +1,4 @@
+// Configure SparkFun ICM-20948 IMU
 void configureImu() {
   imu.begin(Wire, 1);
   if (imu.status != ICM_20948_Stat_Ok ) {
@@ -8,6 +9,7 @@ void configureImu() {
   }
 }
 
+// Read AHRS IMU
 void readImu() {
 
   setPixelColour(cyan);

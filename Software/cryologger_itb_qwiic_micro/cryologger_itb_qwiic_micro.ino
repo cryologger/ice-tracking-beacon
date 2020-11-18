@@ -37,10 +37,9 @@
 #include <Adafruit_NeoPixel.h>                            // https://github.com/adafruit/Adafruit_NeoPixel
 
 // Defined constants
-#define Serial  SerialUSB // Required by SparkFun Qwiic Micro 
-
-#define DEBUG         true  // Output debugging messages to Serial Monitor
-#define DIAGNOSTICS   true  // Output Iridium diagnostic messages to Serial Monitor
+#define Serial        SerialUSB   // Required by SparkFun Qwiic Micro 
+#define DEBUG         false        // Output debugging messages to Serial Monitor
+#define DIAGNOSTICS   true        // Output Iridium diagnostic messages to Serial Monitor
 
 // Pin definitions
 #define VBAT_PIN  A0
@@ -55,19 +54,19 @@ RTCZero           rtc;
 SFE_UBLOX_GPS     gps;              // I2C Address: 0x42
 //SPIFlash          flash(21, &SPI1); //
 
-// Global constant declarations
+// Global constants
 const float R1 = 9973000.0;   // Voltage divider resistor 1
 const float R2 = 998400.0;    // Voltage divider resistor 2
 
-// User defined global variable declarations
-unsigned long alarmInterval         = 600;    // RTC sleep duration in seconds (Default: 3600 seconds)
+// User defined global variables
+unsigned long alarmInterval         = 3600;    // RTC sleep duration in seconds (Default: 3600 seconds)
 byte          alarmSeconds          = 0;
 byte          alarmMinutes          = 4;
 byte          alarmHours            = 0;
 byte          transmitInterval      = 1;     // Number of messages to transmit in each Iridium transmission (340 byte limit)
 byte          maxRetransmitCounter  = 4;      // Number of failed data transmissions to reattempt (340 byte limit)
 
-// Global variable and constant declarations
+// Global variables
 volatile bool alarmFlag             = false;  // Flag for alarm interrupt service routine
 volatile bool watchdogFlag          = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter       = 0;      // Watchdog Timer interrupt counter
@@ -109,7 +108,7 @@ typedef union {
     uint32_t  unixtime;           // UNIX Epoch time                (4 bytes)
     int16_t   temperature;        // Temperature (°C)               (2 bytes)
     uint16_t  humidity;           // Humidity (%)                   (2 bytes)
-    uint32_t  pressure;           // Pressure (Pa)                  (4 bytes)
+    uint16_t  pressure;           // Pressure (Pa)                  (4 bytes)
     int32_t   latitude;           // Latitude (DD)                  (4 bytes)
     int32_t   longitude;          // Longitude (DD)                 (4 bytes)
     uint8_t   satellites;         // # of satellites                (1 byte)
@@ -117,8 +116,8 @@ typedef union {
     uint16_t  voltage;            // Battery voltage (V)            (2 bytes)
     uint16_t  transmitDuration;   // Previous transmission duration (2 bytes)
     uint16_t  messageCounter;     // Message counter                (2 bytes)
-  } __attribute__((packed));                                        // Total: (29 bytes)
-  uint8_t bytes[19];
+  } __attribute__((packed));                                        // Total: (27 bytes)
+  uint8_t bytes[27];
 } SBDMESSAGE;
 
 SBDMESSAGE message;
@@ -148,7 +147,7 @@ void setup() {
 
   Serial.begin(115200);
   //while (!Serial); // Wait for user to open Serial Monitor
-  delay(5000); // Delay to allow user to open Serial Monitor
+  blinkLed(5, 500); // Non-blocking delay to allow user to open Serial Monitor
 
   Serial.println();
   printLine();
@@ -157,7 +156,7 @@ void setup() {
 
   // Configure
   configureNeoPixel();    // Configure WS2812B RGB LED
-  configureWdt();         // Configure Watchdog Timer
+  configureWatchdog();    // Configure Watchdog Timer
   configureQwiicPower();  // Configure Qwiic Power Switch
   configureRtc();         // Configure real-time clock (RTC)
   configureGnss();        // Configure Sparkfun SAM-M8Q
@@ -167,7 +166,6 @@ void setup() {
   syncRtc();              // Synchronize RTC with GNSS
 
   setPixelColour(white);
-  delay(2000);
   Serial.flush(); // Wait for transmission of any serial data to complete
 }
 
@@ -181,7 +179,6 @@ void loop() {
     // Perform measurements
     //readRtc();          // Read RTC
     //printDateTime();
-    Serial.print(F("UNIX Epoch time: ")); Serial.println(unixtime);
     petDog();           // Pet the Watchdog Timer
     readBattery();
     readSensors();      // Read sensors
@@ -199,7 +196,7 @@ void loop() {
   }
 
   // Blink LED
-  blinkLed(1, 50);
+  blinkLed(1, 25);
 
   // Enter deep sleep and await WDT or RTC alarm interrupt
   goToSleep();

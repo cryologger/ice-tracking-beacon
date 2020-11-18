@@ -19,7 +19,7 @@ void readSensors() {
   // Wake-up, take readings and re-enter sleep mode
   bme280.setMode(MODE_FORCED);
   float temperature = bme280.readTempC();
-  float humidity = bme280.readFloatHumidity();
+  float humidity = bme280.readFloatHumidity() / 1000;
   float pressure = bme280.readFloatPressure();
 
   // Write data to union

@@ -102,7 +102,7 @@ void syncRtc() {
     setPixelColour(red);
   }
 
-  // Set initial alarm to occur on seconds rollover
+  // Set initial alarm to occur on hour rollover
   rtc.setAlarmTime(0, 0, 0);
   rtc.setAlarmDate(0, 0, 0);
   rtc.enableAlarm(rtc.MATCH_MMSS);
