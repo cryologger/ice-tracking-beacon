@@ -1,12 +1,14 @@
 // Read battery voltage from voltage divider
 void readBattery() {
 
-  unsigned long loopStartTime = millis(); // Loop timer
+  // Start loop timer
+  startTimer();
+  
   int reading = 0;
   byte samples = 30;
 
   for (byte i = 0; i < samples; ++i) {
-    reading += analogRead(VBAT_PIN); // Read VIN across a 1/10 resistor divider
+    reading += analogRead(VBAT_PIN); // Read VIN across a 1/10 MΩ resistor divider
     delay(1);
   }
 
@@ -21,19 +23,20 @@ void readBattery() {
   }
 
   // print out the value you read:
-  //Serial.print(F("Voltage: ")); Serial.println(voltage);
+  Serial.print(F("Voltage: ")); Serial.println(voltage);
 
-
-  unsigned long loopEndTime = millis() - loopStartTime;
-#if DEBUG
-  Serial.print(F("readBattery() function execution: ")); Serial.print(loopEndTime); Serial.println(F(" ms"));
-#endif
+  // Stop loop timer
+  stopTimer();
 }
 
 // Configure the SparkFun Qwiic Power Switch
 void configureQwiicPower() {
   if (!mySwitch.begin()) {
-    Serial.println(F("Warning: Qwiic Power Switch not detected at default I2C address. Please check wiring."));
+    Serial.println(F("Warning: Qwiic Power Switch not detected at default I2C address. Please check wiring."));\
+    online.powerSwitch = false;
+  }
+  else {
+    online.powerSwitch = true;
   }
 }
 
@@ -79,7 +82,7 @@ void wakeUp() {
     configureGnss();        // Configure Sparkfun SAM-M8Q
     configureImu();         // Configure SparkFun ICM-20948
     configureSensors();     // Configure attached sensors
-    configureIridium();     // Configure SparkFun Qwiic Iridium 9603N
+    //configureIridium();     // Configure SparkFun Qwiic Iridium 9603N
   }
 }
 

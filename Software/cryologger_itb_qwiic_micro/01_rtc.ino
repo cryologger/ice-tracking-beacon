@@ -81,7 +81,7 @@ void syncRtc() {
   // Attempt to sync RTC with GNSS for up to 5 minutes
   Serial.println(F("Attempting to sync RTC with GNSS..."));
 
-  while ((!dateValid || !timeValid) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
+  while ((!dateValid || !timeValid) && millis() - loopStartTime < 1UL * 60UL * 1000UL) {
 
     dateValid = gps.getDateValid();
     timeValid = gps.getTimeValid();

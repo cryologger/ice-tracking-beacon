@@ -61,3 +61,15 @@ void printTransmitBuffer() {
     Serial.println(transmitBuffer[i], BIN);
   }
 }
+
+// Start loop timer
+void startTimer() {
+#if DEBUG
+  loopStartTime = millis(); 
+#endif
+}
+
+void stopTimer() {
+  loopEndTime = millis() - loopStartTime;
+  Serial.print(F("readImu() function execution: ")); Serial.print(loopEndTime); Serial.println(F(" ms"));
+}

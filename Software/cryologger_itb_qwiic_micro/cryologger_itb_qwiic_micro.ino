@@ -42,7 +42,7 @@
 #define DIAGNOSTICS   true        // Output Iridium diagnostic messages to Serial Monitor
 
 // Pin definitions
-#define VBAT_PIN  A0
+#define VBAT_PIN  A1
 
 // Object instantiations
 Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
@@ -128,6 +128,7 @@ struct struct_online {
   bool imu = false;
   bool gnss = false;
   bool iridium = false;
+  bool powerSwitch = false;
 } online;
 
 // Setup
