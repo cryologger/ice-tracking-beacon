@@ -1,7 +1,8 @@
-// Configure 
+// Configure
 void configureNeoPixel() {
   pixels.begin();
   pixels.clear(); // Set all pixel colors to 'off'
+  pixels.show(); // Send the updated pixel colors to the hardware
 }
 
 // Set pixel color
@@ -30,5 +31,8 @@ void setPixelColour(uint32_t colour) {
     pixels.setPixelColor(0, lime);
 
   pixels.show();   // Send the updated pixel colors to the hardware
-  delay(4000);
+  delay(2000);
+
+  pixels.clear(); // Set all pixel colors to 'off'
+  pixels.show(); // Send the updated pixel colors to the hardware
 }

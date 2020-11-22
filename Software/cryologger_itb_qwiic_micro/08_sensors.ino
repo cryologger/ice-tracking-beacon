@@ -1,13 +1,12 @@
 // Configure attached sensors
 void configureSensors() {
-
   // SparkFun BME280 Configuration
   if (bme280.beginI2C()) {
     bme280.setMode(MODE_SLEEP); // Enter sleep mode
     online.bme280 = true;
   }
   else {
-    Serial.println(F("Warning: SparkFun BME280 not connected! Please check wiring."));
+    Serial.println(F("Warning: SparkFun BME280 not detected at default I2C address! Please check wiring."));
     online.bme280 = false;
   }
 }

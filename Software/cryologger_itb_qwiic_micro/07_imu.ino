@@ -17,50 +17,52 @@ void readImu() {
   setPixelColour(cyan);
 
   // Start loop timer
-  startTimer();
+  unsigned long loopStartTime = millis();
 
-  // Wake the sensor
-  imu.sleep(false);
-  imu.lowPower(false);
+  if (online.imu) {
+    // Wake the sensor
+    imu.sleep(false);
+    imu.lowPower(false);
 
-  while (!imu.dataReady() && millis() - loopStartTime < 1UL * 10UL * 1000UL) {
-    blinkLed(1, 1000);
-    if (imu.dataReady()) {
-      imu.getAGMT(); // Values are only updated when 'getAGMT' is called
-      Serial.print("Scaled. Acc (mg) [ ");
-      Serial.print(imu.accX(), 2);
-      Serial.print(", ");
-      Serial.print(imu.accY(), 2);
-      Serial.print(", ");
-      Serial.print(imu.accZ(), 2);
-      Serial.print(" ], Gyr (DPS) [ ");
-      Serial.print(imu.gyrX(), 2);
-      Serial.print(", ");
-      Serial.print(imu.gyrY(), 2);
-      Serial.print(", ");
-      Serial.print(imu.gyrZ(), 2);
-      Serial.print(" ], Mag (uT) [ ");
-      Serial.print(imu.magX(), 2);
-      Serial.print(", ");
-      Serial.print(imu.magY(), 2);
-      Serial.print(", ");
-      Serial.print(imu.magZ(), 2);
-      Serial.print(" ], Tmp (C) [ ");
-      Serial.print(imu.temp(), 2);
-      Serial.print(" ]");
-      Serial.println();
-      setPixelColour(green);
+    while (!imu.dataReady() && millis() - loopStartTime < 1UL * 10UL * 1000UL) {
+      blinkLed(1, 1000);
+      if (imu.dataReady()) {
+        imu.getAGMT(); // Values are only updated when 'getAGMT' is called
+        Serial.print("Scaled. Acc (mg) [ ");
+        Serial.print(imu.accX(), 2);
+        Serial.print(", ");
+        Serial.print(imu.accY(), 2);
+        Serial.print(", ");
+        Serial.print(imu.accZ(), 2);
+        Serial.print(" ], Gyr (DPS) [ ");
+        Serial.print(imu.gyrX(), 2);
+        Serial.print(", ");
+        Serial.print(imu.gyrY(), 2);
+        Serial.print(", ");
+        Serial.print(imu.gyrZ(), 2);
+        Serial.print(" ], Mag (uT) [ ");
+        Serial.print(imu.magX(), 2);
+        Serial.print(", ");
+        Serial.print(imu.magY(), 2);
+        Serial.print(", ");
+        Serial.print(imu.magZ(), 2);
+        Serial.print(" ], Tmp (C) [ ");
+        Serial.print(imu.temp(), 2);
+        Serial.print(" ]");
+        Serial.println();
+        setPixelColour(green);
+      }
     }
-  }
-  if (!imu.dataReady()) {
-    setPixelColour(red);
-  }
+    if (!imu.dataReady()) {
+      setPixelColour(red);
+    }
 
-  // Put the sensor to sleep
-  imu.sleep(true);
-  imu.lowPower(true);
-
+    // Put the sensor to sleep
+    imu.sleep(true);
+    imu.lowPower(true);
+  }
   // Stop loop timer
-  stopTimer();
+  unsigned long loopEndTime = millis() - loopStartTime;
+  Serial.print(F("readImu() function execution: ")); Serial.print(loopEndTime); Serial.println(F(" ms"));
 
 }

@@ -18,8 +18,9 @@ void readGnss() {
   setPixelColour(cyan);
 
   if (online.gnss) {
-
-    unsigned long loopStartTime = millis(); // Loop timer
+    
+    // Start loop timer
+    unsigned long loopStartTime = millis();
     valFix = 0; // Reset fix counter
 
     // Begin listening to the GNSS
@@ -27,9 +28,9 @@ void readGnss() {
 
     blinkLed(2, 1000); // Non-blocking delay to allow GNSS receiver to boot
     // Look for GNSS signal for up to 5 minutes
-    while ((valFix != maxValFix) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
+    while ((valFix != maxValFix) && millis() - loopStartTime < 1UL * 10UL * 1000UL) {
 
-#if DEBUG
+#if DEBUG_GNSS
       char gnssBuffer[100];
       sprintf(gnssBuffer, "%04u-%02d-%02d %02d:%02d:%02d,%ld,%ld,%d,%d,%d",
               gps.getYear(), gps.getMonth(), gps.getDay(),

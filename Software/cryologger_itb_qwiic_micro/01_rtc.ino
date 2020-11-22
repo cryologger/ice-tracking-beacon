@@ -10,18 +10,18 @@
 */
 
 void configureRtc() {
-
   // Initialize RTC
   rtc.begin();
 
   // Manually set time and date
-  //rtc.setTime(23, 58, 0); // (hours, minutes, seconds)
-  //rtc.setDate(11, 11, 20); // (day, month, year)
+  rtc.setTime(23, 59, 30); // (hours, minutes, seconds)
+  rtc.setDate(21, 11, 20); // (day, month, year)
 }
 
 void readRtc() {
 
-  unsigned long loopStartTime = millis(); // Loop timer
+  // Start loop timer
+  unsigned long loopStartTime = millis();
 
   // Get UNIX Epoch time
   unixtime = rtc.getEpoch();
@@ -55,6 +55,9 @@ void setRtcAlarm() {
   // Enable alarm
   rtc.enableAlarm(rtc.MATCH_HHMMSS);
 
+  // Attach alarm to interrupt service routine
+  rtc.attachInterrupt(alarmIsr);
+
   // Print the next RTC alarm date and time
   Serial.print("Current time: "); printDateTime();
   Serial.print("Next alarm: "); printAlarm();
@@ -72,40 +75,40 @@ void setRtcRollingAlarm() {
 void syncRtc() {
 
   setPixelColour(pink);
+  if (online.gnss) {
+    unsigned long loopStartTime = millis(); // Loop timer
+    bool dateValid = false;
+    bool timeValid = false;
+    rtcSyncFlag = false;
 
-  unsigned long loopStartTime = millis(); // Loop timer
-  bool dateValid = false;
-  bool timeValid = false;
-  rtcSyncFlag = false;
+    // Attempt to sync RTC with GNSS for up to 5 minutes
+    Serial.println(F("Attempting to sync RTC with GNSS..."));
 
-  // Attempt to sync RTC with GNSS for up to 5 minutes
-  Serial.println(F("Attempting to sync RTC with GNSS..."));
+    while ((!dateValid || !timeValid) && millis() - loopStartTime < 1UL * 10UL * 1000UL) {
 
-  while ((!dateValid || !timeValid) && millis() - loopStartTime < 1UL * 60UL * 1000UL) {
+      dateValid = gps.getDateValid();
+      timeValid = gps.getTimeValid();
 
-    dateValid = gps.getDateValid();
-    timeValid = gps.getTimeValid();
-
-    // Sync RTC with GNSS if date and time are valid
-    if (dateValid && timeValid) {
-      rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond());
-      rtc.setDate(gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
-      Serial.print("RTC time synced: "); printDateTime();
-      //blinkLed(5, 50); // Blink LED to indicate RTC sync
-      rtcSyncFlag = true;
-      setPixelColour(green);
+      // Sync RTC with GNSS if date and time are valid
+      if (dateValid && timeValid) {
+        rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond());
+        rtc.setDate(gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
+        Serial.print("RTC time synced: "); printDateTime();
+        rtcSyncFlag = true;
+        setPixelColour(green);
+      }
+      ISBDCallback();
     }
-    ISBDCallback();
+    if (!rtcSyncFlag) {
+      Serial.println(F("Warning: RTC sync failed"));
+      setPixelColour(red);
+    }
   }
-  if (!rtcSyncFlag) {
-    Serial.println(F("Warning: RTC sync failed"));
-    setPixelColour(red);
-  }
-
   // Set initial alarm to occur on hour rollover
   rtc.setAlarmTime(0, 0, 0);
   rtc.setAlarmDate(0, 0, 0);
-  rtc.enableAlarm(rtc.MATCH_MMSS);
+  //rtc.enableAlarm(rtc.MATCH_MMSS); // Hours rollover
+  rtc.enableAlarm(rtc.MATCH_SS); // Minutes rollovr
 
   // Attach alarm to interrupt service routine
   rtc.attachInterrupt(alarmIsr);

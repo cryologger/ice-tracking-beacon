@@ -37,21 +37,23 @@
 #include <Adafruit_NeoPixel.h>                            // https://github.com/adafruit/Adafruit_NeoPixel
 
 // Defined constants
-#define Serial        SerialUSB   // Required by SparkFun Qwiic Micro 
-#define DEBUG         false        // Output debugging messages to Serial Monitor
-#define DIAGNOSTICS   true        // Output Iridium diagnostic messages to Serial Monitor
+#define Serial          SerialUSB   // Required by SparkFun Qwiic Micro 
+#define DEBUG           true        // Output debugging messages to Serial Monitor
+#define DEBUG_GNSS      false
+#define DEBUG_IRIDIUM   true        // Output Iridium diagnostic messages to Serial Monitor
 
 // Pin definitions
-#define VBAT_PIN  A1
+#define VBAT_PIN        A1
+#define QWIIC_PWR_PIN   16
 
 // Object instantiations
 Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
-BME280            bme280;           // I2C Address: 0x77
-ICM_20948_I2C     imu;              // I2C Address: 0x69
-IridiumSBD        modem(Wire);      // I2C Address: 0x63
+BME280            bme280;         // I2C Address: 0x77
+ICM_20948_I2C     imu;            // I2C Address: 0x69
+IridiumSBD        modem(Wire);    // I2C Address: 0x63
 QWIIC_POWER       mySwitch;         // I2C Address: 0x41
 RTCZero           rtc;
-SFE_UBLOX_GPS     gps;              // I2C Address: 0x42
+SFE_UBLOX_GPS     gps;            // I2C Address: 0x42
 //SPIFlash          flash(21, &SPI1); //
 
 // Global constants
@@ -59,7 +61,7 @@ const float R1 = 9973000.0;   // Voltage divider resistor 1
 const float R2 = 998400.0;    // Voltage divider resistor 2
 
 // User defined global variables
-unsigned long alarmInterval         = 3600;    // RTC sleep duration in seconds (Default: 3600 seconds)
+unsigned long alarmInterval         = 300;    // RTC sleep duration in seconds (Default: 3600 seconds)
 byte          alarmSeconds          = 0;
 byte          alarmMinutes          = 4;
 byte          alarmHours            = 0;
@@ -129,6 +131,7 @@ struct struct_online {
   bool gnss = false;
   bool iridium = false;
   bool powerSwitch = false;
+  bool bme280 = false;
 } online;
 
 // Setup
@@ -136,7 +139,10 @@ void setup() {
 
   // Pin assignments
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(QWIIC_PWR_PIN, OUTPUT);
+
   digitalWrite(LED_BUILTIN, LOW);
+  digitalWrite(QWIIC_PWR_PIN, HIGH);
 
   // Set analog resolution to 12-bits
   analogReadResolution(12);
@@ -144,6 +150,7 @@ void setup() {
   analogReadCorrection(17, 2057);
 
   Wire.begin(); // Initialize I2C
+  Wire.setClock(400000); // Set I2C clock speed to 400 kHz
   //SPI1.begin(); // Initialize SPI
 
   Serial.begin(115200);
@@ -155,10 +162,10 @@ void setup() {
   Serial.println(F("Cryologger - Iceberg Tracking Beacon v3.0"));
   printLine();
 
-  // Configure
+  // Configuration
+  configureQwiicPower();  // Configure Qwiic Power Switch
   configureNeoPixel();    // Configure WS2812B RGB LED
   configureWatchdog();    // Configure Watchdog Timer
-  configureQwiicPower();  // Configure Qwiic Power Switch
   configureRtc();         // Configure real-time clock (RTC)
   configureGnss();        // Configure Sparkfun SAM-M8Q
   configureImu();         // Configure SparkFun ICM-20948
@@ -179,7 +186,7 @@ void loop() {
 
     // Perform measurements
     //readRtc();          // Read RTC
-    //printDateTime();
+    printDateTime();
     petDog();           // Pet the Watchdog Timer
     readBattery();
     readSensors();      // Read sensors

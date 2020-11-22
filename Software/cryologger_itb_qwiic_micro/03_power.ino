@@ -2,8 +2,8 @@
 void readBattery() {
 
   // Start loop timer
-  startTimer();
-  
+  unsigned long loopStartTime = millis();
+
   int reading = 0;
   byte samples = 30;
 
@@ -23,20 +23,17 @@ void readBattery() {
   }
 
   // print out the value you read:
-  Serial.print(F("Voltage: ")); Serial.println(voltage);
+  //Serial.print(F("Voltage: ")); Serial.println(voltage);
 
   // Stop loop timer
-  stopTimer();
+  unsigned long loopEndTime = millis() - loopStartTime;
+  //Serial.print(F("readBattery() function execution: ")); Serial.print(loopEndTime); Serial.println(F(" ms"));
 }
 
 // Configure the SparkFun Qwiic Power Switch
 void configureQwiicPower() {
   if (!mySwitch.begin()) {
-    Serial.println(F("Warning: Qwiic Power Switch not detected at default I2C address. Please check wiring."));\
-    online.powerSwitch = false;
-  }
-  else {
-    online.powerSwitch = true;
+    Serial.println(F("Warning: Qwiic Power Switch not detected at default I2C address. Please check wiring."));
   }
 }
 
@@ -59,6 +56,7 @@ void goToSleep() {
   USBDevice.detach();
 #endif
   qwiicPowerOff();      // Disable power
+
   LowPower.deepSleep(); // Enter deep sleep
 
   // Wake up
@@ -76,6 +74,7 @@ void wakeUp() {
     Serial.begin(115200);
     //while (!Serial);
     blinkLed(5, 500); // Non-blocking delay to allow user to open Serial Monitor
+    Serial.println(F(" awake!"));
 #endif
     qwiicPowerOn();
     configureNeoPixel();

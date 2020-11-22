@@ -3,7 +3,7 @@ void configureIridium() {
 
   if (modem.isConnected()) {
     modem.adjustATTimeout(30);          // Set AT timeout (Default = 20 seconds)
-    modem.adjustSendReceiveTimeout(180); // Set send/receive timeout (Default = 300 seconds)
+    modem.adjustSendReceiveTimeout(60); // Set send/receive timeout (Default = 300 seconds)
     modem.enable841lowPower(true);      // Enable ATtiny841 low-power mode
     online.iridium = true;
   }
@@ -17,24 +17,30 @@ void configureIridium() {
 void transmitData() {
 
   // Check if data can and should be transmitted
-  if ((online.iridium) && (transmitCounter == transmitInterval)) {
+  if ((online.iridium) && transmitCounter == transmitInterval)) {
 
-    unsigned long loopStartTime = millis(); // Loop timer
+    unsigned long loopStartTime = millis(); // Start loop timer
     int err;
+
+    Serial.println(F("Disabling ATtiny841 low power mode..."));
+    modem.enable841lowPower(false);
 
     Serial.println(F("Enabling the supercapacitor charger..."));
     modem.enableSuperCapCharger(true); // Enable the supercapacitor charger
 
     // Wait for supercapacitor charger PGOOD signal to go HIGH for up to 2 minutes
-    while ((!modem.checkSuperCapCharger()) && millis() - loopStartTime < 2UL * 60UL * 1000UL) {
-      //Serial.println(F("Waiting for supercapacitors to charge..."));
+    while (!modem.checkSuperCapCharger() && millis() - loopStartTime < 2UL * 60UL * 1000UL) {
+      Serial.println(F("Waiting for supercapacitors to charge..."));
       ISBDCallback();
     }
     Serial.println(F("Supercapacitors charged!"));
 
-    modem.enable9603Npower(true); // Enable power to the Qwiic Iridium 9603N
+    // Enable power for the Qwiic Iridium 9603N
+    Serial.println(F("Enabling Qwiic Iridium 9603N power..."));
+    modem.enable9603Npower(true);
 
     // Begin satellite modem operation
+    Serial.println(F("Starting modem..."));
     err = modem.begin();
     if (err == ISBD_SUCCESS) {
       uint8_t inBuffer[240];  // Buffer to store incoming transmission (240 byte limit)
@@ -105,7 +111,7 @@ void transmitData() {
 
     }
     else {
-      Serial.print(F("Begin failed: error")); Serial.println(err);
+      Serial.print(F("Begin failed: error ")); Serial.println(err);
       if (err == ISBD_NO_MODEM_DETECTED) {
         Serial.println(F("Warning: Qwiic Iridium 9603N not detected. Please check wiring."));
       }
@@ -123,15 +129,23 @@ void transmitData() {
     }
 
     // Power down the modem
-    Serial.println(F("Putting the Qwiic Iridium 9603N to sleep."));
+    Serial.println(F("Putting the Qwiic Iridium 9603N to sleep..."));
     err = modem.sleep();
     if (err != ISBD_SUCCESS) {
       Serial.print(F("Sleep failed: error ")); Serial.println(err);
     }
 
-    modem.enable9603Npower(false);      // Disable 9603N power
-    modem.enableSuperCapCharger(false); // Disable the supercapacitor charger
-    modem.enable841lowPower(true);      // Enable the ATtiny841 low power mode
+    // Disable 9603N power
+    Serial.println(F("Disabling 9603N power..."));
+    modem.enable9603Npower(false);
+
+    // Disable the supercapacitor charger
+    Serial.println(F("Disabling the supercapacitor charger..."));
+    modem.enableSuperCapCharger(false);
+
+    // Enable the ATtiny841 low power mode
+    Serial.println(F("Enabling ATtiny841 low power mode..."));
+    modem.enable841lowPower(true); // Change this to false if you want to measure the current draw without enabling low power mode
 
     transmitCounter = 0;  // Reset transmit counter
     unsigned long loopEndTime = millis() - loopStartTime;
@@ -144,36 +158,36 @@ void transmitData() {
     // Check if reset flag was transmitted
     if (resetFlag) {
       Serial.println(F("Forced system reset..."));
-      digitalWrite(LED_BUILTIN, HIGH);  // Turn on LED
-      while (1);                        // Wait for Watchdog Timer to reset system
+      digitalWrite(LED_BUILTIN, HIGH); // Turn on LED
+      while (1); // Wait for Watchdog Timer to reset system
     }
   }
 }
 
 // RockBLOCK callback function can be repeatedly called during transmission or GNSS signal acquisition
 bool ISBDCallback() {
-//#if DEBUG
+#if DEBUG_IRIDIUM
   digitalWrite(LED_BUILTIN, (millis() / 1000) % 2 == 1 ? HIGH : LOW);
-//#endif
+#endif
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis > 1000) {
     previousMillis = currentMillis;
     petDog();  // Reset the Watchdog Timer
-    readBattery();
+    readBattery(); // Read battery voltage during transmission (lowest voltage will be experienced)
   }
   return true;
 }
 
 // Callback to sniff the conversation with the Iridium modem
 void ISBDConsoleCallback(IridiumSBD *device, char c) {
-#if DIAGNOSTICS
+#if DEBUG_IRIDIUM
   Serial.write(c);
 #endif
 }
 
 // Callback to to monitor Iridium modem library's run state
 void ISBDDiagsCallback(IridiumSBD *device, char c) {
-#if DIAGNOSTICS
+#if DEBUG_IRIDIUM
   Serial.write(c);
 #endif
 }
@@ -181,9 +195,9 @@ void ISBDDiagsCallback(IridiumSBD *device, char c) {
 // Write data from structure to transmit buffer
 void writeBuffer() {
 
-  messageCounter++; // Increment message counter
+  messageCounter++;                         // Increment message counter
   message.messageCounter = messageCounter;  // Write message counter data to union
-  transmitCounter++; // Increment data transmission counter
+  transmitCounter++;                        // Increment data transmission counter
 
   // Concatenate current message with existing message(s) stored in transmit buffer
   memcpy(transmitBuffer + (sizeof(message) * (transmitCounter + (retransmitCounter * transmitInterval) - 1)), message.bytes, sizeof(message));
