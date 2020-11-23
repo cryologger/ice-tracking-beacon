@@ -6,7 +6,7 @@ void configureSensors() {
     online.bme280 = true;
   }
   else {
-    Serial.println(F("Warning: SparkFun BME280 not detected at default I2C address! Please check wiring."));
+    SERIAL_PORT.println(F("Warning: SparkFun BME280 not detected at default I2C address! Please check wiring."));
     online.bme280 = false;
   }
 }
@@ -30,5 +30,5 @@ void readSensors() {
   message.pressure = pressure * 100;
 
   unsigned long loopEndTime = millis() - loopStartTime;
-  Serial.print(F("readSenors() function execution: ")); Serial.print(loopEndTime); Serial.println(F(" ms"));
+  SERIAL_PORT.print(F("readSenors() function execution: ")); SERIAL_PORT.print(loopEndTime); SERIAL_PORT.println(F(" ms"));
 }

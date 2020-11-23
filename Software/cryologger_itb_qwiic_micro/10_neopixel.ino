@@ -29,10 +29,9 @@ void setPixelColour(uint32_t colour) {
     pixels.setPixelColor(0, pink);
   else if (colour == lime)
     pixels.setPixelColor(0, lime);
+  else if (colour == off)
+    pixels.clear(); // Set all pixel colors to 'off'
 
   pixels.show();   // Send the updated pixel colors to the hardware
   delay(2000);
-
-  pixels.clear(); // Set all pixel colors to 'off'
-  pixels.show(); // Send the updated pixel colors to the hardware
 }

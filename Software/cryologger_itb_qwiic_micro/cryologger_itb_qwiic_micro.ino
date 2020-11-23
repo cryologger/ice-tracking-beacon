@@ -9,7 +9,6 @@
     - SparkFun GPS Breakout - SAM-M8Q (Qwiic)
     - SparkFun Qwiic Iridium 9603N
     - Maxtena M1621HCT-P-SMA Iridium antenna
-
     - SparkFun Buck-Boost Converter
 
     Comments:
@@ -37,20 +36,27 @@
 #include <Adafruit_NeoPixel.h>                            // https://github.com/adafruit/Adafruit_NeoPixel
 
 // Defined constants
-#define Serial          SerialUSB   // Required by SparkFun Qwiic Micro 
+#define SERIAL_PORT     SerialUSB   // Required by SparkFun Qwiic Micro
+#define IRIDIUM_PORT    Serial      // Yellow wire D16 orange D17
+#define IRIDIUM_WIRE    Wire
+#define IRIDIUM_TIMEOUT 180
+
+
+// Debugging definitions
 #define DEBUG           true        // Output debugging messages to Serial Monitor
-#define DEBUG_GNSS      false
+#define DEBUG_GNSS      true
 #define DEBUG_IRIDIUM   true        // Output Iridium diagnostic messages to Serial Monitor
 
 // Pin definitions
-#define VBAT_PIN        A1
-#define QWIIC_PWR_PIN   16
+#define VBAT_PIN            A1
+#define IRIDIUM_SLEEP_PIN   7
 
 // Object instantiations
 Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
 BME280            bme280;         // I2C Address: 0x77
 ICM_20948_I2C     imu;            // I2C Address: 0x69
-IridiumSBD        modem(Wire);    // I2C Address: 0x63
+//IridiumSBD        modem(IRIDIUM_WIRE);    // I2C Address: 0x63
+IridiumSBD        modem(IRIDIUM_PORT, IRIDIUM_SLEEP_PIN);
 QWIIC_POWER       mySwitch;         // I2C Address: 0x41
 RTCZero           rtc;
 SFE_UBLOX_GPS     gps;            // I2C Address: 0x42
@@ -61,9 +67,9 @@ const float R1 = 9973000.0;   // Voltage divider resistor 1
 const float R2 = 998400.0;    // Voltage divider resistor 2
 
 // User defined global variables
-unsigned long alarmInterval         = 300;    // RTC sleep duration in seconds (Default: 3600 seconds)
+unsigned long alarmInterval         = 1800;    // RTC sleep duration in seconds (Default: 3600 seconds)
 byte          alarmSeconds          = 0;
-byte          alarmMinutes          = 4;
+byte          alarmMinutes          = 5;
 byte          alarmHours            = 0;
 byte          transmitInterval      = 1;     // Number of messages to transmit in each Iridium transmission (340 byte limit)
 byte          maxRetransmitCounter  = 4;      // Number of failed data transmissions to reattempt (340 byte limit)
@@ -81,10 +87,10 @@ int           maxValFix             = 5;      // Max GNSS valid fix counter
 
 float         voltage               = 0.0;
 
-uint8_t       transmitBuffer[340] = {};       // Qwiic Iridium 9603N transmission buffer
-unsigned int  messageCounter      = 0;        // Qwiic Iridium 9603N transmitted message counter
-unsigned int  retransmitCounter   = 0;        // Qwiic Iridium 9603N failed data transmission counter
-unsigned int  transmitCounter     = 0;        // Qwiic Iridium 9603N transmission interval counter
+uint8_t       transmitBuffer[340] = {};       // Iridium 9603 transmission buffer
+unsigned int  messageCounter      = 0;        // Iridium 9603 transmitted message counter
+unsigned int  retransmitCounter   = 0;        // Iridium 9603 failed data transmission counter
+unsigned int  transmitCounter     = 0;        // Iridium 9603 transmission interval counter
 
 unsigned long previousMillis      = 0;        // Global millis() timer
 
@@ -103,6 +109,7 @@ uint32_t purple   = pixels.Color(16, 0, 32);
 uint32_t orange   = pixels.Color(32, 16, 0);
 uint32_t pink     = pixels.Color(32, 0, 16);
 uint32_t lime     = pixels.Color(16, 32, 0);
+uint32_t off      = pixels.Color(0, 0, 0);
 
 // Union to store and send data byte-by-byte via Iridium
 typedef union {
@@ -139,10 +146,10 @@ void setup() {
 
   // Pin assignments
   pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(QWIIC_PWR_PIN, OUTPUT);
+  //pinMode(QWIIC_PWR_PIN, OUTPUT);
 
   digitalWrite(LED_BUILTIN, LOW);
-  digitalWrite(QWIIC_PWR_PIN, HIGH);
+  //digitalWrite(QWIIC_PWR_PIN, HIGH);
 
   // Set analog resolution to 12-bits
   analogReadResolution(12);
@@ -153,28 +160,31 @@ void setup() {
   Wire.setClock(400000); // Set I2C clock speed to 400 kHz
   //SPI1.begin(); // Initialize SPI
 
-  Serial.begin(115200);
-  //while (!Serial); // Wait for user to open Serial Monitor
+  SERIAL_PORT.begin(115200);
+  //while (!SerialUSB); // Wait for user to open Serial Monitor
   blinkLed(5, 500); // Non-blocking delay to allow user to open Serial Monitor
 
-  Serial.println();
+  SERIAL_PORT.println();
   printLine();
-  Serial.println(F("Cryologger - Iceberg Tracking Beacon v3.0"));
+  SERIAL_PORT.println(F("Cryologger - Iceberg Tracking Beacon v3.0"));
   printLine();
 
   // Configuration
   configureQwiicPower();  // Configure Qwiic Power Switch
+  qwiicPowerOn();
   configureNeoPixel();    // Configure WS2812B RGB LED
   configureWatchdog();    // Configure Watchdog Timer
   configureRtc();         // Configure real-time clock (RTC)
   configureGnss();        // Configure Sparkfun SAM-M8Q
   configureImu();         // Configure SparkFun ICM-20948
   configureSensors();     // Configure attached sensors
-  configureIridium();     // Configure SparkFun Qwiic Iridium 9603N
+  //configureIridiumI2C();  // Configure SparkFun Qwiic Iridium 9603N
+  configureIridiumSerial(); // Configure RockBLOCK Iridium 9603N
   syncRtc();              // Synchronize RTC with GNSS
 
   setPixelColour(white);
-  Serial.flush(); // Wait for transmission of any serial data to complete
+
+  SERIAL_PORT.flush(); // Wait for transmission of any serial data to complete
 }
 
 // Loop
@@ -187,15 +197,16 @@ void loop() {
     // Perform measurements
     //readRtc();          // Read RTC
     printDateTime();
-    petDog();           // Pet the Watchdog Timer
-    readBattery();
-    readSensors();      // Read sensors
-    readImu();          // Read IMU
-    readGnss();         // Read GNSS
-    qwiicPowerOff();    // Disable power to Qwiic devices
-    writeBuffer();      // Write data to buffer
-    transmitData();     // Transmit data
-    setRtcAlarm();      // Set RTC alarm
+    petDog();             // Pet the Watchdog Timer
+    readBattery();        // Read battery voltage
+    readSensors();        // Read sensors
+    readImu();            // Read IMU
+    readGnss();           // Read GNSS
+    writeBuffer();        // Write data to buffer
+    //transmitDataI2C();    // Transmit data
+    transmitDataSerial(); // Transmit data
+    qwiicPowerOff();      // Disable power to Qwiic devices
+    setRtcAlarm();        // Set RTC alarm
   }
 
   // Check for watchdog interrupt

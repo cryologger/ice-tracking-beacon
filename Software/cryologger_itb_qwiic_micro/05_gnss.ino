@@ -7,7 +7,7 @@ void configureGnss() {
     online.gnss = true;
   }
   else {
-    Serial.println(F("Warning: SAM-M8Q not detected at default I2C address. Please check wiring."));
+    SERIAL_PORT.println(F("Warning: SAM-M8Q not detected at default I2C address. Please check wiring."));
     online.gnss = false;
   }
 }
@@ -24,11 +24,11 @@ void readGnss() {
     valFix = 0; // Reset fix counter
 
     // Begin listening to the GNSS
-    Serial.println(F("Beginning to listen for GNSS traffic..."));
+    SERIAL_PORT.println(F("Beginning to listen for GNSS traffic..."));
 
     blinkLed(2, 1000); // Non-blocking delay to allow GNSS receiver to boot
     // Look for GNSS signal for up to 5 minutes
-    while ((valFix != maxValFix) && millis() - loopStartTime < 1UL * 10UL * 1000UL) {
+    while ((valFix != maxValFix) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
 
 #if DEBUG_GNSS
       char gnssBuffer[100];
@@ -37,7 +37,7 @@ void readGnss() {
               gps.getHour(), gps.getMinute(), gps.getSecond(),
               gps.getLatitude(), gps.getLongitude(), gps.getSIV(),
               gps.getFixType(), gps.getPDOP());
-      Serial.println(gnssBuffer);
+      SERIAL_PORT.println(gnssBuffer);
 #endif
 
       // Check for GNSS fix
@@ -48,7 +48,7 @@ void readGnss() {
       // Check if enough valid GNSS fixes have been collected
       if ((gps.getFixType() > 0) && (valFix == maxValFix)) {
 
-        Serial.println(F("A GNSS fix was found!"));
+        SERIAL_PORT.println(F("A GNSS fix was found!"));
 
         // Record GNSS coordinates
         long latitude = gps.getLatitude();
@@ -68,7 +68,7 @@ void readGnss() {
         if (gps.getDateValid() && gps.getTimeValid()) {
           rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond());
           rtc.setDate(gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
-          Serial.print("RTC time synced: "); printDateTime();
+          SERIAL_PORT.print("RTC time synced: "); printDateTime();
         }
         setPixelColour(green);
       }
@@ -77,11 +77,11 @@ void readGnss() {
 
     // Check if a GNSS fix was acquired
     if (valFix < maxValFix) {
-      Serial.println(F("Warning: No GNSS fix was found"));
+      SERIAL_PORT.println(F("Warning: No GNSS fix was found"));
       setPixelColour(red);
     }
 
     unsigned long loopEndTime = millis() - loopStartTime;
-    Serial.print(F("readGnss() function execution: ")); Serial.print(loopEndTime); Serial.println(" ms");
+    SERIAL_PORT.print(F("readGnss() function execution: ")); SERIAL_PORT.print(loopEndTime); SERIAL_PORT.println(" ms");
   }
 }

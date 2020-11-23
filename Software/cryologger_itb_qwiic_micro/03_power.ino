@@ -23,17 +23,17 @@ void readBattery() {
   }
 
   // print out the value you read:
-  //Serial.print(F("Voltage: ")); Serial.println(voltage);
+  //SERIAL_PORT.print(F("voltage: ")); SERIAL_PORT.println(voltage);
 
   // Stop loop timer
   unsigned long loopEndTime = millis() - loopStartTime;
-  //Serial.print(F("readBattery() function execution: ")); Serial.print(loopEndTime); Serial.println(F(" ms"));
+  //SERIAL_PORT.print(F("readBattery() function execution: ")); SERIAL_PORT.print(loopEndTime); SERIAL_PORT.println(F(" ms"));
 }
 
 // Configure the SparkFun Qwiic Power Switch
 void configureQwiicPower() {
   if (!mySwitch.begin()) {
-    Serial.println(F("Warning: Qwiic Power Switch not detected at default I2C address. Please check wiring."));
+    SERIAL_PORT.println(F("Warning: Qwiic Power Switch not detected at default I2C address. Please check wiring."));
   }
 }
 
@@ -50,13 +50,14 @@ void qwiicPowerOff() {
 // Enter deep sleep
 void goToSleep() {
 #if DEBUG
-  Serial.println(F("Entering deep sleep..."));
-  Serial.flush();
-  Serial.end();
+  SERIAL_PORT.println(F("Entering deep sleep..."));
+  SERIAL_PORT.flush();
+  SERIAL_PORT.end();
   USBDevice.detach();
 #endif
   qwiicPowerOff();      // Disable power
-
+  setPixelColour(off);
+  digitalWrite(LED_BUILTIN, LOW);
   LowPower.deepSleep(); // Enter deep sleep
 
   // Wake up
@@ -71,10 +72,10 @@ void wakeUp() {
 #if DEBUG
     // Re-establish Serial
     USBDevice.attach();
-    Serial.begin(115200);
-    //while (!Serial);
-    blinkLed(5, 500); // Non-blocking delay to allow user to open Serial Monitor
-    Serial.println(F(" awake!"));
+    SERIAL_PORT.begin(115200);
+    while (!Serial);
+    blinkLed(2, 1000); // Non-blocking delay to allow user to open Serial Monitor
+    SERIAL_PORT.println(F(" awake!"));
 #endif
     qwiicPowerOn();
     configureNeoPixel();
@@ -101,4 +102,8 @@ void blinkLed(byte ledFlashes, unsigned int ledDelay) {
     }
   }
   digitalWrite(LED_BUILTIN, LOW);
+}
+
+void blinkLED(unsigned long interval) {
+  digitalWrite(LED_BUILTIN, (millis() / interval) % 2 == 1 ? HIGH : LOW);
 }

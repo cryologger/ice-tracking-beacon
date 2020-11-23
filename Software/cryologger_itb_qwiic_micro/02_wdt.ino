@@ -33,7 +33,7 @@ void configureWatchdog() {
 
 // Pet the Watchdog Timer
 void petDog() {
-  //Serial.print(F("Watchdog interrupt: ")); Serial.println(watchdogCounter);
+  //SERIAL_PORT.print(F("Watchdog interrupt: ")); SERIAL_PORT.println(watchdogCounter);
   WDT->CLEAR.bit.CLEAR = 0xA5;        // Clear the Watchdog Timer and restart time-out period //REG_WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
   while (WDT->STATUS.bit.SYNCBUSY);   // Await synchronization of registers between clock domains
   watchdogFlag = false;               // Clear watchdog flag
