@@ -10,8 +10,8 @@
 */
 
 void configureRtc() {
-  // Initialize RTC
-  rtc.begin();
+
+  rtc.begin(); // Initialize RTC
 
   // Manually set time and date
   //rtc.setTime(23, 59, 30); // (hours, minutes, seconds)
@@ -32,6 +32,7 @@ void readRtc() {
   //SERIAL_PORT.print(F("Datetime: ")); printDateTime();
   //SERIAL_PORT.print(F("UNIX Epoch time: ")); SERIAL_PORT.println(unixtime);
 
+  // Stop loop timer
   unsigned long loopEndTime = millis() - loopStartTime;
   SERIAL_PORT.print(F("readRtc() function execution: ")); SERIAL_PORT.print(loopEndTime); SERIAL_PORT.println(F(" ms"));
 }
@@ -47,18 +48,35 @@ void setRtcAlarm() {
     alarmTime = unixtime + alarmInterval; // Recalculate next alarm
     SERIAL_PORT.println(F("Warning: RTC alarm set in the past!"));
 
-    // Set alarm time and date to next hour rollover
-    rtc.setAlarmTime(hour(alarmTime), 0, 0);
+    setLedColour(orange);
+
+    // Set alarm to occur on next hour rollover
+    rtc.setAlarmTime(0, 0, 0);
     rtc.setAlarmDate(day(alarmTime), month(alarmTime), year(alarmTime) - 2000);
+
+    // Enable alarm
+    rtc.enableAlarm(rtc.MATCH_MMSS);
   }
   else {
-    // Set alarm time and date
-    rtc.setAlarmTime(hour(alarmTime), minute(alarmTime), 0);
-    rtc.setAlarmDate(day(alarmTime), month(alarmTime), year(alarmTime) - 2000);
-  }
 
-  // Enable alarm
-  rtc.enableAlarm(rtc.MATCH_HHMMSS);
+    if (firstTimeFlag) {
+      // Set initial alarm to occur on next hour rollover
+      rtc.setAlarmTime(0, 0, 0);
+      rtc.setAlarmDate(day(alarmTime), month(alarmTime), year(alarmTime) - 2000);
+
+      // Enable alarm
+      rtc.enableAlarm(rtc.MATCH_MMSS);
+      firstTimeFlag = false; // Clear flag
+    }
+    else {
+      // Set alarm time and date
+      rtc.setAlarmTime(hour(alarmTime), minute(alarmTime), 0);
+      rtc.setAlarmDate(day(alarmTime), month(alarmTime), year(alarmTime) - 2000);
+
+      // Enable alarm
+      rtc.enableAlarm(rtc.MATCH_HHMMSS);
+    }
+  }
 
   // Attach alarm to interrupt service routine
   rtc.attachInterrupt(alarmIsr);
@@ -77,12 +95,16 @@ void setRtcRollingAlarm() {
   rtc.setAlarmDate(rtc.getDay(), rtc.getMonth(), rtc.getYear());
   rtc.enableAlarm(rtc.MATCH_HHMMSS);
 }
+
+// Synchronize RTC with GNSS
 void syncRtc() {
 
-  setPixelColour(pink);
+  setLedColour(pink);
+
+  // Start loop timer
+  unsigned long loopStartTime = millis();
 
   if (online.gnss) {
-    unsigned long loopStartTime = millis(); // Loop timer
     bool dateValid = false;
     bool timeValid = false;
     rtcSyncFlag = false;
@@ -101,27 +123,15 @@ void syncRtc() {
         rtc.setDate(gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
         SERIAL_PORT.print("RTC time synced: "); printDateTime();
         rtcSyncFlag = true;
-        setPixelColour(green);
+        setLedColour(green);
       }
       ISBDCallback();
     }
     if (!rtcSyncFlag) {
       SERIAL_PORT.println(F("Warning: RTC sync failed!"));
-      setPixelColour(red);
+      setLedColour(red);
     }
   }
-  // Set initial alarm to occur on hour rollover
-  rtc.setAlarmTime(0, 0, 0);
-  rtc.setAlarmDate(0, 0, 0);
-  rtc.enableAlarm(rtc.MATCH_MMSS); // Hour rollover
-  //rtc.enableAlarm(rtc.MATCH_SS); // Minute rollovr
-
-  // Attach alarm to interrupt service routine
-  rtc.attachInterrupt(alarmIsr);
-
-  // Print initial datetime and alarm
-  SERIAL_PORT.print("Datetime: "); printTab(1); printDateTime();
-  SERIAL_PORT.print("Alarm: "); printTab(2); printAlarm();
 }
 
 // RTC alarm interrupt service routine

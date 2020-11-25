@@ -4,7 +4,7 @@ void configureIridiumI2C() {
   if (modem.isConnected()) {
     modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
     //modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE); // Assume USB power
-    modem.adjustATTimeout(20);          // Adjust timeout timer for serial AT commands (default = 20 seconds)
+    modem.adjustATTimeout(30);          // Adjust timeout timer for serial AT commands (default = 20 seconds)
     modem.adjustSendReceiveTimeout(60); // Adjust timeout timer for library send/receive commands (default = 300 seconds)
     modem.enable841lowPower(true);      // Enable ATtiny841 low-power mode
     online.iridium = true;
@@ -18,7 +18,7 @@ void configureIridiumI2C() {
 // Transmit data using SparkFun Qwiic Iridium 9603N
 void transmitDataI2C() {
 
-  setPixelColour(purple);
+  setLedColour(purple);
 
   // Check if data can and should be transmitted
   if ((online.iridium) && (transmitCounter == transmitInterval)) {
@@ -171,32 +171,29 @@ void transmitDataI2C() {
 
 // RockBLOCK non-blocking callback function can be repeatedly called during transmission or GNSS signal acquisition
 bool ISBDCallback() {
+#if DEBUG_IRIDIUM
+  digitalWrite(LED_BUILTIN, (millis() / 1000) % 2 == 1 ? HIGH : LOW);
+#endif
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis > 1000) {
     previousMillis = currentMillis;
-    petDog();  // Reset the Watchdog Timer
+    petDog(); // Reset the Watchdog Timer
     readBattery(); // Read battery voltage during transmission (when lowest voltage will be experienced)
-#if DEBUG_IRIDIUM
-    ledState = !ledState;
-    digitalWrite(LED_BUILTIN, ledState);
-#endif
   }
   return true;
 }
 
+#if DEBUG_IRIDIUM
 // Callback to sniff the conversation with the Iridium modem
 void ISBDConsoleCallback(IridiumSBD *device, char c) {
-#if DEBUG_IRIDIUM
   SERIAL_PORT.write(c);
-#endif
 }
 
 // Callback to to monitor Iridium modem library's run state
 void ISBDDiagsCallback(IridiumSBD *device, char c) {
-#if DEBUG_IRIDIUM
   SERIAL_PORT.write(c);
-#endif
 }
+#endif
 
 // Write data from structure to transmit buffer
 void writeBuffer() {

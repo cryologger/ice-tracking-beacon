@@ -1,4 +1,4 @@
-// Configure SparkFun ICM-20948 IMU
+// Configure SparkFun ICM-20948
 void configureImu() {
 
   imu.begin(Wire, 1);
@@ -11,13 +11,12 @@ void configureImu() {
   }
 }
 
-// Read AHRS IMU
+// Read SparkFun ICM-20948
 void readImu() {
 
-  setPixelColour(cyan);
+  setLedColour(magenta);
 
-  // Start loop timer
-  unsigned long loopStartTime = millis();
+  unsigned long loopStartTime = millis(); // Start loop timer
 
   if (online.imu) {
     // Wake the sensor
@@ -49,14 +48,14 @@ void readImu() {
     SERIAL_PORT.print(imu.temp(), 2);
     SERIAL_PORT.print(" ]");
     SERIAL_PORT.println();
-    setPixelColour(green);
+    setLedColour(green);
 
     // Put the sensor to sleep
     imu.sleep(true);
     imu.lowPower(true);
   }
-  // Stop loop timer
-  unsigned long loopEndTime = millis() - loopStartTime;
+
+  unsigned long loopEndTime = millis() - loopStartTime; // Stop loop timer
   SERIAL_PORT.print(F("readImu() function execution: ")); SERIAL_PORT.print(loopEndTime); SERIAL_PORT.println(F(" ms"));
 
 }

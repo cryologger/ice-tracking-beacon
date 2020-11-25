@@ -2,7 +2,7 @@
 void configureIridiumSerial() {
   modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
   //modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE); // Assume USB power
-  modem.adjustATTimeout(20);            // Adjust timeout timer for serial AT commands (default = 20 seconds)
+  modem.adjustATTimeout(30);            // Adjust timeout timer for serial AT commands (default = 20 seconds)
   modem.adjustSendReceiveTimeout(180);  // Adjust timeout timer for library send/receive commands (default = 300 seconds)
   online.iridium = true;
 }
@@ -10,7 +10,7 @@ void configureIridiumSerial() {
 // Transmit data using SparkFun Qwiic Iridium 9603N
 void transmitDataSerial() {
 
-  setPixelColour(purple);
+  setLedColour(purple);
 
   // Check if data can and should be transmitted
   if ((online.iridium) && (transmitCounter == transmitInterval)) {
@@ -47,7 +47,7 @@ void transmitDataSerial() {
 
       // Check if transmission was successful
       if (err == ISBD_SUCCESS) {
-        setPixelColour(green);
+        setLedColour(green);
         retransmitCounter = 0;
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmit buffer array
         SERIAL_PORT.println(F("Transmission successful!"));
@@ -109,7 +109,7 @@ void transmitDataSerial() {
         retransmitCounter = 0;
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmitBuffer array
       }
-      setPixelColour(red);
+      setLedColour(red);
     }
 
     // Power down the modem
@@ -117,18 +117,17 @@ void transmitDataSerial() {
     err = modem.sleep();
     if (err != ISBD_SUCCESS) {
       SERIAL_PORT.print(F("Sleep failed: error ")); SERIAL_PORT.println(err);
-      setPixelColour(orange);
+      setLedColour(orange);
     }
 
     // Close the serial port connected to the RockBLOCK modem
     IRIDIUM_PORT.end();
 
     transmitCounter = 0;  // Reset transmit counter
-    unsigned long loopEndTime = millis() - loopStartTime;
+    unsigned long loopEndTime = millis() - loopStartTime; // Stop loop timer
     message.transmitDuration = loopEndTime / 1000;
 
     SERIAL_PORT.print(F("transmitData() function execution: ")); SERIAL_PORT.print(loopEndTime); SERIAL_PORT.println(" ms");
-    SERIAL_PORT.print(F("transmitDuration: ")); SERIAL_PORT.println(loopEndTime / 1000);
     SERIAL_PORT.print(F("retransmitCounter: ")); SERIAL_PORT.println(retransmitCounter);
 
     // Check if reset flag was transmitted

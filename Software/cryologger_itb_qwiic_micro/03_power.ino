@@ -22,7 +22,6 @@ void readBattery() {
     message.voltage = voltage * 1000;
   }
 
-  // print out the value you read:
   //SERIAL_PORT.print(F("voltage: ")); SERIAL_PORT.println(voltage);
 
   // Stop loop timer
@@ -53,11 +52,10 @@ void goToSleep() {
   SERIAL_PORT.println(F("Entering deep sleep..."));
   SERIAL_PORT.flush();
   SERIAL_PORT.end();
-  USBDevice.detach();
+  USBDevice.detach(); // Safely detach USB prior to sleeping
 #endif
-  qwiicPowerOff();      // Disable power
-  setPixelColour(off);
-  digitalWrite(LED_BUILTIN, LOW);
+  qwiicPowerOff(); // Disable power to Qwiic peripherials
+  setLedColour(off);
   LowPower.deepSleep(); // Enter deep sleep
 
   // Wake up
@@ -70,19 +68,18 @@ void wakeUp() {
   if (alarmFlag) {
     readRtc(); // Read RTC
 #if DEBUG
-    // Re-establish Serial
-    USBDevice.attach();
+    USBDevice.attach(); // Re-attach USB
     SERIAL_PORT.begin(115200);
-    while (!Serial);
+    //while (!SERIAL_PORT);
     blinkLed(2, 1000); // Non-blocking delay to allow user to open Serial Monitor
     SERIAL_PORT.println(F(" awake!"));
 #endif
-    qwiicPowerOn();
-    configureNeoPixel();
-    configureGnss();        // Configure Sparkfun SAM-M8Q
-    configureImu();         // Configure SparkFun ICM-20948
-    configureSensors();     // Configure attached sensors
-    //configureIridium();     // Configure SparkFun Qwiic Iridium 9603N
+    qwiicPowerOn();       // Enable power to Qwiic peripherals
+    configureLed();       // Configure WS2812B RGB LED
+    configureGnss();      // Configure Sparkfun SAM-M8Q
+    configureImu();       // Configure SparkFun ICM-20948
+    configureSensors();   // Configure attached sensors
+    //configureIridium();   // Configure SparkFun Qwiic Iridium 9603N
   }
 }
 
@@ -96,14 +93,10 @@ void blinkLed(byte ledFlashes, unsigned int ledDelay) {
     unsigned long currentMillis = millis();
     if (currentMillis - previousMillis > ledDelay) {
       previousMillis = currentMillis;
-      ledState = !ledState;
-      digitalWrite(LED_BUILTIN, ledState);
+      ledStateFlag = !ledStateFlag;
+      digitalWrite(LED_BUILTIN, ledStateFlag);
       i++;
     }
   }
   digitalWrite(LED_BUILTIN, LOW);
-}
-
-void blinkLED(unsigned long interval) {
-  digitalWrite(LED_BUILTIN, (millis() / interval) % 2 == 1 ? HIGH : LOW);
 }

@@ -1,4 +1,4 @@
-// Configure the WDT to perform a system reset if loop() blocks for more than 8-16 seconds
+// Configure the Watchdog Timer to perform a system reset if loop() blocks for more than 8-16 seconds
 void configureWatchdog() {
   // Set up the generic clock (GCLK2) used to clock the watchdog timer at 1.024kHz
   REG_GCLK_GENDIV = GCLK_GENDIV_DIV(4) |          // Divide the 32.768kHz clock source by divisor 32, where 2^(4 + 1): 32.768kHz/32=1.024kHz
@@ -31,7 +31,7 @@ void configureWatchdog() {
   NVIC_EnableIRQ(WDT_IRQn);
 }
 
-// Pet the Watchdog Timer
+// Reset the Watchdog Timer
 void petDog() {
   //SERIAL_PORT.print(F("Watchdog interrupt: ")); SERIAL_PORT.println(watchdogCounter);
   WDT->CLEAR.bit.CLEAR = 0xA5;        // Clear the Watchdog Timer and restart time-out period //REG_WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;

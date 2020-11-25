@@ -14,9 +14,9 @@ void configureSensors() {
 // Read attached sensors
 void readSensors() {
 
-  setPixelColour(yellow);
+  setLedColour(yellow);
 
-  unsigned long loopStartTime = millis();
+  unsigned long loopStartTime = millis(); // Start the loop timer
 
   // Wake-up, take readings and re-enter sleep mode
   bme280.setMode(MODE_FORCED);
@@ -29,6 +29,8 @@ void readSensors() {
   message.humidity = humidity * 100;
   message.pressure = pressure * 100;
 
-  unsigned long loopEndTime = millis() - loopStartTime;
+  setLedColour(green);
+
+  unsigned long loopEndTime = millis() - loopStartTime; // Stop loop timer
   SERIAL_PORT.print(F("readSenors() function execution: ")); SERIAL_PORT.print(loopEndTime); SERIAL_PORT.println(F(" ms"));
 }

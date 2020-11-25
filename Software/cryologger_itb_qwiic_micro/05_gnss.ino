@@ -3,7 +3,7 @@ void configureGnss() {
   blinkLed(1, 1000);
   if (gps.begin()) {
     gps.setI2COutput(COM_TYPE_UBX); // Set I2C port to output UBX only (turn off NMEA noise)
-    //gps.saveConfiguration();        // Save current settings to Flash and BBR
+    //gps.saveConfiguration(); // Save current settings to Flash and BBR
     online.gnss = true;
   }
   else {
@@ -15,19 +15,16 @@ void configureGnss() {
 // Read SparkFun GPS Breakout SAM-M8Q
 void readGnss() {
 
-  setPixelColour(cyan);
+  setLedColour(cyan);
 
   if (online.gnss) {
-    
-    // Start loop timer
-    unsigned long loopStartTime = millis();
+
+    unsigned long loopStartTime = millis(); // Start loop timer
     valFix = 0; // Reset fix counter
 
-    // Begin listening to the GNSS
-    SERIAL_PORT.println(F("Beginning to listen for GNSS traffic..."));
-
-    blinkLed(2, 1000); // Non-blocking delay to allow GNSS receiver to boot
     // Look for GNSS signal for up to 5 minutes
+    SERIAL_PORT.println(F("Beginning to listen for GNSS traffic..."));
+    
     while ((valFix != maxValFix) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
 
 #if DEBUG_GNSS
@@ -56,32 +53,37 @@ void readGnss() {
         byte satellites = gps.getSIV();
         byte fix = gps.getFixType();
         unsigned int pdop = gps.getPDOP();
+        bool dateValid = gps.getDateValid();
+        bool timeValid = gps.getTimeValid();
 
         // Write data to union
         message.latitude = latitude;
         message.longitude = longitude;
         message.satellites = satellites;
         message.pdop = pdop;
-        break;
 
         // Sync RTC with GNSS if date and time are valid
-        if (gps.getDateValid() && gps.getTimeValid()) {
+        if (dateValid && timeValid) {
           rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond());
           rtc.setDate(gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
           SERIAL_PORT.print("RTC time synced: "); printDateTime();
         }
-        setPixelColour(green);
+        else {
+          SERIAL_PORT.println("Warning: Invalid GNSS date and time!");
+          setLedColour(orange);
+        }
+        setLedColour(green);
       }
       ISBDCallback();
     }
 
     // Check if a GNSS fix was acquired
     if (valFix < maxValFix) {
-      SERIAL_PORT.println(F("Warning: No GNSS fix was found"));
-      setPixelColour(red);
+      SERIAL_PORT.println(F("Warning: No GNSS fix was found!"));
+      setLedColour(red);
     }
 
-    unsigned long loopEndTime = millis() - loopStartTime;
+    unsigned long loopEndTime = millis() - loopStartTime; // Stop loop timer
     SERIAL_PORT.print(F("readGnss() function execution: ")); SERIAL_PORT.print(loopEndTime); SERIAL_PORT.println(" ms");
   }
 }

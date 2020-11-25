@@ -39,8 +39,6 @@
 #define SERIAL_PORT     SerialUSB   // Required by SparkFun Qwiic Micro
 #define IRIDIUM_PORT    Serial      // Yellow wire D16 orange D17
 #define IRIDIUM_WIRE    Wire
-#define IRIDIUM_TIMEOUT 180
-
 
 // Debugging definitions
 #define DEBUG           true        // Output debugging messages to Serial Monitor
@@ -67,18 +65,19 @@ const float R1 = 9973000.0;   // Voltage divider resistor 1
 const float R2 = 998400.0;    // Voltage divider resistor 2
 
 // User defined global variables
-unsigned long alarmInterval         = 1800;    // RTC sleep duration in seconds (Default: 3600 seconds)
+unsigned long alarmInterval         = 900;    // RTC sleep duration in seconds (Default: 3600 seconds)
 byte          alarmSeconds          = 0;
 byte          alarmMinutes          = 5;
 byte          alarmHours            = 0;
-byte          transmitInterval      = 1;     // Number of messages to transmit in each Iridium transmission (340 byte limit)
+byte          transmitInterval      = 1;      // Number of messages to transmit in each Iridium transmission (340 byte limit)
 byte          maxRetransmitCounter  = 4;      // Number of failed data transmissions to reattempt (340 byte limit)
 
 // Global variables
-volatile bool alarmFlag             = false;  // Flag for alarm interrupt service routine
+volatile bool alarmFlag             = true;   // Flag for alarm interrupt service routine
 volatile bool watchdogFlag          = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter       = 0;      // Watchdog Timer interrupt counter
-bool          ledState              = LOW;    // Flag to toggle LED in blinkLed() function
+bool          firstTimeFlag         = true;   // Flag to determine if the program is running for the first time
+bool          ledStateFlag          = LOW;    // Flag to toggle LED in blinkLed() function
 bool          rtcSyncFlag           = true;   // Flag to determine if RTC should be set using GNSS time
 bool          resetFlag             = 0;      // Flag to force system reset using Watchdog Timer
 
@@ -87,17 +86,16 @@ int           maxValFix             = 5;      // Max GNSS valid fix counter
 
 float         voltage               = 0.0;
 
-uint8_t       transmitBuffer[340] = {};       // Iridium 9603 transmission buffer
-unsigned int  messageCounter      = 0;        // Iridium 9603 transmitted message counter
-unsigned int  retransmitCounter   = 0;        // Iridium 9603 failed data transmission counter
-unsigned int  transmitCounter     = 0;        // Iridium 9603 transmission interval counter
+uint8_t       transmitBuffer[340]   = {};     // Iridium 9603 transmission buffer
+unsigned int  messageCounter        = 0;      // Iridium 9603 transmitted message counter
+unsigned int  retransmitCounter     = 0;      // Iridium 9603 failed data transmission counter
+unsigned int  transmitCounter       = 0;      // Iridium 9603 transmission interval counter
 
-unsigned long previousMillis      = 0;        // Global millis() timer
+unsigned long previousMillis        = 0;      // Global millis() timer
 
-time_t        alarmTime           = 0;
-time_t        unixtime            = 0;
+time_t        alarmTime, unixtime   = 0;
 
-// NeoPixel colour definitons
+// WS2812B RGB LED colour definitons
 uint32_t white    = pixels.Color(32, 32, 32);
 uint32_t red      = pixels.Color(32, 0, 0);
 uint32_t green    = pixels.Color(0, 32, 0);
@@ -146,10 +144,7 @@ void setup() {
 
   // Pin assignments
   pinMode(LED_BUILTIN, OUTPUT);
-  //pinMode(QWIIC_PWR_PIN, OUTPUT);
-
   digitalWrite(LED_BUILTIN, LOW);
-  //digitalWrite(QWIIC_PWR_PIN, HIGH);
 
   // Set analog resolution to 12-bits
   analogReadResolution(12);
@@ -161,8 +156,8 @@ void setup() {
   //SPI1.begin(); // Initialize SPI
 
   SERIAL_PORT.begin(115200);
-  //while (!SerialUSB); // Wait for user to open Serial Monitor
-  blinkLed(5, 500); // Non-blocking delay to allow user to open Serial Monitor
+  //while (!SERIAL_PORT); // Wait for user to open Serial Monitor
+  blinkLed(4, 1000); // Non-blocking delay to allow user to open Serial Monitor
 
   SERIAL_PORT.println();
   printLine();
@@ -171,8 +166,8 @@ void setup() {
 
   // Configuration
   configureQwiicPower();  // Configure Qwiic Power Switch
-  qwiicPowerOn();
-  configureNeoPixel();    // Configure WS2812B RGB LED
+  qwiicPowerOn();         // Enable power to Qwiic peripherals
+  configureLed();         // Configure WS2812B RGB LED
   configureWatchdog();    // Configure Watchdog Timer
   configureRtc();         // Configure real-time clock (RTC)
   configureGnss();        // Configure Sparkfun SAM-M8Q
@@ -182,7 +177,7 @@ void setup() {
   configureIridiumSerial(); // Configure RockBLOCK Iridium 9603N
   syncRtc();              // Synchronize RTC with GNSS
 
-  setPixelColour(white);
+  setLedColour(white);
 
   SERIAL_PORT.flush(); // Wait for transmission of any serial data to complete
 }
@@ -192,31 +187,31 @@ void loop() {
 
   // Check if alarm flag was set
   if (alarmFlag) {
-    alarmFlag = false;  // Clear alarm flag
-
+    alarmFlag = false; // Clear alarm flag
+    printDateTime(); // Print RTC's current date and time
+    
     // Perform measurements
-    //readRtc();          // Read RTC
-    printDateTime();
-    petDog();             // Pet the Watchdog Timer
-    readBattery();        // Read battery voltage
-    readSensors();        // Read sensors
-    readImu();            // Read IMU
-    readGnss();           // Read GNSS
-    writeBuffer();        // Write data to buffer
+    readRtc();
+    petDog();             // Reset the Watchdog Timer
+    readBattery();        // Read the battery voltage
+    readSensors();        // Read attached sensors
+    readImu();            // Read the IMU
+    readGnss();           // Read the GNSS
+    writeBuffer();        // Write the data to transmit buffer
     //transmitDataI2C();    // Transmit data
-    transmitDataSerial(); // Transmit data
-    qwiicPowerOff();      // Disable power to Qwiic devices
-    setRtcAlarm();        // Set RTC alarm
+    transmitDataSerial(); // Attempt to transmit data
+    qwiicPowerOff();      // Disable power to Qwiic peripheral devices
+    setRtcAlarm();        // Set the RTC alarm
   }
 
   // Check for watchdog interrupt
   if (watchdogFlag) {
-    petDog();
+    petDog(); // Reset the Watchdog Timer
   }
 
   // Blink LED
   blinkLed(1, 25);
 
-  // Enter deep sleep and await WDT or RTC alarm interrupt
+  // Enter deep sleep and wait for WDT or RTC alarm interrupt
   goToSleep();
 }
