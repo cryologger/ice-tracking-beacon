@@ -63,8 +63,27 @@ void readGnss() {
 
         // Sync RTC with GNSS if date and time are valid
         if (dateValid && timeValid) {
+
+          // Calculate RTC drift
+          tmElements_t tm;
+          tm.Year = gps.getYear() - 1970;
+          tm.Month = gps.getMonth();
+          tm.Day = gps.getDay();
+          tm.Hour = gps.getHour();
+          tm.Minute = gps.getMinute();
+          tm.Second = gps.getSecond();
+          time_t rtcEpoch = rtc.getEpoch(); // Get current epoch time
+          time_t gnssEpoch = makeTime(tm); // Convert tmElements to time_t
+          int rtcDrift = rtcEpoch - gnssEpoch; // Calculate difference
+
+          // Write data to union
+          message.rtcDrift = rtcDrift;
+          SERIAL_PORT.print("RTC drift: "); SERIAL_PORT.println(rtcDrift);
+
+          // Sync RTC date and time
           rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond());
           rtc.setDate(gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
+
           SERIAL_PORT.print("RTC time synced: "); printDateTime();
         }
         setLedColour(green);

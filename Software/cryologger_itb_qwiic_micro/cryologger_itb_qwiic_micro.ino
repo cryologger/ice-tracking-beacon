@@ -35,9 +35,9 @@
 #include <ArduinoLowPower.h>                              // https://github.com/arduino-libraries/ArduinoLowPower
 #include <Adafruit_NeoPixel.h>                            // https://github.com/adafruit/Adafruit_NeoPixel
 
-// Defined constants
+// Port definitions
 #define SERIAL_PORT     SerialUSB   // Required by SparkFun Qwiic Micro
-#define IRIDIUM_PORT    Serial      // D16: Pin 1 (yellow) D17: Pin 6 (orange)
+#define IRIDIUM_PORT    Serial      
 #define IRIDIUM_WIRE    Wire
 
 // Debugging definitions
@@ -54,7 +54,7 @@ Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
 BME280            bme280;         // I2C Address: 0x77
 ICM_20948_I2C     imu;            // I2C Address: 0x69
 //IridiumSBD        modem(IRIDIUM_WIRE); // I2C Address: 0x63
-IridiumSBD        modem(IRIDIUM_PORT, IRIDIUM_SLEEP_PIN);
+IridiumSBD        modem(IRIDIUM_PORT, IRIDIUM_SLEEP_PIN); // D16: Pin 1 (yellow) D17: Pin 6 (orange)
 QWIIC_POWER       mySwitch;       // I2C Address: 0x41
 RTCZero           rtc;
 SFE_UBLOX_GPS     gps;            // I2C Address: 0x42
@@ -93,7 +93,8 @@ unsigned int  transmitCounter       = 0;      // Iridium 9603 transmission inter
 
 unsigned long previousMillis        = 0;      // Global millis() timer
 
-time_t        alarmTime, unixtime   = 0;
+time_t        alarmTime, unixtime   = 0;      // Global RTC time variables
+
 
 // WS2812B RGB LED colour definitons
 uint32_t white    = pixels.Color(32, 32, 32);
@@ -115,15 +116,16 @@ typedef union {
     uint32_t  unixtime;           // UNIX Epoch time                (4 bytes)
     int16_t   temperature;        // Temperature (°C)               (2 bytes)
     uint16_t  humidity;           // Humidity (%)                   (2 bytes)
-    uint16_t  pressure;           // Pressure (Pa)                  (4 bytes)
+    uint16_t  pressure;           // Pressure (Pa)                  (2 bytes)
     int32_t   latitude;           // Latitude (DD)                  (4 bytes)
     int32_t   longitude;          // Longitude (DD)                 (4 bytes)
     uint8_t   satellites;         // # of satellites                (1 byte)
-    uint16_t  pdop;               // PDOP                           (2 byte)
+    uint16_t  pdop;               // PDOP                           (2 bytes)
+    int16_t   rtcDrift;           // RTC offset from GNSS time      (2 bytes)
     uint16_t  voltage;            // Battery voltage (V)            (2 bytes)
     uint16_t  transmitDuration;   // Previous transmission duration (2 bytes)
     uint16_t  messageCounter;     // Message counter                (2 bytes)
-  } __attribute__((packed));                                        // Total: (27 bytes)
+  } __attribute__((packed));                                        // Total: (29 bytes)
   uint8_t bytes[27];
 } SBDMESSAGE;
 
