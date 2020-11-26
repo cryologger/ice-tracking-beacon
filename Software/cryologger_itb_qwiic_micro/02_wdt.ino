@@ -51,8 +51,8 @@ void WDT_Handler() {
     while (WDT->STATUS.bit.SYNCBUSY); // Await synchronization of registers between clock domains
   }
   else {
-    WDT->CTRL.bit.ENABLE = 0;         // For debugging only: Disable Watchdog
-    digitalWrite(LED_BUILTIN, HIGH);  // For debugging only: Turn on LED to indicate Watchdog trigger
+    //WDT->CTRL.bit.ENABLE = 0;         // For debugging only: Disable Watchdog
+    //digitalWrite(LED_BUILTIN, HIGH);  // For debugging only: Turn on LED to indicate Watchdog trigger
     while (true);                     // Force Watchdog Timer to reset the system
   }
   watchdogFlag = true; // Set the watchdog flag

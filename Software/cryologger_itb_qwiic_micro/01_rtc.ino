@@ -52,7 +52,6 @@ void setRtcAlarm() {
 
     // Set alarm to occur on next hour rollover
     rtc.setAlarmTime(0, 0, 0);
-    rtc.setAlarmDate(day(alarmTime), month(alarmTime), year(alarmTime) - 2000);
 
     // Enable alarm
     rtc.enableAlarm(rtc.MATCH_MMSS);
@@ -62,7 +61,6 @@ void setRtcAlarm() {
     if (firstTimeFlag) {
       // Set initial alarm to occur on next hour rollover
       rtc.setAlarmTime(0, 0, 0);
-      rtc.setAlarmDate(day(alarmTime), month(alarmTime), year(alarmTime) - 2000);
 
       // Enable alarm
       rtc.enableAlarm(rtc.MATCH_MMSS);

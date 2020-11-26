@@ -1,53 +1,30 @@
-// Configure SparkFun Qwiic Iridium 9603N
-void configureIridiumI2C() {
-
-  if (modem.isConnected()) {
-    modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
-    modem.adjustATTimeout(30);          // Adjust timeout timer for serial AT commands (default = 20 s)
-    modem.adjustSendReceiveTimeout(60); // Adjust timeout timer for library send/receive commands (default = 300 s)
-    modem.enable841lowPower(true);      // Enable ATtiny841 low-power mode
-    online.iridium = true;
-  }
-  else {
-    SERIAL_PORT.println(F("Warning: Qwiic Iridium 9603N not detected! Please check wiring."));
-    online.iridium = false;
-  }
+// Configure RockBLOCK 9603
+void configureIridium() {
+  modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
+  modem.adjustATTimeout(30);            // Adjust timeout timer for serial AT commands (default = 20 s)
+  modem.adjustSendReceiveTimeout(60);  // Adjust timeout timer for library send/receive commands (default = 300 s)
+  online.iridium = true;
 }
 
-// Transmit data using SparkFun Qwiic Iridium 9603N
-void transmitDataI2C() {
+// Transmit data using RockBLOCK 9603
+void transmitData() {
 
   setLedColour(purple);
 
-  // Check if data can and should be transmitted
+  // Check if data transmission is required
   if ((online.iridium) && (transmitCounter == transmitInterval)) {
 
     unsigned long loopStartTime = millis(); // Start loop timer
     int err;
 
-
-    SERIAL_PORT.println(F("Disabling ATtiny841 low power mode..."));
-    modem.enable841lowPower(false);
-
-    SERIAL_PORT.println(F("Enabling the supercapacitor charger..."));
-    modem.enableSuperCapCharger(true); // Enable the supercapacitor charger
-
-    // Wait for supercapacitor charger PGOOD signal to go HIGH for up to 2 minutes
-    SERIAL_PORT.println(F("Waiting for supercapacitors to charge..."));
-    while (!modem.checkSuperCapCharger() && millis() - loopStartTime < 2UL * 60UL * 1000UL) {
-      ISBDCallback();
-    }
-    SERIAL_PORT.println(F("Supercapacitors charged!"));
-
-    // Enable power for the Qwiic Iridium 9603N
-    SERIAL_PORT.println(F("Enabling Qwiic Iridium 9603N power..."));
-    modem.enable9603Npower(true);
+    // Start the serial port connected to the satellite modem
+    IRIDIUM_PORT.begin(19200);
 
     // Begin satellite modem operation
     SERIAL_PORT.println(F("Starting modem..."));
     err = modem.begin();
     if (err == ISBD_SUCCESS) {
-      uint8_t mtBuffer[270];  // Buffer to store incoming transmission (270-byte limit)
+      uint8_t mtBuffer[270];  // Buffer to store incoming transmission (MT SBD max message length: 270 bytes)
       size_t mtBufferSize = sizeof(mtBuffer);
       memset(mtBuffer, 0x00, sizeof(mtBuffer)); // Clear mtBuffer array
 
@@ -64,22 +41,31 @@ void transmitDataI2C() {
           SERIAL_PORT.println(signalQuality);
       */
 
-      // Transmit and receieve data in binary format
+      // Transmit and receieve SBD message data in binary format
       err = modem.sendReceiveSBDBinary(transmitBuffer, (sizeof(message) * (transmitCounter + (retransmitCounter * transmitInterval))), mtBuffer, mtBufferSize);
 
       // Check if transmission was successful
-      if (err == ISBD_SUCCESS) {
-        retransmitCounter = 0;
-        memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmit buffer array
+      if (err != ISBD_SUCCESS) {
+        SERIAL_PORT.print(F("Transmission failed with error code ")); SERIAL_PORT.println(err);
+
+        setLedColour(red); // Turn on LED to indicate failed transmission
+      }
+      else {
         SERIAL_PORT.println(F("Transmission successful!"));
 
-        // Check for incoming message
-        // If no inbound message is available mtBufferSize will be zero
+        setLedColour(green); // Turn on LED to indicate successful transmission
+        retransmitCounter = 0; // Clear message retransmit counter
+        memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmit buffer array
+        
+        // Check if a Mobile Terminated (MT) message was received
+        // If no message is available, mtBufferSize = 0
         if (mtBufferSize > 0) {
 
-          // Print mtBuffer size and values of each incoming byte of data
-          SERIAL_PORT.print(F("Inbound buffer size is: ")); SERIAL_PORT.println(mtBufferSize);
-          for (uint8_t i = 0; i < mtBufferSize; i++) {
+          SERIAL_PORT.print(F("MT message received. Size: ")); 
+          SERIAL_PORT.print(mtBufferSize); SERIAL_PORT.println(F(" bytes"));
+          
+          // Print each incoming byte of data contained in the mtBuffer
+          for (byte i = 0; i < mtBufferSize; i++) {
             SERIAL_PORT.print(F("Address: ")); SERIAL_PORT.print(i);
             SERIAL_PORT.print(F("\tValue: ")); SERIAL_PORT.println(mtBuffer[i], HEX);
           }
@@ -101,7 +87,7 @@ void transmitDataI2C() {
               (maxRetransmitCounterBuffer >= 0    && maxRetransmitCounterBuffer <= 24) &&
               (resetFlagBuffer            == 0    || resetFlagBuffer            == 255)) {
 
-            // Update variables
+            // Update global variables
             alarmInterval         = alarmIntervalBuffer;        // Update alarm interval
             transmitInterval      = transmitIntervalBuffer;     // Update transmit interval
             maxRetransmitCounter  = maxRetransmitCounterBuffer; // Update max retransmit counter
@@ -109,8 +95,13 @@ void transmitDataI2C() {
           }
         }
       }
-      else {
-        SERIAL_PORT.print(F("Transmission failed: error ")); SERIAL_PORT.println(err);
+
+      // Clear the Mobile Originated message buffer
+      SERIAL_PORT.println(F("Clearing the MO buffer..."));
+      err = modem.clearBuffers(ISBD_CLEAR_MO); // Clear MO buffer
+      if (err != ISBD_SUCCESS) {
+        SERIAL_PORT.print(F("Warning: modem.clearBuffers failed with error "));
+        SERIAL_PORT.println(err);
       }
 
     }
@@ -130,6 +121,7 @@ void transmitDataI2C() {
         retransmitCounter = 0;
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmitBuffer array
       }
+      setLedColour(red);
     }
 
     // Power down the modem
@@ -137,26 +129,17 @@ void transmitDataI2C() {
     err = modem.sleep();
     if (err != ISBD_SUCCESS) {
       SERIAL_PORT.print(F("Sleep failed: error ")); SERIAL_PORT.println(err);
+      setLedColour(orange);
     }
 
-    // Disable 9603N power
-    SERIAL_PORT.println(F("Disabling 9603N power..."));
-    modem.enable9603Npower(false);
-
-    // Disable the supercapacitor charger
-    SERIAL_PORT.println(F("Disabling the supercapacitor charger..."));
-    modem.enableSuperCapCharger(false);
-
-    // Enable the ATtiny841 low power mode
-    SERIAL_PORT.println(F("Enabling ATtiny841 low power mode..."));
-    modem.enable841lowPower(true); // Change this to false if you want to measure the current draw without enabling low power mode
+    // Close the serial port connected to the RockBLOCK
+    IRIDIUM_PORT.end();
 
     transmitCounter = 0;  // Reset transmit counter
-    unsigned long loopEndTime = millis() - loopStartTime;
+    unsigned long loopEndTime = millis() - loopStartTime; // Stop loop timer
     message.transmitDuration = loopEndTime / 1000;
 
     SERIAL_PORT.print(F("transmitData() function execution: ")); SERIAL_PORT.print(loopEndTime); SERIAL_PORT.println(" ms");
-    SERIAL_PORT.print(F("transmitDuration: ")); SERIAL_PORT.println(loopEndTime / 1000);
     SERIAL_PORT.print(F("retransmitCounter: ")); SERIAL_PORT.println(retransmitCounter);
 
     // Check if reset flag was transmitted
@@ -166,4 +149,67 @@ void transmitDataI2C() {
       while (1); // Wait for Watchdog Timer to reset system
     }
   }
+}
+
+// RockBLOCK non-blocking callback function can be repeatedly called during transmission or GNSS signal acquisition
+bool ISBDCallback() {
+#if DEBUG_IRIDIUM
+  digitalWrite(LED_BUILTIN, (millis() / 1000) % 2 == 1 ? HIGH : LOW);
+#endif
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis > 1000) {
+    previousMillis = currentMillis;
+    petDog(); // Reset the Watchdog Timer
+    readBattery(); // Read battery voltage during transmission (when lowest voltage will be experienced)
+  }
+  return true;
+}
+
+#if DEBUG_IRIDIUM
+// Callback to sniff the conversation with the Iridium modem
+void ISBDConsoleCallback(IridiumSBD *device, char c) {
+  SERIAL_PORT.write(c);
+}
+
+// Callback to to monitor Iridium modem library's run state
+void ISBDDiagsCallback(IridiumSBD *device, char c) {
+  SERIAL_PORT.write(c);
+}
+#endif
+
+// Write data from structure to transmit buffer
+void writeBuffer() {
+
+  messageCounter++;                         // Increment message counter
+  message.messageCounter = messageCounter;  // Write message counter data to union
+  transmitCounter++;                        // Increment data transmission counter
+
+  // Concatenate current message with existing message(s) stored in transmit buffer
+  memcpy(transmitBuffer + (sizeof(message) * (transmitCounter + (retransmitCounter * transmitInterval) - 1)), message.bytes, sizeof(message));
+
+#if DEBUG
+  printUnion();
+  printUnionBinary(); // Print union/structure in hex/binary
+  //printTransmitBuffer();  // Print transmit buffer in hex/binary
+#endif
+}
+
+// Call user function 1
+void userFunction1() {
+
+}
+
+// Call user function 2
+void userFunction2() {
+
+}
+
+// Call user function 3
+void userFunction3() {
+
+}
+
+// Call user function 4
+void userFunction4() {
+
 }

@@ -20,12 +20,12 @@ void readGnss() {
   if (online.gnss) {
 
     unsigned long loopStartTime = millis(); // Start loop timer
-    valFix = 0; // Reset fix counter
+    gnssFixCounter = 0; // Reset fix counter
 
     // Look for GNSS signal for up to 5 minutes
     SERIAL_PORT.println(F("Beginning to listen for GNSS traffic..."));
-    
-    while ((valFix != maxValFix) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
+
+    while ((gnssFixCounter != gnssFixCounterMax) && millis() - loopStartTime < 1UL * 30UL * 1000UL) {
 
 #if DEBUG_GNSS
       char gnssBuffer[100];
@@ -39,15 +39,14 @@ void readGnss() {
 
       // Check for GNSS fix
       if (gps.getFixType() > 0) {
-        valFix += 1; // Increment counter
+        gnssFixCounter += 1; // Increment counter
       }
 
       // Check if enough valid GNSS fixes have been collected
-      if ((gps.getFixType() > 0) && (valFix == maxValFix)) {
+      if ((gps.getFixType() > 0) && (gnssFixCounter == gnssFixCounterMax)) {
 
         SERIAL_PORT.println(F("A GNSS fix was found!"));
 
-        // Record GNSS coordinates
         long latitude = gps.getLatitude();
         long longitude = gps.getLongitude();
         byte satellites = gps.getSIV();
@@ -68,17 +67,13 @@ void readGnss() {
           rtc.setDate(gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
           SERIAL_PORT.print("RTC time synced: "); printDateTime();
         }
-        else {
-          SERIAL_PORT.println("Warning: Invalid GNSS date and time!");
-          setLedColour(orange);
-        }
         setLedColour(green);
       }
       ISBDCallback();
     }
 
     // Check if a GNSS fix was acquired
-    if (valFix < maxValFix) {
+    if (gnssFixCounter < gnssFixCounterMax) {
       SERIAL_PORT.println(F("Warning: No GNSS fix was found!"));
       setLedColour(red);
     }

@@ -37,12 +37,12 @@
 
 // Defined constants
 #define SERIAL_PORT     SerialUSB   // Required by SparkFun Qwiic Micro
-#define IRIDIUM_PORT    Serial      // Yellow wire D16 orange D17
+#define IRIDIUM_PORT    Serial      // D16: Pin 1 (yellow) D17: Pin 6 (orange)
 #define IRIDIUM_WIRE    Wire
 
 // Debugging definitions
-#define DEBUG           true        // Output debugging messages to Serial Monitor
-#define DEBUG_GNSS      true
+#define DEBUG           true        // Output debug messages to Serial Monitor
+#define DEBUG_GNSS      true        // Output GNSS debug information
 #define DEBUG_IRIDIUM   true        // Output Iridium diagnostic messages to Serial Monitor
 
 // Pin definitions
@@ -53,9 +53,9 @@
 Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
 BME280            bme280;         // I2C Address: 0x77
 ICM_20948_I2C     imu;            // I2C Address: 0x69
-//IridiumSBD        modem(IRIDIUM_WIRE);    // I2C Address: 0x63
+//IridiumSBD        modem(IRIDIUM_WIRE); // I2C Address: 0x63
 IridiumSBD        modem(IRIDIUM_PORT, IRIDIUM_SLEEP_PIN);
-QWIIC_POWER       mySwitch;         // I2C Address: 0x41
+QWIIC_POWER       mySwitch;       // I2C Address: 0x41
 RTCZero           rtc;
 SFE_UBLOX_GPS     gps;            // I2C Address: 0x42
 //SPIFlash          flash(21, &SPI1); //
@@ -65,30 +65,30 @@ const float R1 = 9973000.0;   // Voltage divider resistor 1
 const float R2 = 998400.0;    // Voltage divider resistor 2
 
 // User defined global variables
-unsigned long alarmInterval         = 900;    // RTC sleep duration in seconds (Default: 3600 seconds)
+unsigned long alarmInterval         = 180;    // Sleep duration in seconds (Default: 3600 seconds)
 byte          alarmSeconds          = 0;
 byte          alarmMinutes          = 5;
 byte          alarmHours            = 0;
-byte          transmitInterval      = 1;      // Number of messages to transmit in each Iridium transmission (340 byte limit)
-byte          maxRetransmitCounter  = 4;      // Number of failed data transmissions to reattempt (340 byte limit)
+byte          transmitInterval      = 1;      // Number of messages to include in each Iridium transmission (340-byte limit)
+byte          maxRetransmitCounter  = 4;      // Number of failed data transmissions to reattempt (340-byte limit)
 
 // Global variables
 volatile bool alarmFlag             = true;   // Flag for alarm interrupt service routine
 volatile bool watchdogFlag          = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter       = 0;      // Watchdog Timer interrupt counter
-bool          firstTimeFlag         = true;   // Flag to determine if the program is running for the first time
+bool          firstTimeFlag         = false;   // Flag to determine if the program is running for the first time
 bool          ledStateFlag          = LOW;    // Flag to toggle LED in blinkLed() function
 bool          rtcSyncFlag           = true;   // Flag to determine if RTC should be set using GNSS time
 bool          resetFlag             = 0;      // Flag to force system reset using Watchdog Timer
 
-int           valFix                = 0;      // GNSS valid fix counter
-int           maxValFix             = 5;      // Max GNSS valid fix counter
+byte          gnssFixCounter        = 0;      // GNSS valid fix counter
+byte          gnssFixCounterMax     = 1;      // GNSS max valid fix counter
 
 float         voltage               = 0.0;
 
-uint8_t       transmitBuffer[340]   = {};     // Iridium 9603 transmission buffer
-unsigned int  messageCounter        = 0;      // Iridium 9603 transmitted message counter
-unsigned int  retransmitCounter     = 0;      // Iridium 9603 failed data transmission counter
+uint8_t       transmitBuffer[340]   = {};     // Iridium 9603 transmission buffer (MO SBD message max length: 340 bytes)
+unsigned int  messageCounter        = 0;      // Iridium 9603 cumualtive transmission counter (zero indicates a reset)
+unsigned int  retransmitCounter     = 0;      // Iridium 9603 failed transmission counter
 unsigned int  transmitCounter       = 0;      // Iridium 9603 transmission interval counter
 
 unsigned long previousMillis        = 0;      // Global millis() timer
@@ -155,7 +155,7 @@ void setup() {
   Wire.setClock(400000); // Set I2C clock speed to 400 kHz
   //SPI1.begin(); // Initialize SPI
 
-  SERIAL_PORT.begin(115200);
+  SERIAL_PORT.begin(115200); // Begin serial at 115200 baud
   //while (!SERIAL_PORT); // Wait for user to open Serial Monitor
   blinkLed(4, 1000); // Non-blocking delay to allow user to open Serial Monitor
 
@@ -174,12 +174,10 @@ void setup() {
   configureImu();         // Configure SparkFun ICM-20948
   configureSensors();     // Configure attached sensors
   //configureIridiumI2C();  // Configure SparkFun Qwiic Iridium 9603N
-  configureIridiumSerial(); // Configure RockBLOCK Iridium 9603N
-  syncRtc();              // Synchronize RTC with GNSS
+  configureIridium(); // Configure RockBLOCK Iridium 9603N
+  //syncRtc();              // Synchronize RTC with GNSS
 
   setLedColour(white);
-
-  SERIAL_PORT.flush(); // Wait for transmission of any serial data to complete
 }
 
 // Loop
@@ -189,7 +187,7 @@ void loop() {
   if (alarmFlag) {
     alarmFlag = false; // Clear alarm flag
     printDateTime(); // Print RTC's current date and time
-    
+
     // Perform measurements
     readRtc();
     petDog();             // Reset the Watchdog Timer
@@ -199,7 +197,7 @@ void loop() {
     readGnss();           // Read the GNSS
     writeBuffer();        // Write the data to transmit buffer
     //transmitDataI2C();    // Transmit data
-    transmitDataSerial(); // Attempt to transmit data
+    transmitData();       // Transmit data
     qwiicPowerOff();      // Disable power to Qwiic peripheral devices
     setRtcAlarm();        // Set the RTC alarm
   }
