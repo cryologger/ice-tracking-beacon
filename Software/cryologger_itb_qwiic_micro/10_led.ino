@@ -1,11 +1,12 @@
-// Configure 
-void configureNeoPixel() {
+// Configure WS2812B RGB LED
+void configureLed() {
   pixels.begin();
   pixels.clear(); // Set all pixel colors to 'off'
+  pixels.show(); // Send the updated pixel colors to the hardware
 }
 
-// Set pixel color
-void setPixelColour(uint32_t colour) {
+// Set WS2812B RGB LED color
+void setLedColour(uint32_t colour) {
   if (colour == white)
     pixels.setPixelColor(0, white);
   else if (colour == red)
@@ -28,7 +29,9 @@ void setPixelColour(uint32_t colour) {
     pixels.setPixelColor(0, pink);
   else if (colour == lime)
     pixels.setPixelColor(0, lime);
+  else if (colour == off)
+    pixels.clear(); // Set all pixel colors to 'off'
 
   pixels.show();   // Send the updated pixel colors to the hardware
-  delay(4000);
+  delay(1000);
 }

@@ -1,63 +1,64 @@
 void printLine() {
   for (byte i = 0; i < 79; i++) {
-    Serial.print("-");
+    SERIAL_PORT.print("-");
   }
-  Serial.println();
+  SERIAL_PORT.println();
 }
 
 void printTab(byte _times) {
   for (byte i = 0; i < _times; i++) {
-    Serial.print("\t");
+    SERIAL_PORT.print("\t");
   }
 }
 
 // Print contents of union/structure
 void printUnion() {
   printLine();
-  Serial.println(F("Union/structure"));
+  SERIAL_PORT.println(F("Union/structure"));
   printLine();
-  Serial.print(F("unixtime:\t\t")); Serial.println(message.unixtime);
-  Serial.print(F("temperature:\t\t")); Serial.println(message.temperature);
-  Serial.print(F("humidity:\t\t")); Serial.println(message.humidity);
-  Serial.print(F("pressure:\t\t")); Serial.println(message.pressure);
-  //Serial.print(F("pitch:\t\t\t")); Serial.println(message.pitch);
-  //Serial.print(F("roll:\t\t\t")); Serial.println(message.roll);
-  //Serial.print(F("heading:\t\t")); Serial.println(message.heading);
-  Serial.print(F("latitude:\t\t")); Serial.println(message.latitude);
-  Serial.print(F("longitude:\t\t")); Serial.println(message.longitude);
-  Serial.print(F("satellites:\t\t")); Serial.println(message.satellites);
-  Serial.print(F("pdop:\t\t\t")); Serial.println(message.pdop);
-  Serial.print(F("voltage:\t\t")); Serial.println(message.voltage);
-  Serial.print(F("transmitDuration:\t")); Serial.println(message.transmitDuration);
-  Serial.print(F("messageCounter:\t\t")); Serial.println(message.messageCounter);
+  SERIAL_PORT.print(F("unixtime:")); printTab(2); SERIAL_PORT.println(message.unixtime);
+  SERIAL_PORT.print(F("temperature:")); printTab(2); SERIAL_PORT.println(message.temperature);
+  SERIAL_PORT.print(F("humidity:")); printTab(2); SERIAL_PORT.println(message.humidity);
+  SERIAL_PORT.print(F("pressure:")); printTab(2); SERIAL_PORT.println(message.pressure);
+  //SERIAL_PORT.print(F("pitch:")); printTab(3); SERIAL_PORT.println(message.pitch);
+  //SERIAL_PORT.print(F("roll:")); printTab(3); SERIAL_PORT.println(message.roll);
+  //SERIAL_PORT.print(F("heading:")); printTab(2); SERIAL_PORT.println(message.heading);
+  SERIAL_PORT.print(F("latitude:")); printTab(2); SERIAL_PORT.println(message.latitude);
+  SERIAL_PORT.print(F("longitude:")); printTab(2); SERIAL_PORT.println(message.longitude);
+  SERIAL_PORT.print(F("satellites:")); printTab(2); SERIAL_PORT.println(message.satellites);
+  SERIAL_PORT.print(F("pdop:")); printTab(3); SERIAL_PORT.println(message.pdop);
+  SERIAL_PORT.print(F("rtcDrift:")); printTab(2); SERIAL_PORT.println(message.rtcDrift);
+  SERIAL_PORT.print(F("voltage:")); printTab(2); SERIAL_PORT.println(message.voltage);
+  SERIAL_PORT.print(F("transmitDuration:")); printTab(1); SERIAL_PORT.println(message.transmitDuration);
+  SERIAL_PORT.print(F("messageCounter:")); printTab(2); SERIAL_PORT.println(message.messageCounter);
   printLine();
 }
 
 // Print contents of union/structure in binary and hexadecimal
 void printUnionBinary() {
-  Serial.println(F("Union/structure "));
+  SERIAL_PORT.println(F("Union/structure "));
   printLine();
-  Serial.println(F("Byte\tHex\tBinary"));
+  SERIAL_PORT.println(F("Byte\tHex\tBinary"));
   for (int i = 0; i < sizeof(message); ++i) {
-    Serial.print(i);
-    Serial.print("\t");
-    Serial.print(message.bytes[i], HEX);
-    Serial.print("\t");
-    Serial.println(message.bytes[i], BIN);
+    SERIAL_PORT.print(i);
+    printTab(1);
+    SERIAL_PORT.print(message.bytes[i], HEX);
+    printTab(1);
+    SERIAL_PORT.println(message.bytes[i], BIN);
   }
   printLine();
 }
 
 // Print contents of transmit buffer in binary and hexadecimal
 void printTransmitBuffer() {
-  Serial.println(F("Transmit buffer"));
+  SERIAL_PORT.println(F("Transmit buffer"));
   printLine();
-  Serial.println(F("Byte\tHex\tBinary"));
+  SERIAL_PORT.println(F("Byte\tHex\tBinary"));
   for (int i = 0; i < 340; i++) {
-    Serial.print(i);
-    Serial.print(F("\t"));
-    Serial.print(transmitBuffer[i], HEX);
-    Serial.print("\t");
-    Serial.println(transmitBuffer[i], BIN);
+    SERIAL_PORT.print(i);
+    printTab(1);
+    SERIAL_PORT.print(transmitBuffer[i], HEX);
+    printTab(1);
+    SERIAL_PORT.println(transmitBuffer[i], BIN);
   }
 }

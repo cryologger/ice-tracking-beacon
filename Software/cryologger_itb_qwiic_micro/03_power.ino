@@ -1,12 +1,14 @@
 // Read battery voltage from voltage divider
 void readBattery() {
 
-  unsigned long loopStartTime = millis(); // Loop timer
+  // Start loop timer
+  unsigned long loopStartTime = millis();
+
   int reading = 0;
   byte samples = 30;
 
   for (byte i = 0; i < samples; ++i) {
-    reading += analogRead(VBAT_PIN); // Read VIN across a 1/10 resistor divider
+    reading += analogRead(VBAT_PIN); // Read VIN across a 1/10 MΩ resistor divider
     delay(1);
   }
 
@@ -20,20 +22,17 @@ void readBattery() {
     message.voltage = voltage * 1000;
   }
 
-  // print out the value you read:
-  //Serial.print(F("Voltage: ")); Serial.println(voltage);
+  //SERIAL_PORT.print(F("voltage: ")); SERIAL_PORT.println(voltage);
 
-
+  // Stop loop timer
   unsigned long loopEndTime = millis() - loopStartTime;
-#if DEBUG
-  Serial.print(F("readBattery() function execution: ")); Serial.print(loopEndTime); Serial.println(F(" ms"));
-#endif
+  //SERIAL_PORT.print(F("readBattery() function execution: ")); SERIAL_PORT.print(loopEndTime); SERIAL_PORT.println(F(" ms"));
 }
 
 // Configure the SparkFun Qwiic Power Switch
 void configureQwiicPower() {
   if (!mySwitch.begin()) {
-    Serial.println(F("Warning: Qwiic Power Switch not detected at default I2C address. Please check wiring."));
+    SERIAL_PORT.println(F("Warning: Qwiic Power Switch not detected at default I2C address. Please check wiring."));
   }
 }
 
@@ -50,12 +49,13 @@ void qwiicPowerOff() {
 // Enter deep sleep
 void goToSleep() {
 #if DEBUG
-  Serial.println(F("Entering deep sleep..."));
-  Serial.flush();
-  Serial.end();
-  USBDevice.detach();
+  SERIAL_PORT.println(F("Entering deep sleep..."));
+  SERIAL_PORT.flush();
+  SERIAL_PORT.end();
+  USBDevice.detach(); // Safely detach USB prior to sleeping
 #endif
-  qwiicPowerOff();      // Disable power
+  qwiicPowerOff(); // Disable power to Qwiic peripherials
+  setLedColour(off);
   LowPower.deepSleep(); // Enter deep sleep
 
   // Wake up
@@ -68,18 +68,18 @@ void wakeUp() {
   if (alarmFlag) {
     readRtc(); // Read RTC
 #if DEBUG
-    // Re-establish Serial
-    USBDevice.attach();
-    Serial.begin(115200);
-    //while (!Serial);
-    blinkLed(5, 500); // Non-blocking delay to allow user to open Serial Monitor
+    USBDevice.attach(); // Re-attach USB
+    SERIAL_PORT.begin(115200);
+    //while (!SERIAL_PORT);
+    blinkLed(2, 1000); // Non-blocking delay to allow user to open Serial Monitor
+    SERIAL_PORT.println(F(" awake!"));
 #endif
-    qwiicPowerOn();
-    configureNeoPixel();
-    configureGnss();        // Configure Sparkfun SAM-M8Q
-    configureImu();         // Configure SparkFun ICM-20948
-    configureSensors();     // Configure attached sensors
-    configureIridium();     // Configure SparkFun Qwiic Iridium 9603N
+    qwiicPowerOn();       // Enable power to Qwiic peripherals
+    configureLed();       // Configure WS2812B RGB LED
+    configureGnss();      // Configure Sparkfun SAM-M8Q
+    configureImu();       // Configure SparkFun ICM-20948
+    configureSensors();   // Configure attached sensors
+    //configureIridium();   // Configure SparkFun Qwiic Iridium 9603N
   }
 }
 
@@ -93,8 +93,8 @@ void blinkLed(byte ledFlashes, unsigned int ledDelay) {
     unsigned long currentMillis = millis();
     if (currentMillis - previousMillis > ledDelay) {
       previousMillis = currentMillis;
-      ledState = !ledState;
-      digitalWrite(LED_BUILTIN, ledState);
+      ledStateFlag = !ledStateFlag;
+      digitalWrite(LED_BUILTIN, ledStateFlag);
       i++;
     }
   }

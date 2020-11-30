@@ -1,6 +1,5 @@
-// Configure the WDT to perform a system reset if loop() blocks for more than 8-16 seconds
+// Configure the Watchdog Timer to perform a system reset if loop() blocks for more than 8-16 seconds
 void configureWatchdog() {
-
   // Set up the generic clock (GCLK2) used to clock the watchdog timer at 1.024kHz
   REG_GCLK_GENDIV = GCLK_GENDIV_DIV(4) |          // Divide the 32.768kHz clock source by divisor 32, where 2^(4 + 1): 32.768kHz/32=1.024kHz
                     GCLK_GENDIV_ID(2);            // Select Generic Clock (GCLK) 2
@@ -32,9 +31,9 @@ void configureWatchdog() {
   NVIC_EnableIRQ(WDT_IRQn);
 }
 
-// Pet the Watchdog Timer
+// Reset the Watchdog Timer
 void petDog() {
-  //Serial.print(F("Watchdog interrupt: ")); Serial.println(watchdogCounter);
+  //SERIAL_PORT.print(F("Watchdog interrupt: ")); SERIAL_PORT.println(watchdogCounter);
   WDT->CLEAR.bit.CLEAR = 0xA5;        // Clear the Watchdog Timer and restart time-out period //REG_WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
   while (WDT->STATUS.bit.SYNCBUSY);   // Await synchronization of registers between clock domains
   watchdogFlag = false;               // Clear watchdog flag
@@ -47,13 +46,13 @@ void WDT_Handler() {
   WDT->INTFLAG.bit.EW = 1;          // Clear the Early Warning interrupt flag //REG_WDT_INTFLAG = WDT_INTFLAG_EW;
 
   // Perform system reset after 10 watchdog interrupts (should not occur)
-  if (watchdogCounter < 10) {
+  if (watchdogCounter < 5) {
     WDT->CLEAR.bit.CLEAR = 0xA5;      // Clear the Watchdog Timer and restart time-out period //REG_WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
     while (WDT->STATUS.bit.SYNCBUSY); // Await synchronization of registers between clock domains
   }
   else {
-    WDT->CTRL.bit.ENABLE = 0;         // For debugging only: Disable Watchdog
-    digitalWrite(LED_BUILTIN, HIGH);  // For debugging only: Turn on LED to indicate Watchdog trigger
+    //WDT->CTRL.bit.ENABLE = 0;         // For debugging only: Disable Watchdog
+    //digitalWrite(LED_BUILTIN, HIGH);  // For debugging only: Turn on LED to indicate Watchdog trigger
     while (true);                     // Force Watchdog Timer to reset the system
   }
   watchdogFlag = true; // Set the watchdog flag

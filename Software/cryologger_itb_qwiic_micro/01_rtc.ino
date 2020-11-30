@@ -11,17 +11,17 @@
 
 void configureRtc() {
 
-  // Initialize RTC
-  rtc.begin();
+  rtc.begin(); // Initialize RTC
 
   // Manually set time and date
-  //rtc.setTime(23, 58, 0); // (hours, minutes, seconds)
-  //rtc.setDate(11, 11, 20); // (day, month, year)
+  //rtc.setTime(23, 59, 30); // (hours, minutes, seconds)
+  //rtc.setDate(21, 11, 20); // (day, month, year)
 }
 
 void readRtc() {
 
-  unsigned long loopStartTime = millis(); // Loop timer
+  // Start loop timer
+  unsigned long loopStartTime = millis();
 
   // Get UNIX Epoch time
   unixtime = rtc.getEpoch();
@@ -29,11 +29,12 @@ void readRtc() {
   // Write data to union
   message.unixtime = unixtime;
 
-  //Serial.print(F("Datetime: ")); printDateTime();
-  //Serial.print(F("UNIX Epoch time: ")); Serial.println(unixtime);
+  //SERIAL_PORT.print(F("Datetime: ")); printDateTime();
+  //SERIAL_PORT.print(F("UNIX Epoch time: ")); SERIAL_PORT.println(unixtime);
 
+  // Stop loop timer
   unsigned long loopEndTime = millis() - loopStartTime;
-  Serial.print(F("readRtc() function execution: ")); Serial.print(loopEndTime); Serial.println(F(" ms"));
+  SERIAL_PORT.print(F("readRtc() function execution: ")); SERIAL_PORT.print(loopEndTime); SERIAL_PORT.println(F(" ms"));
 }
 
 void setRtcAlarm() {
@@ -45,19 +46,42 @@ void setRtcAlarm() {
   if (alarmTime < rtc.getEpoch()) {
     unixtime = rtc.getEpoch(); // Get UNIX Epoch time
     alarmTime = unixtime + alarmInterval; // Recalculate next alarm
-    Serial.println(F("Warning: RTC alarm set in the past"));
+    SERIAL_PORT.println(F("Warning: RTC alarm set in the past!"));
+
+    setLedColour(orange);
+
+    // Set alarm to occur on next hour rollover
+    rtc.setAlarmTime(0, 0, 0);
+
+    // Enable alarm
+    rtc.enableAlarm(rtc.MATCH_MMSS);
+  }
+  else {
+
+    if (firstTimeFlag) {
+      // Set initial alarm to occur on next hour rollover
+      rtc.setAlarmTime(0, 0, 0);
+
+      // Enable alarm
+      rtc.enableAlarm(rtc.MATCH_MMSS);
+      firstTimeFlag = false; // Clear flag
+    }
+    else {
+      // Set alarm time and date
+      rtc.setAlarmTime(hour(alarmTime), minute(alarmTime), 0);
+      rtc.setAlarmDate(day(alarmTime), month(alarmTime), year(alarmTime) - 2000);
+
+      // Enable alarm
+      rtc.enableAlarm(rtc.MATCH_HHMMSS);
+    }
   }
 
-  // Set alarm time and date
-  rtc.setAlarmTime(hour(alarmTime), minute(alarmTime), 0);
-  rtc.setAlarmDate(day(alarmTime), month(alarmTime), year(alarmTime) - 2000);
-
-  // Enable alarm
-  rtc.enableAlarm(rtc.MATCH_HHMMSS);
+  // Attach alarm to interrupt service routine
+  rtc.attachInterrupt(alarmIsr);
 
   // Print the next RTC alarm date and time
-  Serial.print("Current time: "); printDateTime();
-  Serial.print("Next alarm: "); printAlarm();
+  SERIAL_PORT.print("Current time: "); printDateTime();
+  SERIAL_PORT.print("Next alarm: "); printAlarm();
 }
 
 // Set RTC rolling alarms
@@ -69,50 +93,46 @@ void setRtcRollingAlarm() {
   rtc.setAlarmDate(rtc.getDay(), rtc.getMonth(), rtc.getYear());
   rtc.enableAlarm(rtc.MATCH_HHMMSS);
 }
+
+// Synchronize RTC with GNSS
 void syncRtc() {
 
-  setPixelColour(pink);
+  setLedColour(pink);
 
-  unsigned long loopStartTime = millis(); // Loop timer
-  bool dateValid = false;
-  bool timeValid = false;
-  rtcSyncFlag = false;
+  // Start loop timer
+  unsigned long loopStartTime = millis();
 
-  // Attempt to sync RTC with GNSS for up to 5 minutes
-  Serial.println(F("Attempting to sync RTC with GNSS..."));
+  if (online.gnss) {
+    bool dateValid = false;
+    bool timeValid = false;
+    rtcSyncFlag = false;
 
-  while ((!dateValid || !timeValid) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
+    // Attempt to sync RTC with GNSS for up to 5 minutes
+    SERIAL_PORT.println(F("Attempting to sync RTC with GNSS..."));
 
-    dateValid = gps.getDateValid();
-    timeValid = gps.getTimeValid();
+    while ((!dateValid || !timeValid) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
 
-    // Sync RTC with GNSS if date and time are valid
-    if (dateValid && timeValid) {
-      rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond());
-      rtc.setDate(gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
-      Serial.print("RTC time synced: "); printDateTime();
-      //blinkLed(5, 50); // Blink LED to indicate RTC sync
-      rtcSyncFlag = true;
-      setPixelColour(green);
+      dateValid = gps.getDateValid();
+      timeValid = gps.getTimeValid();
+
+      // Sync RTC with GNSS if date and time are valid
+      if (dateValid && timeValid) {
+
+        // Set RTC date and time
+        rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond());
+        rtc.setDate(gps.getDay(), gps.getMonth(), gps.getYear() - 2000);
+
+        SERIAL_PORT.print("RTC time synced: "); printDateTime();
+        rtcSyncFlag = true;
+        setLedColour(green);
+      }
+      ISBDCallback();
     }
-    ISBDCallback();
+    if (!rtcSyncFlag) {
+      SERIAL_PORT.println(F("Warning: RTC sync failed!"));
+      setLedColour(red);
+    }
   }
-  if (!rtcSyncFlag) {
-    Serial.println(F("Warning: RTC sync failed"));
-    setPixelColour(red);
-  }
-
-  // Set initial alarm to occur on hour rollover
-  rtc.setAlarmTime(0, 0, 0);
-  rtc.setAlarmDate(0, 0, 0);
-  rtc.enableAlarm(rtc.MATCH_MMSS);
-
-  // Attach alarm to interrupt service routine
-  rtc.attachInterrupt(alarmIsr);
-
-  // Print initial datetime and alarm
-  Serial.print("Datetime: "); printTab(1); printDateTime();
-  Serial.print("Alarm: "); printTab(2); printAlarm();
 }
 
 // RTC alarm interrupt service routine
@@ -126,7 +146,7 @@ void printDateTime() {
   sprintf(dateTimeBuffer, "20%02d-%02d-%02d %02d:%02d:%02d",
           rtc.getYear(), rtc.getMonth(), rtc.getDay(),
           rtc.getHours(), rtc.getMinutes(), rtc.getSeconds());
-  Serial.println(dateTimeBuffer);
+  SERIAL_PORT.println(dateTimeBuffer);
 }
 
 // Print the RTC's alarm
@@ -135,5 +155,5 @@ void printAlarm() {
   sprintf(alarmBuffer, "20%02d-%02d-%02d %02d:%02d:%02d",
           rtc.getAlarmYear(), rtc.getAlarmMonth(), rtc.getAlarmDay(),
           rtc.getAlarmHours(), rtc.getAlarmMinutes(), rtc.getAlarmSeconds());
-  Serial.println(alarmBuffer);
+  SERIAL_PORT.println(alarmBuffer);
 }
