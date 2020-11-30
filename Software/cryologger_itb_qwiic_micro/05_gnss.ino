@@ -25,7 +25,7 @@ void readGnss() {
     // Look for GNSS signal for up to 5 minutes
     SERIAL_PORT.println(F("Beginning to listen for GNSS traffic..."));
 
-    while ((gnssFixCounter != gnssFixCounterMax) && millis() - loopStartTime < 1UL * 30UL * 1000UL) {
+    while ((gnssFixCounter != gnssFixCounterMax) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
 
 #if DEBUG_GNSS
       char gnssBuffer[100];
@@ -72,8 +72,8 @@ void readGnss() {
           tm.Hour = gps.getHour();
           tm.Minute = gps.getMinute();
           tm.Second = gps.getSecond();
-          time_t rtcEpoch = rtc.getEpoch(); // Get current epoch time
           time_t gnssEpoch = makeTime(tm); // Convert tmElements to time_t
+          time_t rtcEpoch = rtc.getEpoch(); // Get current epoch time
           int rtcDrift = rtcEpoch - gnssEpoch; // Calculate difference
 
           // Write data to union

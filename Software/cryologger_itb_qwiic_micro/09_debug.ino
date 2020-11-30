@@ -27,6 +27,7 @@ void printUnion() {
   SERIAL_PORT.print(F("longitude:")); printTab(2); SERIAL_PORT.println(message.longitude);
   SERIAL_PORT.print(F("satellites:")); printTab(2); SERIAL_PORT.println(message.satellites);
   SERIAL_PORT.print(F("pdop:")); printTab(3); SERIAL_PORT.println(message.pdop);
+  SERIAL_PORT.print(F("rtcDrift:")); printTab(2); SERIAL_PORT.println(message.rtcDrift);
   SERIAL_PORT.print(F("voltage:")); printTab(2); SERIAL_PORT.println(message.voltage);
   SERIAL_PORT.print(F("transmitDuration:")); printTab(1); SERIAL_PORT.println(message.transmitDuration);
   SERIAL_PORT.print(F("messageCounter:")); printTab(2); SERIAL_PORT.println(message.messageCounter);
@@ -40,9 +41,9 @@ void printUnionBinary() {
   SERIAL_PORT.println(F("Byte\tHex\tBinary"));
   for (int i = 0; i < sizeof(message); ++i) {
     SERIAL_PORT.print(i);
-    printTab(1); 
+    printTab(1);
     SERIAL_PORT.print(message.bytes[i], HEX);
-    printTab(1); 
+    printTab(1);
     SERIAL_PORT.println(message.bytes[i], BIN);
   }
   printLine();
@@ -55,9 +56,9 @@ void printTransmitBuffer() {
   SERIAL_PORT.println(F("Byte\tHex\tBinary"));
   for (int i = 0; i < 340; i++) {
     SERIAL_PORT.print(i);
-    printTab(1); 
+    printTab(1);
     SERIAL_PORT.print(transmitBuffer[i], HEX);
-    printTab(1); 
+    printTab(1);
     SERIAL_PORT.println(transmitBuffer[i], BIN);
   }
 }

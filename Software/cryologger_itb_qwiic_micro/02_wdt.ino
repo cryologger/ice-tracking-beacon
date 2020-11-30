@@ -46,7 +46,7 @@ void WDT_Handler() {
   WDT->INTFLAG.bit.EW = 1;          // Clear the Early Warning interrupt flag //REG_WDT_INTFLAG = WDT_INTFLAG_EW;
 
   // Perform system reset after 10 watchdog interrupts (should not occur)
-  if (watchdogCounter < 10) {
+  if (watchdogCounter < 5) {
     WDT->CLEAR.bit.CLEAR = 0xA5;      // Clear the Watchdog Timer and restart time-out period //REG_WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
     while (WDT->STATUS.bit.SYNCBUSY); // Await synchronization of registers between clock domains
   }

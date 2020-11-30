@@ -1,8 +1,9 @@
 // Configure RockBLOCK 9603
 void configureIridium() {
+  //modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE); // Assume battery power
   modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
   modem.adjustATTimeout(30);            // Adjust timeout timer for serial AT commands (default = 20 s)
-  modem.adjustSendReceiveTimeout(60);  // Adjust timeout timer for library send/receive commands (default = 300 s)
+  modem.adjustSendReceiveTimeout(180);  // Adjust timeout timer for library send/receive commands (default = 300 s)
   online.iridium = true;
 }
 
@@ -48,22 +49,25 @@ void transmitData() {
       if (err != ISBD_SUCCESS) {
         SERIAL_PORT.print(F("Transmission failed with error code ")); SERIAL_PORT.println(err);
 
+        blinkLed(5, 1000); // Blink LED slowly to indicated failed transmission
         setLedColour(red); // Turn on LED to indicate failed transmission
       }
       else {
         SERIAL_PORT.println(F("Transmission successful!"));
 
+        blinkLed(10, 100); // Blink LED quickly to indicate successful transmission
         setLedColour(green); // Turn on LED to indicate successful transmission
+
         retransmitCounter = 0; // Clear message retransmit counter
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmit buffer array
-        
+
         // Check if a Mobile Terminated (MT) message was received
         // If no message is available, mtBufferSize = 0
         if (mtBufferSize > 0) {
 
-          SERIAL_PORT.print(F("MT message received. Size: ")); 
+          SERIAL_PORT.print(F("MT message received. Size: "));
           SERIAL_PORT.print(mtBufferSize); SERIAL_PORT.println(F(" bytes"));
-          
+
           // Print each incoming byte of data contained in the mtBuffer
           for (byte i = 0; i < mtBufferSize; i++) {
             SERIAL_PORT.print(F("Address: ")); SERIAL_PORT.print(i);
@@ -102,6 +106,7 @@ void transmitData() {
       if (err != ISBD_SUCCESS) {
         SERIAL_PORT.print(F("Warning: modem.clearBuffers failed with error "));
         SERIAL_PORT.println(err);
+        setLedColour(orange);
       }
 
     }
@@ -109,6 +114,7 @@ void transmitData() {
       SERIAL_PORT.print(F("Begin failed: error ")); SERIAL_PORT.println(err);
       if (err == ISBD_NO_MODEM_DETECTED) {
         SERIAL_PORT.println(F("Warning: Qwiic Iridium 9603N not detected. Please check wiring."));
+        setLedColour(red);
       }
       return;
     }

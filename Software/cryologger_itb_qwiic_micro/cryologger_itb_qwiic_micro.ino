@@ -1,6 +1,6 @@
 /*
     Title:    Cryologger Ice Tracking Beacon (ITB) - Version 3
-    Date:     November 18, 2020
+    Date:     November 30, 2020
     Author:   Adam Garbo
 
     Components:
@@ -65,24 +65,24 @@ const float R1 = 9973000.0;   // Voltage divider resistor 1
 const float R2 = 998400.0;    // Voltage divider resistor 2
 
 // User defined global variables
-unsigned long alarmInterval         = 180;    // Sleep duration in seconds (Default: 3600 seconds)
+unsigned long alarmInterval         = 3600;    // Sleep duration in seconds (Default: 3600 seconds)
 byte          alarmSeconds          = 0;
 byte          alarmMinutes          = 5;
 byte          alarmHours            = 0;
 byte          transmitInterval      = 1;      // Number of messages to include in each Iridium transmission (340-byte limit)
-byte          maxRetransmitCounter  = 4;      // Number of failed data transmissions to reattempt (340-byte limit)
+byte          maxRetransmitCounter  = 0;      // Number of failed data transmissions to reattempt (340-byte limit)
 
 // Global variables
 volatile bool alarmFlag             = true;   // Flag for alarm interrupt service routine
 volatile bool watchdogFlag          = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter       = 0;      // Watchdog Timer interrupt counter
-bool          firstTimeFlag         = false;   // Flag to determine if the program is running for the first time
+bool          firstTimeFlag         = true;   // Flag to determine if the program is running for the first time
 bool          ledStateFlag          = LOW;    // Flag to toggle LED in blinkLed() function
 bool          rtcSyncFlag           = true;   // Flag to determine if RTC should be set using GNSS time
 bool          resetFlag             = 0;      // Flag to force system reset using Watchdog Timer
 
 byte          gnssFixCounter        = 0;      // GNSS valid fix counter
-byte          gnssFixCounterMax     = 1;      // GNSS max valid fix counter
+byte          gnssFixCounterMax     = 5;      // GNSS max valid fix counter
 
 float         voltage               = 0.0;
 
@@ -126,7 +126,7 @@ typedef union {
     uint16_t  transmitDuration;   // Previous transmission duration (2 bytes)
     uint16_t  messageCounter;     // Message counter                (2 bytes)
   } __attribute__((packed));                                        // Total: (29 bytes)
-  uint8_t bytes[27];
+  uint8_t bytes[29];
 } SBDMESSAGE;
 
 SBDMESSAGE message;
@@ -176,7 +176,7 @@ void setup() {
   configureImu();         // Configure SparkFun ICM-20948
   configureSensors();     // Configure attached sensors
   //configureIridiumI2C();  // Configure SparkFun Qwiic Iridium 9603N
-  configureIridium(); // Configure RockBLOCK Iridium 9603N
+  configureIridium();     // Configure RockBLOCK Iridium 9603N
   //syncRtc();              // Synchronize RTC with GNSS
 
   setLedColour(white);

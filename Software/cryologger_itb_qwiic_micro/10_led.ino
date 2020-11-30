@@ -33,5 +33,5 @@ void setLedColour(uint32_t colour) {
     pixels.clear(); // Set all pixel colors to 'off'
 
   pixels.show();   // Send the updated pixel colors to the hardware
-  delay(2000);
+  delay(1000);
 }
