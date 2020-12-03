@@ -1,5 +1,5 @@
 # Cryologger - Iceberg Tracking Beacon (ITB) v1.0
-![Image](https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/V2/Documentation/Images/DSC_2351.JPG)
+![Image](https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/V1/Photos/IMG_1654.JPG)
 
 
 ## Background
