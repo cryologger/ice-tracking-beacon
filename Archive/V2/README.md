@@ -19,11 +19,11 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 | Component | Product | Cost (USD) |
 | --- | --- | :---: | 
 | Satellite transceiver | Rock7 RockBLOCK 9603 | $249.95 |
-| Processor | Adafruit M0 Proto | $19.95 |
+| Processor | Adafruit Feather M0 Basic Proto | $19.95 |
 | Real-time clock | Adafruit DS3231 Precision RTC FeatherWing | $13.95 |
 | GNSS | Adafruit Ultimate GPS FeatherWing | $39.95 |
 | IMU | Pololu LSM303D 3D Compass and Accelerometer | $7.95 |
-| Voltage Regulator | Pololu D36V6F3 3.3V 600mA Step-Down | $4.95 |
+| Voltage Regulator | Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator | $4.95 |
 | Battery |	Tadiran	Lithium Pulses Plus 7.2V 38Ah 273.6Wh | $100 |
 | Enclosure | Nanuk 903 | $27.95 |
 
