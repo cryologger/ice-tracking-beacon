@@ -44,11 +44,11 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 
 ## Repository Contents
 
-* **/Archive** - Contains information on previous versions of the Cryologger design.
+* **/Archive** - Contains information on previous versions of the Cryologger design
 
-* **/Software** - Contains the Arduino code.
+* **/Software** - Contains the Arduino code
 
-* **/Bill of Materials** - Information on all components used construction and their associated costs.
+* **/Bill of Materials** - Information on all components used construction and their associated costs
 
 * **/Documentation** - All project documents
 
