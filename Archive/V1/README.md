@@ -15,7 +15,7 @@ The Cryologger is based on the open-source Arduino platform (www.arduino.cc) and
 
 Planned for extended deployments in harsh Arctic conditions, the Cryologger can provide long-term measurements of GPS position, temperature, pressure, pitch, roll, tilt-compensated heading and battery voltage. Data are transmitted over the Iridium satellite network at specified intervals and can be remotely updated based on the desired sampling frequency. Collected data are made freely available and can be viewed in near-real time at https://cryologger.org.
 
-#### Bill of Materials
+### Bill of Materials
 
 | Component | Product | Cost (USD) | URL |
 | --- | --- | :---: | --- |
@@ -37,7 +37,7 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 | Enclosure | Nanuk 905 | $45.95 | https://nanuk.com/collections/all-nanuk-cases/products/nanuk-905 |
 | **Total** | | **$555.25** | 
 
-#### Collected Measurements
+### Measurements
 | Variable | Unit | Comments |
 | --- | :---: | --- |
 | Datetime  |   | UNIX Epoch Time |
@@ -59,7 +59,34 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/V1/Photos/IMG_4288.JPG" width="360">
 <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/V1/Photos/IMG_0153.JPG" width="360">
 </p>
-  
+
+## Deployments
+
+A total of 6 Cryologger drift tracking beacons were deployed from the CCGS Amundsen’s helicopter on icebergs and ice islands along the coasts of Ellesmere Island and Baffin Island during the ArcticNet leg of the 2018 Amundsen Expeditions. 
+
+The overall suitability of potential targets was determined by assessing the iceberg’s size, shape and location. At the time of deployment, a compass heading of the tracking beacon was recorded and a 360° aerial photo survey of the iceberg was performed if possible. Following deployment, communications with each beacon were successfully established in order to remotely modify their operational parameters for optimal battery efficiency.
+
+## Results
+
+As of December 2020, a single Cryologger tracking beacon remains operational. All other beacons have been lost due to iceberg break-up or deterioration. Combined, the six Cryologgers have transmitted a total of more than 53,978 messages via the Iridium satellite network and have achieved an average lifespan of 564 days. 
+
+**Table 1.** Cryologger deployments and days operational as of December 20, 2020.
+
+| Beacon	| Deployment	| Latitude	| Longitude	| Days Operational | Comments
+| :---: | :---: | :---: | :---: | :---: | --- | 
+| 1	| 2018-09-03	| 66.2188	| -61.4864	| 435 | 
+| 2	| 2018-08-27	| 75.7712	| -78.5163	| 310 | Iceberg deteriorated off the coast of Labrador after travelling over 4000 km
+| 3	| 2018-08-28	| 77.6074	| -76.9739	| 709 | Ice island catastrophically broke apart after being caught in a gyre in Baffin Bay
+| 4	| 2018-08-28	| 77.9703	| -78.4877	| 748 | Iceberg broke in half between September 10-15, 2020
+| 5	| 2018-09-01	| 67.3577	| -63.271	| 841 | Beacon fell off the iceberg and has been transmitting from the shore since ...
+| 6	| 2018-09-01	| 67.5387	| -63.3641	| 386 | 
+
+
+## Conclusion & Future Work
+The success of the Cryologger tracking beacon deployments have demonstrated that low-cost, open-source hardware and software can provide a robust and cost-effective platform for the collection in-situ iceberg tracking data. These data can provide key insights to iceberg drift and deterioration processes in the Canadian Arctic.
+
+Development of the next version of the Cryologger is currently underway and will incorporate the Adafruit Feather ecosystem of development boards to improve overall processing capabilities and modularity.
+
 ## Repository Contents
 
 * **/Archive** - Contains information on previous versions of the Cryologger design.
