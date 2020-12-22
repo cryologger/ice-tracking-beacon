@@ -14,20 +14,26 @@ The Cryologger is based on the open-source Arduino platform (www.arduino.cc) and
 
 Planned for extended deployments in harsh Arctic conditions, the Cryologger can provide long-term measurements of GPS position, temperature, pressure, pitch, roll, tilt-compensated heading and battery voltage. Data are transmitted over the Iridium satellite network at specified intervals and can be remotely updated based on the desired sampling frequency. Collected data are made freely available and can be viewed in near-real time at https://cryologger.org.
 
-#### Materials
+### Bill of Materials
 
-| Component | Product | Cost (USD) |
-| --- | --- | :---: | 
-| Satellite transceiver | Rock7 RockBLOCK 9603 | $249.95 |
-| Processor | Adafruit Feather M0 Basic Proto | $19.95 |
-| Real-time clock | Adafruit DS3231 Precision RTC FeatherWing | $13.95 |
-| GNSS | Adafruit Ultimate GPS FeatherWing | $39.95 |
-| IMU | Pololu LSM303D 3D Compass and Accelerometer | $7.95 |
-| Voltage Regulator | Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator | $4.95 |
-| Battery |	Tadiran	Lithium Pulses Plus 7.2V 38Ah 273.6Wh | $100 |
-| Enclosure | Nanuk 903 | $27.95 |
+| Component | Product | Cost (USD) | URL |
+| --- | --- | :---: | --- |
+| Satellite transceiver | Rock7 RockBLOCK 9603 | $249.95 | http://www.rock7mobile.com/products-rockblock-9603 |
+| Processor | Adafruit Feather M0 Basic Proto | $19.95 | https://www.adafruit.com/product/2772 |
+| Real-time clock | Adafruit DS3231 Precision RTC FeatherWing | $13.95 | https://www.adafruit.com/product/3028 |
+| Real-time clock battery | CR1220 12mm Diameter - 3V Lithium Coin Cell Battery | $2.50 | https://www.adafruit.com/product/380 |
+| GPS | Adafruit Ultimate GPS FeatherWing | $39.95 | https://www.adafruit.com/product/3133 |
+| GPS battery | CR1220 12mm Diameter - 3V Lithium Coin Cell Battery | $2.50 | https://www.adafruit.com/product/380 |
+| IMU | Pololu LSM303D 3D Compass and Accelerometer | $7.95 | https://www.pololu.com/product/2127 |
+| Voltage Regulator | Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator | $4.95 | https://www.pololu.com/product/3791 |
+| Power connector | Male DC Power adapter - 2.1mm plug to screw terminal block | $2.00 | https://www.adafruit.com/product/369 |
+| Power connector | Breadboard-friendly 2.1mm DC barrel jack | $0.95 | https://www.adafruit.com/product/373 |
+| Protoboard | Adafruit FeatherWing Tripler Mini Kit | $8.50 | https://www.adafruit.com/product/3417 |
+| Battery |	Tadiran	Lithium Pulses Plus 7.2V 38Ah 273.6Wh | $100 | http://www.tadiranbat.com/assets/tlp-93121-b-al1.pdf |
+| Enclosure | Nanuk 903 | $27.95 | https://nanuk.com/products/nanuk-903 |
+| **Total** | | **$481.10** | |
 
-#### Measurements
+### Measurements
 | Variable | Unit | Comments |
 | --- | :---: | --- |
 | Datetime  |   | YYYY-MM-DD HH:MM:SS |
@@ -42,6 +48,20 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 | Voltage | V | Battery voltage |
 | Transmit duration  | s | Length of Iridium transmission  |
 | Message counter |  | Number of transmitted messages |
+
+## Deployments
+
+A total of 8 Cryologger drift tracking beacons were deployed from the CCGS Amundsen's helicopter on icebergs and ice islands along the coasts of Ellesmere Island, Baffin Island and Greenland during the ArcticNet leg of the 2019 Amundsen Expedition. An additional 2 tracking beacons were deployed by helicopter on icebergs near the Milne Ice Shelf, Ellesmere Island in the summer of 2019.
+
+## Results
+
+Tracking beacons deployed in the summer of 2019 have since reported over 40,000 GPS positions. Transmission difficulties have been encoutnered by several beacons due to the use of the RockBLOCK's onboard antenna and interference from overlying snow cover.
+
+## Conclusion & Future Work
+
+The overall success of the Cryologger tracking beacon deployments have demonstrated that low-cost, open-source hardware and software can provide a robust and cost-effective platform for the collection in-situ iceberg tracking data. These data can provide key insights to iceberg drift and deterioration processes in the Canadian Arctic.
+
+Development of the next version of the Cryologger tracking beacon is currently underway and will focus on improving overall reliability, exploring the use of more environmentally friendly materials and modifications allowing the tracking beacons to transform into ocean drifter buoys once breakup of the icebergs occurs.
 
 ## Repository Contents
 
@@ -59,7 +79,7 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 * Currently in progress
 
 ## License Information
-This project is distributed under the GNU General Public License v3.0
+This project is distributed under the GNU General Public License v3.0.
 
 Cheers,
 
