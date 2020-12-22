@@ -17,6 +17,7 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 
 ### Bill of Materials
 
+**Table 1.** Bill of materials
 | Component | Product | Cost (USD) | URL |
 | --- | --- | :---: | --- |
 | Satellite transceiver | Rock7 RockBLOCK 9603 | $249.95 | http://www.rock7mobile.com/products-rockblock-9603 |
@@ -38,6 +39,8 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 | **Total** | | **$555.25** | 
 
 ### Measurements
+
+**Table 2.** Collected measurements
 | Variable | Unit | Comments |
 | --- | :---: | --- |
 | Datetime  |   | UNIX Epoch Time |
@@ -70,17 +73,15 @@ The overall suitability of potential targets was determined by assessing the ice
 
 As of December 2020, a single Cryologger tracking beacon remains operational. All other beacons have been lost due to iceberg break-up or deterioration. Combined, the six Cryologgers have transmitted a total of more than 53,978 messages via the Iridium satellite network and have achieved an average lifespan of 564 days. 
 
-**Table 1.** Cryologger deployments and days operational as of December 20, 2020.
-
+**Table 3.** Cryologger v1.0 deployments and days operational as of December 20, 2020.
 | Beacon	| Deployment	| Latitude	| Longitude	| Days Operational | Comments
 | :---: | :---: | :---: | :---: | :---: | --- | 
-| 1	| 2018-09-03	| 66.2188	| -61.4864	| 435 | 
-| 2	| 2018-08-27	| 75.7712	| -78.5163	| 310 | Iceberg deteriorated off the coast of Labrador after travelling over 4000 km
-| 3	| 2018-08-28	| 77.6074	| -76.9739	| 709 | Ice island catastrophically broke apart after being caught in a gyre in Baffin Bay
-| 4	| 2018-08-28	| 77.9703	| -78.4877	| 748 | Iceberg broke in half between September 10-15, 2020
-| 5	| 2018-09-01	| 67.3577	| -63.271	| 841 | Beacon fell off the iceberg and has been transmitting from the shore since ...
-| 6	| 2018-09-01	| 67.5387	| -63.3641	| 386 | 
-
+| 18130	| 2018-09-03	| 66.2188	| -61.4864	| 435 | 
+| 15110	| 2018-08-27	| 75.7712	| -78.5163	| 310 | Iceberg deteriorated off the coast of Labrador after travelling over 4000 km
+| 19120	| 2018-08-28	| 77.6074	| -76.9739	| 709 | Ice island catastrophically broke apart after being caught in a gyre in Baffin Bay
+| 11050	| 2018-08-28	| 77.9703	| -78.4877	| 748 | Iceberg broke in half between September 10-15, 2020
+| 15160	| 2018-09-01	| 67.3577	| -63.271	| 841 | Beacon fell off the iceberg and has been transmitting from the shore since ...
+| 16060	| 2018-09-01	| 67.5387	| -63.3641	| 386 | 
 
 ## Conclusion & Future Work
 The success of the Cryologger tracking beacon deployments have demonstrated that low-cost, open-source hardware and software can provide a robust and cost-effective platform for the collection in-situ iceberg tracking data. These data can provide key insights to iceberg drift and deterioration processes in the Canadian Arctic.
