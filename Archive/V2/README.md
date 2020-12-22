@@ -16,6 +16,7 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 
 ### Bill of Materials
 
+**Table 1.** Bill of materials
 | Component | Product | Cost (USD) | URL |
 | --- | --- | :---: | --- |
 | Satellite transceiver | Rock7 RockBLOCK 9603 | $249.95 | http://www.rock7mobile.com/products-rockblock-9603 |
@@ -34,6 +35,8 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 | **Total** | | **$481.10** | |
 
 ### Measurements
+
+**Table 2.** Collected measurements
 | Variable | Unit | Comments |
 | --- | :---: | --- |
 | Datetime  |   | YYYY-MM-DD HH:MM:SS |
@@ -51,11 +54,25 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 
 ## Deployments
 
-A total of 8 Cryologger drift tracking beacons were deployed from the CCGS Amundsen's helicopter on icebergs and ice islands along the coasts of Ellesmere Island, Baffin Island and Greenland during the ArcticNet leg of the 2019 Amundsen Expedition. An additional 2 tracking beacons were deployed by helicopter on icebergs near the Milne Ice Shelf, Ellesmere Island in the summer of 2019.
+A total of 8 Cryologger drift tracking beacons were deployed from the CCGS Amundsen's helicopter on icebergs and ice islands along the coasts of Ellesmere Island, Baffin Island and Greenland during the ArcticNet leg of the 2019 Amundsen Expedition. An additional 2 tracking beacons were also deployed by helicopter on icebergs near the Milne Ice Shelf, Ellesmere Island in the summer of 2019.
 
 ## Results
 
-Tracking beacons deployed in the summer of 2019 have since reported over 40,000 GPS positions. Transmission difficulties have been encoutnered by several beacons due to the use of the RockBLOCK's onboard antenna and interference from overlying snow cover.
+Tracking beacons deployed in the summer of 2019 have reported a combined total of over 40,000 GPS positions. Several beacons have experienced difficulties transmissitting data due to the use of the RockBLOCK's onboard antenna and interference from the overlying snow cover.
+
+**Table 3.** Cryologger v2.0 deployments and days operational as of December 22, 2020.
+| Beacon	| Deployment	| Latitude	| Longitude	| Days Operational | Comments
+| :---: | :---: | :---: | :---: | :---: | --- | 
+| 65700	| 2019-07-06 17:00	| 82.7173	| -82.7923	| 535 | |
+| 54740	| 2019-07-08 01:00	| 82.7588	| -82.1242	| 534 | |
+| 96100	| 2019-08-01 12:50	| 80.9552	| -61.6162	| 479 | |
+| 92350	| 2019-08-01 13:00	| 80.9693	| -61.1920	| 399 | |
+| 92950	| 2019-08-01 13:15	| 80.9083	| -60.9950	| 433 | |
+| 98160	| 2019-08-01 13:30	| 80.8669	| -61.3386	| 480 | |
+| 94100	| 2019-07-30 14:00	| 79.3992	| -65.1887	| 424 | |
+| 92070	| 2019-07-30 15:00	| 79.7245	| -65.3903	| 413 | |
+| 94110	| 2019-08-05 15:15	| 77.9722	| -78.4142	| 331 | Iceberg broke apart approximately July 1, 2020 |
+| 95310	| 2019-08-05 16:15	| 77.9225	| -78.1355	| 431 | |
 
 ## Conclusion & Future Work
 
@@ -71,12 +88,12 @@ Development of the next version of the Cryologger tracking beacon is currently u
 
 * **/Bill of Materials** - Information on all components used construction and their associated costs.
 
-* **/Documentation** - All project documents
+* **/Documentation** - All project documentation.
 
-* **/Hardware** - Autodesk EAGLE schematics and Fusion 360 design files
+* **/Hardware** - Autodesk EAGLE schematics and Fusion 360 design files.
 
 ## Documentation
-* Currently in progress
+* Currently in progress.
 
 ## License Information
 This project is distributed under the GNU General Public License v3.0.
