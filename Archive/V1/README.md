@@ -51,7 +51,7 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 | Satellites | # | Number of satellites in view  |
 | HDOP |  | Horizonal dilution of precision |
 | Voltage | V | Battery voltage |
-| Transmit duration  | s | Length of Iridium transmission  |
+| Transmit duration  | s | Transmission time of previous Iridium SBD message  |
 | Message counter |  | Number of transmitted messages |
 
 #### Photos
