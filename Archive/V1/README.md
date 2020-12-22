@@ -20,14 +20,14 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 | Component | Product | Cost (USD) | URL |
 | --- | --- | :---: | --- |
 | Satellite transceiver | Rock7 RockBLOCK 9603 | $249.95 | http://www.rock7mobile.com/products-rockblock-9603 |
-| Satellite antenna | Maxtena	M1621HCT-P-SMA | $50.00 | 
+| Satellite antenna | Maxtena	M1621HCT-P-SMA | $50.00 | https://www.maxtena.com/products/f-passive/m1621hct-p-sma-iridium-passive-antenna/ |
 | Processor | Adafruit	Pro Trinket - 3V 12MHz | $9.95 | https://www.adafruit.com/products/2010 |
 | GNSS | Adafruit	Ultimate GPS Breakout | $39.95 | https://www.adafruit.com/products/746 |
 | IMU | Adafruit LSM303 - Triple-axis Accelerometer + Magnetometer | $14.95 | https://www.adafruit.com/products/1120 |
 | Real-time clock IC |	Maxim	DS3231SN	1	|	$9.00 |	https://www.digikey.ca/product-detail/en/maxim-integrated/DS3231SN-T-R/DS3231SN-T-RCT-ND/3894827
 | Real-time clock PCB	| Adafruit SMT Breakout PCB for SOIC-16 | $3.95	|	https://www.adafruit.com/product/1207
 | Real-time clock battery	| Adafruit	20mm Coin Cell Breakout Board (CR2032)	|	$2.50	| https://www.adafruit.com/product/1870
-| EEPROM | Microchip	256K I2C EEPROM 24LC256 | $1.25 | | https://www.digikey.ca/en/products/detail/microchip-technology/24LC256-I-P/273431 |
+| EEPROM | Microchip	256K I2C EEPROM 24LC256 | $1.25 | https://www.digikey.ca/en/products/detail/microchip-technology/24LC256-I-P/273431 |
 | Sensors | Adafruit MPL3115A2 Pressure/Altitude/Temperature Sensor | $9.95 | https://www.adafruit.com/product/1893 |
 | Voltage Regulator | 5V, 2.5A Step-Down Voltage Regulator D24V22F5 | $8.95 | https://www.pololu.com/product/2858 |
 | Power connector | Male DC Power adapter - 2.1mm plug to screw terminal block | $2.00 | https://www.adafruit.com/product/369 |
@@ -35,7 +35,7 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 | Protoboard | Adafruit	Perma-Proto Full-sized Breadboard PCB | $5.95	| https://www.adafruit.com/product/1606 |
 | Battery | Tadiran Lithium Pulses Plus 7.2V 38Ah 273.6Wh | $100.00 | http://www.tadiranbat.com/assets/tlp-93121-b-al1.pdf |
 | Enclosure | Nanuk 905 | $45.95 | https://nanuk.com/collections/all-nanuk-cases/products/nanuk-905 |
-| **Total** | | **$700.00** | 
+| **Total** | | **$555.25** | 
 
 #### Collected Measurements
 | Variable | Unit | Comments |
