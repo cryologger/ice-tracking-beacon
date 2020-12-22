@@ -52,7 +52,7 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 | Transmit duration  | s | Length of Iridium transmission  |
 | Message counter |  | Number of transmitted messages |
 
-## Data transmission and processing
+### Data transmission and processing
 Sensor measurements and GPS position are recorded hourly and stored in memory until the desired transmission interval is reached. Data are compressed into a binary message (340 bytes maximum) to minimize the cost and total number of transmissions required. Data are transmitted via the Iridium Short Burst Data (SBD) satellite network at user-specified intervals, which can be remotely updated based on the desired sampling frequency. SBD data messages are received by an Iridium ground station and sent to Rock7's server. The data is then forwarded to an Amazon Web Services (AWS) SQS queue, decoded using an AWS Lambda Python function and stored in a database using the Amazon Relational Database Service (RDS). Data is made freely available and can be viewed in near-real time at https://cryologger.org.
 
 ## Deployments
