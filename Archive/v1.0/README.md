@@ -1,6 +1,7 @@
 # Cryologger - Iceberg Tracking Beacon (ITB) v1.0
-![Image](https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/V1/Photos/IMG_1654.JPG)
-
+<p align="center">
+  <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v1.0/Images/2018_300434063418130_A.JPG">
+</p>
 
 ## Background
 Icebergs and ice islands represent significant hazards to marine navigation and offshore infrastructure at a time when demand for access to Canada’s Arctic waters is increasing.
@@ -13,7 +14,7 @@ The goal of this project is to determine if the Cryologger, a tracking beacon ba
 ## Design
 The Cryologger is based on the open-source Arduino platform (www.arduino.cc) and built using low-cost, do-it-yourself electronics that can be easily modified to meet the needs of the end-user. Code was written using the Arduino Integrated Development Environment (IDE) and benefits from the availability of community-generated libraries.
 
-Planned for extended deployments in harsh Arctic conditions, the Cryologger can provide long-term measurements of GPS position, temperature, pressure, pitch, roll, tilt-compensated heading and battery voltage. Data are transmitted over the Iridium satellite network at specified intervals and can be remotely updated based on the desired sampling frequency. Collected data are made freely available and can be viewed in near-real time at https://cryologger.org.
+Planned for extended deployments in harsh Arctic conditions, the Cryologger can provide long-term measurements of GPS position, temperature, pressure, pitch, roll, tilt-compensated heading and battery voltage. 
 
 ### Bill of Materials
 
@@ -58,9 +59,9 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 | Message counter |  | Number of transmitted messages |
 
 #### Photos
-<p float="middle">
-<img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/V1/Photos/IMG_4288.JPG" width="360">
-<img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/V1/Photos/IMG_0153.JPG" width="360">
+<p align="center">
+  <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v1.0/Images/IMG_4288.JPG" width="360">
+  <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v1.0/Images/IMG_0153.JPG" width="360">
 </p>
 
 ### Data transmission and processing
@@ -70,11 +71,25 @@ Sensor measurements and GPS position are recorded hourly and stored in memory un
 
 A total of 6 Cryologger drift tracking beacons were deployed from the CCGS Amundsen’s helicopter on icebergs and ice islands along the coasts of Ellesmere Island and Baffin Island during the ArcticNet leg of the 2018 Amundsen Expeditions. 
 
+<p align="center">
+  <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v1.0/Images/2018_deployments.png" width="360">
+</p>
+
 The overall suitability of potential targets was determined by assessing the iceberg’s size, shape and location. At the time of deployment, a compass heading of the tracking beacon was recorded and a 360° aerial photo survey of the iceberg was performed if possible. Following deployment, communications with each beacon were successfully established in order to remotely modify their operational parameters for optimal battery efficiency.
+
+<p align="center">
+  <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v1.0/Images/2018_300434063415110.JPG" width="360">
+  <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v1.0/Images/2018_300434063411050.JPG" width="360">
+</p>
+
 
 ## Results
 
-As of December 2020, a single Cryologger tracking beacon remains operational. All other beacons have been lost due to iceberg break-up or deterioration. Combined, the six Cryologgers have transmitted a total of more than 53,978 messages via the Iridium satellite network and have achieved an average lifespan of 564 days. 
+As of December 2020, 5 of 6 Cryologger beacons have been lost due to iceberg break-up or deterioration. The single remaining operational beacon was disloged from its iceberg and is currently transmitting its location from shore. Combined, the six Cryologgers have transmitted more than 54,000 GPS positions via the Iridium satellite network and have achieved an average lifespan of 564 days. 
+
+<p align="center">
+  <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v1.0/Images/2018_trajectories.png" width="360">
+</p>
 
 **Table 3.** Cryologger v1.0 deployments and days operational as of December 20, 2020.
 | Beacon	| Deployment	| Latitude	| Longitude	| Days Operational | Comments
