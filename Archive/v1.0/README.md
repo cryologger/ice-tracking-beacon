@@ -1,7 +1,5 @@
 # Cryologger - Iceberg Tracking Beacon (ITB) v1.0
-<p align="center">
-  <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v1.0/Images/2018_300434063418130_A.JPG">
-</p>
+![Image](https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v1.0/Images/2018_300434063418130_A.JPG)
 
 ## Background
 Icebergs and ice islands represent significant hazards to marine navigation and offshore infrastructure at a time when demand for access to Canada’s Arctic waters is increasing.
@@ -39,33 +37,39 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 | Enclosure | Nanuk 905 | $45.95 | https://nanuk.com/collections/all-nanuk-cases/products/nanuk-905 |
 | **Total** | | **$555.25** | 
 
-### Measurements
+### Assembly
 
-**Table 2.** Collected measurements
-| Variable | Unit | Comments |
-| --- | :---: | --- |
-| Datetime  |   | UNIX Epoch Time |
-| Temperature | °C  | Internal temperature |
-| Pressure | hPa | Internal pressure |
-| Pitch | °|  |
-| Roll | ° |  |
-| Heading | °  | Tilt-compensated heading (0-360°) |
-| Latitude | DD |  |
-| Longitude | DD |  |
-| Satellites | # | Number of satellites in view  |
-| HDOP |  | Horizonal dilution of precision |
-| Voltage | V | Battery voltage |
-| Transmit duration  | s | Transmission time of previous Iridium SBD message  |
-| Message counter |  | Number of transmitted messages |
-
-#### Photos
 <p align="center">
   <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v1.0/Images/IMG_4288.JPG" width="360">
   <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v1.0/Images/IMG_0153.JPG" width="360">
 </p>
+<p align="center">
+  <b>Figure 1.</b> Cryologger components wired and soldered (left) and situated inside a 3D-printed case and Nanuk enclosure (right). 
+</p>
+
+### Measurements
+
+**Table 2.** Collected measurements and the amount of memory required to transmit.
+| Variable | Unit | Comments | Size |
+| --- | :---: | --- | --- |
+| Datetime  |   | UNIX Epoch Time | 4 bytes |
+| Temperature | °C  | Internal temperature | 2 bytes |
+| Pressure | hPa | Internal pressure | 2 bytes |
+| Pitch | °| Pitch | 2 bytes |
+| Roll | ° | Roll | 2 bytes |
+| Heading | °  | Tilt-compensated heading (0-360°) | 2 bytes |
+| Latitude | DD | GPS latitude | 4 bytes |
+| Longitude | DD | GPS longitude | 4 bytes |
+| Satellites | # | Number of satellites in view  | 2 bytes |
+| HDOP |  | Horizonal dilution of precision | 2 bytes |
+| Voltage | V | Battery voltage | 2 bytes |
+| Transmit duration  | s | Transmission time of previous Iridium SBD message  |  2 bytes |
+| Message counter |  | Number of transmitted messages |  2 bytes |
 
 ### Data transmission and processing
-Sensor measurements and GPS position are recorded hourly and stored in memory until the desired transmission interval is reached. Data are compressed into a binary message (340 bytes maximum) to minimize the cost and total number of transmissions required. Data are transmitted via the Iridium Short Burst Data (SBD) satellite network at user-specified intervals, which can be remotely updated based on the desired sampling frequency. SBD data messages are received by an Iridium ground station and sent to Rock7's server. The data is then forwarded to an Amazon Web Services (AWS) SQS queue, decoded using an AWS Lambda Python function and stored in a database using the Amazon Relational Database Service (RDS). Data is made freely available and can be viewed in near-real time at https://cryologger.org.
+Sensor measurements and GPS position are recorded hourly and stored in memory until the desired transmission interval is reached. Data are compressed into a binary message (max 340 bytes) to minimize the cost and the total number of transmissions required. Data are transmitted via the Iridium Short Burst Data (SBD) satellite network at user-specified intervals, which can be remotely updated based on the desired sampling frequency. Once the SBD data messages are received by an Iridium ground station, they are sent to Rock7's server. The data is then forwarded to an Amazon Web Services (AWS) SQS queue, decoded using an AWS Lambda Python function, and stored in a database using the Amazon Relational Database Service (RDS). 
+
+Data is made freely available and can be viewed in near-real time at https://cryologger.org.
 
 ## Deployments
 
@@ -74,7 +78,9 @@ A total of 6 Cryologger drift tracking beacons were deployed from the CCGS Amund
 <p align="center">
   <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v1.0/Images/2018_deployments.png" width="360">
 </p>
-
+<p align="center">
+  <b>Figure 3.</b> 2018 Cryologger deployment locations.
+<p>
 The overall suitability of potential targets was determined by assessing the iceberg’s size, shape and location. At the time of deployment, a compass heading of the tracking beacon was recorded and a 360° aerial photo survey of the iceberg was performed if possible. Following deployment, communications with each beacon were successfully established in order to remotely modify their operational parameters for optimal battery efficiency.
 
 <p align="center">
@@ -82,13 +88,15 @@ The overall suitability of potential targets was determined by assessing the ice
   <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v1.0/Images/2018_300434063411050.JPG" width="360">
 </p>
 
-
 ## Results
 
 As of December 2020, 5 of 6 Cryologger beacons have been lost due to iceberg break-up or deterioration. The single remaining operational beacon was disloged from its iceberg and is currently transmitting its location from shore. Combined, the six Cryologgers have transmitted more than 54,000 GPS positions via the Iridium satellite network and have achieved an average lifespan of 564 days. 
 
 <p align="center">
   <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v1.0/Images/2018_trajectories.png" width="360">
+</p>
+<p align="center">
+  <b>Figure 4.</b> Cryologger trajectories between September 2018 and December 2020.
 </p>
 
 **Table 3.** Cryologger v1.0 deployments and days operational as of December 20, 2020.
