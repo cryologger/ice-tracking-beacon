@@ -74,6 +74,8 @@ A total of 8 Cryologger drift tracking beacons were deployed from the CCGS Amund
 <p align="center"><img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v2.0/Images/2019_deployments.png" width="720"></p>
 <p align="center"><b>Figure 3.</b> 2019 Cryologger deployment locations.<p>
 
+The overall suitability of potential targets was determined by assessing the iceberg’s size, shape and location. At the time of deployment, a compass heading of the tracking beacon was recorded and a 360° aerial photo survey of the iceberg was performed if possible. Following deployment, communications with each beacon were successfully established in order to remotely modify their operational parameters for optimal battery efficiency.
+
 <p align="center">
   <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v2.0/Images/2019_300434063494100_A.JPG" width="420">
   <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v2.0/Images/2019_300434063494100_B.JPG" width="420">
