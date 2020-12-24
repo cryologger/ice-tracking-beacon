@@ -86,7 +86,7 @@ The overall suitability of potential targets was determined by assessing the ice
 
 ## Results
 
-As of December 2020, 5 of 6 Cryologger beacons have been lost due to iceberg break-up or deterioration. The single remaining operational beacon was disloged from its iceberg and is currently transmitting its location from shore. Combined, the six Cryologgers have transmitted more than 54,000 GPS positions via the Iridium satellite network and have achieved an average lifespan of 564 days. 
+As of December 2020, 5 of 6 Cryologger beacons have been lost due to iceberg break-up or deterioration. The single remaining operational beacon was disloged from its iceberg and is currently transmitting its location from shore. Combined, the six Cryologgers have transmitted more than 54,000 GPS positions via the Iridium satellite network and have achieved a lifespan ranging from 310 to 841 days. 
 
 <p align="center"><img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v1.0/Images/2018_trajectories.png" width="480"></p>
 <p align="center"><b>Figure 5.</b> Cryologger trajectories between September 2018 and December 2020.</p>
