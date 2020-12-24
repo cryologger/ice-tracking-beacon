@@ -3,6 +3,10 @@
     Date:     June 22, 2019
     Author:   Adam Garbo
 
+    Description:
+    - This code is currently powering the two iceberg tracking beacons deployed 
+      off the coast of Milne Ice Shelf, Ellesmere Island, Nunavut, summer 2019.
+      
     Components:
     - Adafruit Feather M0 Proto
     - Adafruit DS3231 RTC Precision Featherwing
@@ -10,11 +14,8 @@
     - Rock Seven RockBLOCK 9603
     - Pololu LSM303D 3D Compass and Accelerometer
     - Pololu 3.3V, 2.6A Step-Down Voltage Regulator D24V22F3
-
-    Comments:
-      This code is currently powering the two iceberg tracking beacons deployed 
-      off the coast of Milne Ice Shelf, Ellesmere Island, Nunavut, summer 2019.
 */
+
 #include <Arduino.h>            // https://github.com/arduino/ArduinoCore-samd (Required before wiring_private.h)
 #include <ArduinoLowPower.h>    // https://github.com/arduino-libraries/ArduinoLowPower
 #include <DS3232RTC.h>          // https://github.com/JChristensen/DS3232RTC
