@@ -1,8 +1,18 @@
 /*
-  Title:          Cryologger Ice Tracking Beacon (ITB)
-  Author:         Adam Garbo
-  Last modified:  August 25, 2018
-  Description:    Ice tracking beacon intended for deployment in the Canadian Arctic.
+  Title:    Cryologger Ice Tracking Beacon v1.0
+  Date:     August 26, 2018
+  Author:   Adam Garbo
+
+  Description:    
+  - Iceberg tracking beacons deployed during the 2018 Amundsen Expedition Leg 3a.
+
+  Components: 
+  - Adafruit Pro Trinket 3V
+  - Maxim DS3231SN RTC 
+  - Adafruit Ultimate GPS Breakout
+  - Rock Seven RockBLOCK 9603
+  - Adafruit LSM303DLHC 
+  - Pololu 3.3V, 2.6A Step-Down Voltage Regulator D24V22F3
 */
 
 // Libraries
