@@ -3,6 +3,10 @@
     Date:     August 12, 2019
     Author:   Adam Garbo
 
+    Description:
+    - This code is currently powering all iceberg tracking beacons deployed 
+      during the 2019 Amundsen Expedition Leg 2b.
+      
     Components:
     - Adafruit Feather M0 Proto
     - Adafruit DS3231 RTC Precision Featherwing
@@ -10,10 +14,6 @@
     - Rock Seven RockBLOCK 9603
     - Pololu LSM303D 3D Compass and Accelerometer
     - Pololu 3.3V, 2.6A Step-Down Voltage Regulator D24V22F3
-    
-    Comments:
-      This code is currently powering all iceberg tracking beacons deployed 
-      during the 2019 Amundsen Expedition Leg 2b.
 */
 #include <Arduino.h>            // https://github.com/arduino/ArduinoCore-samd (Required before wiring_private.h)
 #include <ArduinoLowPower.h>    // https://github.com/arduino-libraries/ArduinoLowPower
