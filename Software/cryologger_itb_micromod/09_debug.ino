@@ -47,7 +47,6 @@ void printUnionHex() {
   printLine();
 }
 
-
 // Print contents of transmit buffer
 void printTransmitBuffer() {
   DEBUG_PRINTLN("Transmit buffer");

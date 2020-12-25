@@ -36,6 +36,7 @@ void transmitData() {
     modem.enable9603Npower(true); // Enable power to the Qwiic Iridium 9603N
 
     // Begin satellite modem operation
+    DEBUG_PRINTLN("Starting modem...");
     err = modem.begin();
     if (err == ISBD_SUCCESS) {
       uint8_t mtBuffer[240];  // Buffer to store incoming transmission (240 byte limit)
@@ -60,8 +61,10 @@ void transmitData() {
 
       // Check if transmission was successful
       if (err == ISBD_SUCCESS) {
+        
         retransmitCounter = 0;
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmit buffer array
+      
         DEBUG_PRINTLN("Transmission successful!");
 
         // Check for incoming SBD Mobile Terminated (MT) message
@@ -95,7 +98,7 @@ void transmitData() {
     if (err != ISBD_SUCCESS) {
       retransmitCounter++;
       // Reset counter if reattempt limit is exceeded
-      if (retransmitCounter >= maxRetransmitCounter) {
+      if (retransmitCounter >= retransmitCounterMax) {
         retransmitCounter = 0;
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmitBuffer array
       }
@@ -133,12 +136,14 @@ bool ISBDCallback() {
     petDog();  // Reset the Watchdog Timer
 
     // Blink LED
-    ledState = !ledState; // Set LED state opposite to what it was previously
-    digitalWrite(LED_BUILTIN, !ledState);
+
+    ledStateFlag = !ledStateFlag; // Set LED state opposite to what it was previously
+    digitalWrite(LED_BUILTIN, !ledStateFlag);
   }
   return true;
 }
 
+#if DEBUG_IRIDUM
 // Callback to sniff the conversation with the Iridium modem
 void ISBDConsoleCallback(IridiumSBD *device, char c) {
   DEBUG_WRITE(c);
@@ -148,6 +153,7 @@ void ISBDConsoleCallback(IridiumSBD *device, char c) {
 void ISBDDiagsCallback(IridiumSBD *device, char c) {
   DEBUG_WRITE(c);
 }
+#endif
 
 // Write data to transmit buffer
 void writeBuffer() {

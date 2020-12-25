@@ -23,13 +23,16 @@
 #include <SparkFun_Ublox_Arduino_Library.h> // http://librarymanager/All#SparkFun_Ublox_GPS
 #include <SdFat.h>                          // http://librarymanager/All#SdFat
 #include <SPI.h>
+#include <TimeLib.h>                        // https://github.com/PaulStoffregen/Time
 #include <WDT.h>
 #include <Wire.h>
 
 // ----------------------------------------------------------------------------
 // Debugging macros
 // ----------------------------------------------------------------------------
-#define DEBUG       true
+#define DEBUG         true
+#define DEBUG_IRIDUM  false
+#define DEBUG_GNSS    false
 
 #if DEBUG
 #define DEBUG_PRINT(x)            Serial.print(x)
@@ -66,32 +69,33 @@ BME280        bme280;         // I2C Address: 0x77
 IridiumSBD    modem(Wire);    // I2C Address: 0x63
 SdFat         sd;             // File system object
 SdFile        file;           // Log file
-SFE_UBLOX_GPS gps;            // I2C Address: 0x42
+SFE_UBLOX_GPS gnss;           // I2C Address: 0x42
 
 // ----------------------------------------------------------------------------
 // User defined global variable declarations
 // ----------------------------------------------------------------------------
 byte          alarmSeconds          = 0;
-byte          alarmMinutes          = 5;
+byte          alarmMinutes          = 30;
 byte          alarmHours            = 0;
 unsigned int  transmitInterval      = 1;    // Number of messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  maxRetransmitCounter  = 10;    // Number of failed data transmissions to reattempt (340 byte limit)
+unsigned int  retransmitCounterMax  = 10;   // Number of failed data transmissions to reattempt (340 byte limit)
 
-// Global variable and constant declarations
-volatile bool alarmFlag           = false;  // RTC alarm ISR flag
-volatile bool watchdogFlag        = false;  // Watchdog Timer ISR flag
+// ----------------------------------------------------------------------------
+// Global variable declarations
+// ----------------------------------------------------------------------------
+volatile bool alarmFlag           = false;  // Flag for alarm interrupt service routine
+volatile bool watchdogFlag        = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter     = 0;      // Watchdog Timer interrupt counter
-bool          ledState            = LOW;    // LED blink flag
-bool          rtcSyncFlag         = false;  // RTC synchronization flag
-bool          resetFlag           = 0;      // Force system reset flag
-
+bool          firstTimeFlag       = true;   // Flag to determine if the program is running for the first time
+bool          ledStateFlag        = LOW;    // Flag to toggle LED in blinkLed() function
+bool          rtcSyncFlag         = true;   // Flag to determine if RTC should be set using GNSS time
+bool          resetFlag           = 0;      // Flag to force system reset using Watchdog Timer
 byte          gnssFixCounter      = 0;      // GNSS valid fix counter
 byte          gnssFixCounterMax   = 5;      // GNSS max valid fix counter
 uint8_t       transmitBuffer[340] = {};     // Iridium 9603 transmission buffer (SBD MO message max: 340 bytes)
 char          fileName[30]        = "";     // Keep a record of this file name so that it can be re-opened upon wakeup from sleep
-char          outputData[512];              // Factor of 512 for easier recording to SD in 512 chunks
-unsigned int  sdPowerDelay        = 250;    // Delay (in milliseconds) before disabling power to microSD
-unsigned int  qwiicPowerDelay     = 2000;   // Delay (in milliseconds) after enabling power to Qwiic connector
+unsigned int  sdPowerDelay        = 250;    // Delay before disabling power to microSD (milliseconds)
+unsigned int  qwiicPowerDelay     = 2000;   // Delay after enabling power to Qwiic connector (milliseconds)
 unsigned int  messageCounter      = 0;      // Iridium 9603 cumualtive transmission counter (zero indicates a reset)
 unsigned int  retransmitCounter   = 0;      // Iridium 9603 failed transmission counter
 unsigned int  transmitCounter     = 0;      // Iridium 9603 transmission interval counter
@@ -164,19 +168,20 @@ void setup() {
   delay(5000); // Delay to allow user to open Serial Monitor
 
   printLine();
-  DEBUG_PRINTLN("Cryologger Iceberg Tracking Beacon");
+  DEBUG_PRINTLN("Cryologger Iceberg Tracking Beacon v3.0");
   printLine();
 
   DEBUG_PRINT("Datetime: "); printDateTime();
 
-  configureSd();      // Configure microSD
   configureGnss();    // Configure Sparkfun SAM-M8Q
+  syncRtc();          // Synchronize RTC with GNSS
   configureIridium(); // Configure SparkFun Qwiic Iridium 9603N
   configureRtc();     // Configure real-time clock (RTC)
-  syncRtc();          // Synchronize RTC with GNSS
   configureWdt();     // Configure and start Watchdog Timer
+  configureSd();      // Configure microSD
   configureSensors(); // Configure attached sensors
   createLogFile();
+
   Serial.flush(); // Wait for transmission of any serial data to complete
 }
 
@@ -190,7 +195,7 @@ void loop() {
     alarmFlag = false; // Clear alarm flag
 
     DEBUG_PRINT("Alarm trigger: "); printDateTime();
-    
+
     setRtcAlarm();  // Set the next RTC alarm
 
     // Perform measurements

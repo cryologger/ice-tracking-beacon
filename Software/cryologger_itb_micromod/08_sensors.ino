@@ -15,19 +15,26 @@ void configureSensors() {
 // Read attached sensors
 void readSensors() {
 
-  unsigned long loopStartTime = millis(); // Start the loop timer
+  if (online.bme280) {
+    unsigned long loopStartTime = millis(); // Start the loop timer
 
-  // Wake-up, take readings and re-enter sleep mode
-  bme280.setMode(MODE_FORCED);
-  float temperature = bme280.readTempC();
-  float humidity = bme280.readFloatHumidity();
-  float pressure = bme280.readFloatPressure() / 1000;
+    // Wake-up, take readings and re-enter sleep mode
+    bme280.setMode(MODE_FORCED);
+    blinkLed(1, 5); // Non-blocking delay to allow sensor to complete the reading
+    float temperature = bme280.readTempC();
+    float humidity = bme280.readFloatHumidity();
+    float pressure = bme280.readFloatPressure();
 
-  // Write data to union
-  moMessage.temperature = temperature * 100;
-  moMessage.humidity = humidity * 100;
-  moMessage.pressure = pressure * 100;
+    // Write data to union
+    moMessage.temperature = temperature * 100;
+    moMessage.humidity = humidity * 100;
+    moMessage.pressure = pressure / 10;
 
-  unsigned long loopEndTime = millis() - loopStartTime; // Stop loop timer
-  //DEBUG_PRINT("readSenors() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
+    unsigned long loopEndTime = millis() - loopStartTime; // Stop loop timer
+    //DEBUG_PRINT("readSenors() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
+  }
+  else {
+    DEBUG_PRINTLN("Warning: BME280 offline!");
+    return;
+  }
 }

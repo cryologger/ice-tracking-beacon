@@ -88,6 +88,7 @@ void wakeUp() {
     configureSd();      // Configure microSD
     configureGnss();    // Configure SAM-M8Q receiver
     configureIridium(); // Configure Qwiic Iridium 9603N
+    configureSensors(); // Configure attached sensors
   }
 }
 
@@ -124,13 +125,12 @@ void peripheralPowerOff() {
 void blinkLed(byte ledFlashes, unsigned int ledDelay) {
 
   byte i = 0;
-
   while (i < ledFlashes * 2) {
     unsigned long currentMillis = millis();
     if (currentMillis - previousMillis > ledDelay) {
       previousMillis = currentMillis;
-      ledState = !ledState;
-      digitalWrite(LED_BUILTIN, ledState);
+      ledStateFlag = !ledStateFlag;
+      digitalWrite(LED_BUILTIN, ledStateFlag);
       i++;
     }
   }

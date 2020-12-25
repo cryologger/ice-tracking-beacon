@@ -56,17 +56,17 @@ void logData() {
 
   // Open log file and append data
   if (file.open(fileName, O_APPEND | O_WRITE)) {
-    file.print(moMessage.unixtime);                 file.print(",");
-    file.print(moMessage.temperature / 100.0, 2);   file.print(",");
-    file.print(moMessage.humidity / 100.0, 2);      file.print(",");
-    file.print(moMessage.pressure / 100.0, 2);      file.print(",");
-    file.print(moMessage.latitude, 6);              file.print(",");
-    file.print(moMessage.longitude, 6);       file.print(",");
-    file.print(moMessage.satellites);       file.print(",");
-    file.print(moMessage.pdop, 2);          file.print(",");
-    file.print(moMessage.rtcDrift);         file.print(",");
-    file.print(moMessage.voltage, 2);       file.print(",");
-    file.print(moMessage.transmitDuration); file.print(",");
+    file.print(moMessage.unixtime);             file.print(",");
+    file.print(moMessage.temperature / 100.0);  file.print(",");
+    file.print(moMessage.humidity / 100.0);     file.print(",");
+    file.print(moMessage.pressure / 100.0);     file.print(",");
+    file.print(moMessage.latitude);             file.print(",");
+    file.print(moMessage.longitude);            file.print(",");
+    file.print(moMessage.satellites);           file.print(",");
+    file.print(moMessage.pdop);                 file.print(",");
+    file.print(moMessage.rtcDrift);             file.print(",");
+    file.print(moMessage.voltage, 2);           file.print(",");
+    file.print(moMessage.transmitDuration);     file.print(",");
     file.println(moMessage.messageCounter);
 
     updateFileAccess(); // Update file access and write timestamps
