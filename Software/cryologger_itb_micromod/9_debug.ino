@@ -1,64 +1,61 @@
 void printLine() {
   for (byte i = 0; i < 79; i++) {
-    Serial.print("-");
+    DEBUG_PRINT("-");
   }
-  Serial.println();
+  DEBUG_PRINTLN();
 }
 
 void printTab(byte _times) {
   for (byte i = 0; i < _times; i++) {
-    Serial.print("\t");
+    DEBUG_PRINT("\t");
   }
 }
 
 // Print union/structure
 void printUnion() {
   printLine();
-  Serial.println(F("Union/structure"));
+  DEBUG_PRINTLN("Union/structure");
   printLine();
-  Serial.print(F("unixtime:\t\t")); Serial.println(message.unixtime);
-  //Serial.print(F("temperature:\t\t")); Serial.println(message.temperature);
-  //Serial.print(F("pressure:\t\t")); Serial.println(message.pressure);
-  //Serial.print(F("humidity:\t\t")); Serial.println(message.humidity);
-  //Serial.print(F("pitch:\t\t\t")); Serial.println(message.pitch);
-  //Serial.print(F("roll:\t\t\t")); Serial.println(message.roll);
-  //Serial.print(F("heading:\t\t")); Serial.println(message.heading);
-  Serial.print(F("latitude:\t\t")); Serial.println(message.latitude);
-  Serial.print(F("longitude:\t\t")); Serial.println(message.longitude);
-  Serial.print(F("satellites:\t\t")); Serial.println(message.satellites);
-  Serial.print(F("pdop:\t\t\t")); Serial.println(message.pdop);
-  Serial.print(F("fix:\t\t\t")); Serial.println(message.fix);
-  //Serial.print(F("voltage:\t\t")); Serial.println(message.voltage);
-  Serial.print(F("transmitDuration:\t")); Serial.println(message.transmitDuration);
-  Serial.print(F("messageCounter:\t\t")); Serial.println(message.messageCounter);
+  DEBUG_PRINT("unixtime:");         printTab(2);  DEBUG_PRINTLN(moMessage.unixtime);
+  DEBUG_PRINT("temperature:");      printTab(2);  DEBUG_PRINTLN(moMessage.temperature);
+  DEBUG_PRINT("humidity:");         printTab(2);  DEBUG_PRINTLN(moMessage.humidity);
+  DEBUG_PRINT("pressure:");         printTab(2);  DEBUG_PRINTLN(moMessage.pressure);
+  //DEBUG_PRINT("pitch:");            printTab(3);  DEBUG_PRINTLN(moMessage.pitch);
+  //DEBUG_PRINT("roll:");             printTab(3);  DEBUG_PRINTLN(moMessage.roll);
+  //DEBUG_PRINT("heading:");          printTab(2);  DEBUG_PRINTLN(moMessage.heading);
+  DEBUG_PRINT("latitude:");         printTab(2);  DEBUG_PRINTLN(moMessage.latitude);
+  DEBUG_PRINT("longitude:");        printTab(2);  DEBUG_PRINTLN(moMessage.longitude);
+  DEBUG_PRINT("satellites:");       printTab(2);  DEBUG_PRINTLN(moMessage.satellites);
+  DEBUG_PRINT("pdop:");             printTab(3);  DEBUG_PRINTLN(moMessage.pdop);
+  DEBUG_PRINT("rtcDrift:");         printTab(2);  DEBUG_PRINTLN(moMessage.rtcDrift);
+  DEBUG_PRINT("voltage:");          printTab(2);  DEBUG_PRINTLN(moMessage.voltage);
+  DEBUG_PRINT("transmitDuration:"); printTab(1);  DEBUG_PRINTLN(moMessage.transmitDuration);
+  DEBUG_PRINT("messageCounter:");   printTab(2);  DEBUG_PRINTLN(moMessage.messageCounter);
   printLine();
 }
 
 // Print contents of union/structure
-void printUnionBinary() {
-  Serial.println(F("Union/structure "));
+void printUnionHex() {
+  DEBUG_PRINTLN("Union/structure ");
   printLine();
-  Serial.println(F("Byte\tHex\tBinary"));
-  for (int i = 0; i < sizeof(message); ++i) {
-    Serial.print(i);
-    Serial.print("\t");
-    Serial.print(message.bytes[i], HEX);
-    Serial.print("\t");
-    Serial.println(message.bytes[i], BIN);
+  char tempData[340];
+  DEBUG_PRINTLN("Byte\tHex");
+  for (int i = 0; i < sizeof(moMessage); ++i) {
+    sprintf(tempData, "%d\t0x%02X", i, moMessage.bytes[i]);
+    DEBUG_PRINTLN(tempData);
   }
   printLine();
 }
 
+
 // Print contents of transmit buffer
 void printTransmitBuffer() {
-  Serial.println(F("Transmit buffer"));
+  DEBUG_PRINTLN("Transmit buffer");
   printLine();
-  Serial.println(F("Byte\tHex\tBinary"));
-  for (int i = 0; i < 340; i++) {
-    Serial.print(i);
-    Serial.print(F("\t"));
-    Serial.print(transmitBuffer[i], HEX);
-    Serial.print("\t");
-    Serial.println(transmitBuffer[i], BIN);
+  char tempData[sizeof(transmitBuffer)];
+  DEBUG_PRINTLN("Byte\tHex");
+  for (int i = 0; i < sizeof(transmitBuffer); ++i) {
+    sprintf(tempData, "%d\t0x%02X", i, transmitBuffer[i]);
+    DEBUG_PRINTLN(tempData);
   }
 }

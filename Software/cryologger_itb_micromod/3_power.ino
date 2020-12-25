@@ -1,6 +1,6 @@
-
+// Read battery voltage (broken)
 void readBattery() {
-  
+
 }
 
 // Enter deep sleep
@@ -23,11 +23,12 @@ void goToSleep() {
   am_hal_pwrctrl_periph_disable(AM_HAL_PWRCTRL_PERIPH_UART0);
   am_hal_pwrctrl_periph_disable(AM_HAL_PWRCTRL_PERIPH_UART1);
 
-  // Disable all pads except G1 and G2
+  // Disable all pads except G1, G2 and LED
   for (int x = 0; x < 50; x++)
   {
     if ((x != ap3_gpio_pin2pad(PIN_PWC_POWER)) &&
-        (x != ap3_gpio_pin2pad(PIN_QWIIC_POWER)))
+        (x != ap3_gpio_pin2pad(PIN_QWIIC_POWER)) &&
+        (x != ap3_gpio_pin2pad(LED_BUILTIN)))
     {
       am_hal_gpio_pinconfig(x, g_AM_HAL_GPIO_DISABLE);
     }
@@ -35,6 +36,13 @@ void goToSleep() {
 
   qwiicPowerOff();      // Disable power to Qwiic connector
   peripheralPowerOff(); // Disable power to peripherals
+
+  // Mark devices as offline
+  online.gnss = true;
+  online.bme280 = false;
+  online.microSd = false;
+  online.iridium = false;
+  online.gnss = false;
 
   // Disable power to Flash, SRAM, and cache
   am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_CACHE); // Turn off CACHE
@@ -52,7 +60,7 @@ void goToSleep() {
   /*
      Processor sleeps and awaits RTC or WDT ISR
   */
-  
+
   // Wake up
   wakeUp();
 }
@@ -81,9 +89,9 @@ void wakeUp() {
     configureGnss();    // Configure SAM-M8Q receiver
     configureIridium(); // Configure Qwiic Iridium 9603N
   }
-
 }
 
+// Delay to allow Qwiic devices time to power up
 void qwiicPowerOnDelay() {
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis > qwiicPowerDelay) {
@@ -102,12 +110,12 @@ void qwiicPowerOff() {
   digitalWrite(PIN_QWIIC_POWER, LOW);
 }
 
-// Enable power to peripherals
+// Enable power to microSD and peripherals
 void peripheralPowerOn() {
   digitalWrite(PIN_PWC_POWER, HIGH);
 }
 
-// Disable power to peripherals
+// Disable power to microSD and peripherals
 void peripheralPowerOff() {
   digitalWrite(PIN_PWC_POWER, LOW);
 }
@@ -115,7 +123,6 @@ void peripheralPowerOff() {
 // Blink LED (non-blocking)
 void blinkLed(byte ledFlashes, unsigned int ledDelay) {
 
-  pinMode(LED_BUILTIN, OUTPUT);
   byte i = 0;
 
   while (i < ledFlashes * 2) {

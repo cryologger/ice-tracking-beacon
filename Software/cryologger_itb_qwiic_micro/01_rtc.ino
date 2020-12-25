@@ -34,7 +34,7 @@ void readRtc() {
 
   // Stop loop timer
   unsigned long loopEndTime = millis() - loopStartTime;
-  SERIAL_PORT.print(F("readRtc() function execution: ")); SERIAL_PORT.print(loopEndTime); SERIAL_PORT.println(F(" ms"));
+  //SERIAL_PORT.print(F("readRtc() function execution: ")); SERIAL_PORT.print(loopEndTime); SERIAL_PORT.println(F(" ms"));
 }
 
 void setRtcAlarm() {

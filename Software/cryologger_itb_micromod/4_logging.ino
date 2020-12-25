@@ -1,9 +1,10 @@
 void configureSd() {
+
   if (sd.begin(PIN_MICROSD_CHIP_SELECT, SD_SCK_MHZ(24))) {
     online.microSd = true;
   }
   else {
-    Serial.println(F("Warning: microSD not detected! Please check wiring."));
+    DEBUG_PRINTLN("Warning: microSD not detected! Please check wiring.");
     //while(1);
   }
 }
@@ -18,26 +19,27 @@ void createLogFile() {
   rtc.getTime();
 
   // Create log file name
-  sprintf(fileName, "20%02d%02d%02d_%02d0000.csv",
-          rtc.year, rtc.month, rtc.dayOfMonth, rtc.hour);
+  sprintf(fileName, "20%02d%02d%02d_%02d%02d%02d.csv",
+          rtc.year, rtc.month, rtc.dayOfMonth,
+          rtc.hour, rtc.minute, rtc.seconds);
 
   // O_CREAT - Create the file if it does not exist
   // O_APPEND - Seek to the end of the file prior to each write
   // O_WRITE - Open the file for writing
   if (!file.open(fileName, O_CREAT | O_APPEND | O_WRITE)) {
-    Serial.println(F("Failed to create log file"));
+    DEBUG_PRINTLN("Failed to create log file");
     return;
   }
 
   if (!file.isOpen()) {
-    Serial.println(F("Warning: Unable to open file"));
+    DEBUG_PRINTLN("Warning: Unable to open file");
   }
 
   // Update file create timestamp
-  updateDataFileCreate();
+  updateFileCreate();
 
   // Write header to file
-  file.println("datetime,latitude,longitude,sattlites,fix,pdop,");
+  file.println("unixtime,temperature,humidity,pressure,latitude,longitude,satellites,pdop,drift,voltage,transmitDuration,messageCounter");
 
   // Sync the log file
   file.sync();
@@ -45,53 +47,76 @@ void createLogFile() {
   // Close log file
   file.close();
 
-  Serial.print(F("Logging to file: ")); Serial.println(fileName);
+  DEBUG_PRINT("Logging to file: "); DEBUG_PRINTLN(fileName);
 }
 
+
+// Log data to microSD
 void logData() {
 
   // Open log file and append data
   if (file.open(fileName, O_APPEND | O_WRITE)) {
-    file.write(outputData, strlen(outputData)); // Write data to SD
-    updateDataFileAccess(); // Update file access and write timestamps
+    file.print(moMessage.unixtime);                 file.print(",");
+    file.print(moMessage.temperature / 100.0, 2);   file.print(",");
+    file.print(moMessage.humidity / 100.0, 2);      file.print(",");
+    file.print(moMessage.pressure / 100.0, 2);      file.print(",");
+    file.print(moMessage.latitude, 6);              file.print(",");
+    file.print(moMessage.longitude, 6);       file.print(",");
+    file.print(moMessage.satellites);       file.print(",");
+    file.print(moMessage.pdop, 2);          file.print(",");
+    file.print(moMessage.rtcDrift);         file.print(",");
+    file.print(moMessage.voltage, 2);       file.print(",");
+    file.print(moMessage.transmitDuration); file.print(",");
+    file.println(moMessage.messageCounter);
+
+    updateFileAccess(); // Update file access and write timestamps
   }
   else {
-    Serial.println("Warning: Unable to open file");
+    DEBUG_PRINTLN("Warning: Unable to open file!");
   }
 
-  // Force data to SD and update the directory entry to avoid data loss
-  if (!file.sync() || file.getWriteError()) {
-    Serial.println(F("Warning: Write error"));
+  // Sync log file
+  if (!file.sync()) {
+    DEBUG_PRINTLN(F("Warning: File sync error!"));
   }
 
-  file.close();
-  
-  // Print outputData to terminal
-  Serial.print("outputData: "); Serial.println(outputData);
+  // Check for write error
+  if (file.getWriteError()) {
+    DEBUG_PRINTLN(F("Warning: File write error!"));
+  }
 
-  // Clear arrays
-  memset(outputData, 0x00, sizeof(outputData));
-  memset(tempData, 0x00, sizeof(tempData)); 
+  // Close log file
+  if (!file.close()) {
+    DEBUG_PRINTLN(F("Warning: File close error!"));
+  }
+
+  // Blink LED
+  blinkLed(2, 100);
 }
 
-void updateDataFileCreate() {
+// Update the file create timestamp
+void updateFileCreate() {
   // Get the RTC's current date and time
   rtc.getTime();
   // Update the file create timestamp
-  if (!file.timestamp(T_CREATE, (rtc.year + 2000), rtc.month, rtc.dayOfMonth, rtc.hour, rtc.minute, rtc.seconds)) {
-    Serial.print(F("Warning: Unable to write file create timestamp"));
+  if (!file.timestamp(T_CREATE, (rtc.year + 2000), rtc.month, rtc.dayOfMonth,
+                      rtc.hour, rtc.minute, rtc.seconds)) {
+    DEBUG_PRINTLN("Warning: Unable to write file create timestamp");
   }
 }
 
-void updateDataFileAccess() {
+// Update the file access and write timestamps
+void updateFileAccess() {
   // Get the RTC's current date and time
   rtc.getTime();
   // Update the file access timestamp
-  if (!file.timestamp(T_ACCESS, (rtc.year + 2000), rtc.month, rtc.dayOfMonth, rtc.hour, rtc.minute, rtc.seconds)) {
-    Serial.println(F("Warning: Unable to write file access timestamp"));
+  if (!file.timestamp(T_ACCESS, (rtc.year + 2000), rtc.month, rtc.dayOfMonth,
+                      rtc.hour, rtc.minute, rtc.seconds)) {
+    DEBUG_PRINTLN("Warning: Unable to write file access timestamp");
   }
   // Update the file write timestamp
-  if (!file.timestamp(T_WRITE, (rtc.year + 2000), rtc.month, rtc.dayOfMonth, rtc.hour, rtc.minute, rtc.seconds)) {
-    Serial.println(F("Warning: Unable to write file write timestamp"));
+  if (!file.timestamp(T_WRITE, (rtc.year + 2000), rtc.month, rtc.dayOfMonth,
+                      rtc.hour, rtc.minute, rtc.seconds)) {
+    DEBUG_PRINTLN("Warning: Unable to write file write timestamp");
   }
 }

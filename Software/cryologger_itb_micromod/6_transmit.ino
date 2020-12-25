@@ -8,7 +8,7 @@ void configureIridium() {
     online.iridium = true;
   }
   else {
-    Serial.println(F("Warning: Qwiic Iridium 9603N not detected! Please check wiring."));
+    DEBUG_PRINTLN("Warning: Qwiic Iridium 9603N not detected! Please check wiring.");
     //while (1);
   }
 }
@@ -22,57 +22,71 @@ void transmitData() {
     unsigned long loopStartTime = millis(); // Loop timer
     int err;
 
-    Serial.println(F("Enabling the supercapacitor charger..."));
+    DEBUG_PRINTLN("Enabling the supercapacitor charger...");
     modem.enableSuperCapCharger(true); // Enable the supercapacitor charger
 
     // Wait for supercapacitor charger PGOOD signal to go HIGH for up to 2 minutes
     while ((!modem.checkSuperCapCharger()) && millis() - loopStartTime < 2UL * 60UL * 1000UL) {
-      Serial.println(F("Waiting for supercapacitors to charge..."));
+      DEBUG_PRINTLN("Waiting for supercapacitors to charge...");
       blinkLed(1, 1000);
       petDog();
     }
-    Serial.println(F("Supercapacitors charged!"));
+    DEBUG_PRINTLN("Supercapacitors charged!");
 
     modem.enable9603Npower(true); // Enable power to the Qwiic Iridium 9603N
 
     // Begin satellite modem operation
     err = modem.begin();
     if (err == ISBD_SUCCESS) {
-      uint8_t inBuffer[240];  // Buffer to store incoming transmission (240 byte limit)
-      size_t inBufferSize = sizeof(inBuffer);
-      memset(inBuffer, 0x00, sizeof(inBuffer)); // Clear inBuffer array
+      uint8_t mtBuffer[240];  // Buffer to store incoming transmission (240 byte limit)
+      size_t mtBufferSize = sizeof(mtBuffer);
+      memset(mtBuffer, 0x00, sizeof(mtBuffer)); // Clear inBuffer array
 
       /*
           // Test the signal quality
           int signalQuality = -1;
           err = modem.getSignalQuality(signalQuality);
           if (err != ISBD_SUCCESS) {
-            Serial.print(F("SignalQuality failed: error "));
-            Serial.println(err);
+            DEBUG_PRINT("SignalQuality failed: error ");
+            DEBUG_PRINTLN(err);
             return;
           }
-          Serial.print(F("On a scale of 0 to 5, signal quality is currently: "));
-          Serial.println(signalQuality);
+          DEBUG_PRINT("On a scale of 0 to 5, signal quality is currently: ");
+          DEBUG_PRINTLN(signalQuality);
       */
 
       // Transmit and receieve data in binary format
-      err = modem.sendReceiveSBDBinary(transmitBuffer, (sizeof(message) * (transmitCounter + (retransmitCounter * transmitInterval))), inBuffer, inBufferSize);
+      err = modem.sendReceiveSBDBinary(transmitBuffer, (sizeof(moMessage) * (transmitCounter + (retransmitCounter * transmitInterval))), mtBuffer, mtBufferSize);
 
       // Check if transmission was successful
       if (err == ISBD_SUCCESS) {
         retransmitCounter = 0;
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmit buffer array
-        Serial.println(F("Transmission successful!"));
+        DEBUG_PRINTLN("Transmission successful!");
+
+        // Check for incoming SBD Mobile Terminated (MT) message
+        // If no inbound message is available, inBufferSize = 0
+        if (mtBufferSize > 0) {
+
+          // Print mtBuffer contents and write incoming message buffer to union/structure
+          DEBUG_PRINT("Inbound buffer size is: "); DEBUG_PRINTLN(mtBufferSize);
+          char tempData[240];
+          DEBUG_PRINTLN("Byte\tHex");
+          for (int i = 0; i < sizeof(mtBuffer); ++i) {
+            mtMessage.bytes[i] = mtBuffer[i];
+            sprintf(tempData, "%d\t0x%02X", i, mtBuffer[i]);
+            DEBUG_PRINTLN(tempData);
+          }
+        }
       }
       else {
-        Serial.print(F("Transmission failed: error ")); Serial.println(err);
+        DEBUG_PRINT("Transmission failed: error "); DEBUG_PRINTLN(err);
       }
-
     }
     else {
-      Serial.print(F("Begin failed: error")); Serial.println(err);
+      DEBUG_PRINT("Begin failed: error"); DEBUG_PRINTLN(err);
       if (err == ISBD_NO_MODEM_DETECTED) {
-        Serial.println(F("Warning: Qwiic Iridium 9603N not detected. Please check wiring."));
+        DEBUG_PRINTLN("Warning: Qwiic Iridium 9603N not detected. Please check wiring.");
       }
       return;
     }
@@ -88,10 +102,10 @@ void transmitData() {
     }
 
     // Power down the modem
-    Serial.println(F("Putting the Qwiic Iridium 9603N to sleep."));
+    DEBUG_PRINTLN("Putting the Qwiic Iridium 9603N to sleep.");
     err = modem.sleep();
     if (err != ISBD_SUCCESS) {
-      Serial.print(F("Sleep failed: error ")); Serial.println(err);
+      DEBUG_PRINT("Sleep failed: error "); DEBUG_PRINTLN(err);
     }
 
     modem.enable9603Npower(false);      // Disable 9603N power
@@ -100,56 +114,52 @@ void transmitData() {
 
     transmitCounter = 0;  // Reset transmit counter
     unsigned long loopEndTime = millis() - loopStartTime;
-    message.transmitDuration = loopEndTime / 1000;
+    moMessage.transmitDuration = loopEndTime / 1000;
 
-    Serial.print(F("transmitData() function execution: ")); Serial.println(loopEndTime); Serial.println(" ms");
-    Serial.print(F("transmitDuration: %d ")); Serial.println(loopEndTime / 1000);
-    Serial.print(F("retransmitCounter: ")); Serial.println(retransmitCounter);
+
+    DEBUG_PRINT("transmitDuration: "); DEBUG_PRINTLN(loopEndTime / 1000);
+    DEBUG_PRINT("retransmitCounter: "); DEBUG_PRINTLN(retransmitCounter);
+
+    DEBUG_PRINT("transmitData() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
   }
 }
 
-
 // RockBLOCK callback function can be repeatedly called during transmission or GNSS signal acquisition
 bool ISBDCallback() {
-
-  digitalWrite(LED_BUILTIN, (millis() / 500) % 2 == 1 ? HIGH : LOW);
 
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis > 1000) {
     previousMillis = currentMillis;
     petDog();  // Reset the Watchdog Timer
+
+    // Blink LED
+    ledState = !ledState; // Set LED state opposite to what it was previously
+    digitalWrite(LED_BUILTIN, !ledState);
   }
   return true;
 }
 
-
 // Callback to sniff the conversation with the Iridium modem
 void ISBDConsoleCallback(IridiumSBD *device, char c) {
-#if DEBUG
-  Serial.write(c);
-#endif
+  DEBUG_WRITE(c);
 }
 
 // Callback to to monitor Iridium modem library's run state
 void ISBDDiagsCallback(IridiumSBD *device, char c) {
-#if DEBUG
-  Serial.write(c);
-#endif
+  DEBUG_WRITE(c);
 }
 
 // Write data to transmit buffer
 void writeBuffer() {
 
-  messageCounter++;                         // Increment message counter
-  message.messageCounter = messageCounter;  // Write message counter data to union
-  transmitCounter++;                        // Increment data transmission counter
+  messageCounter++;                           // Increment message counter
+  moMessage.messageCounter = messageCounter;  // Write message counter data to union
+  transmitCounter++;                          // Increment data transmission counter
 
   // Concatenate current message with existing message(s) stored in transmit buffer
-  memcpy(transmitBuffer + (sizeof(message) * (transmitCounter + (retransmitCounter * transmitInterval) - 1)), message.bytes, sizeof(message));
+  memcpy(transmitBuffer + (sizeof(moMessage) * (transmitCounter + (retransmitCounter * transmitInterval) - 1)), moMessage.bytes, sizeof(moMessage));
 
-#if DEBUG
-  printUnion();
-  //printUnionBinary(); // Print union/structure in hex/binary
-  //printTransmitBuffer();  // Print transmit buffer in hex/binary
-#endif
+  printUnion();           // Print union
+  //printUnionHex();        // Print union in hex
+  //printTransmitBuffer();  // Print transmit buffer in hex
 }
