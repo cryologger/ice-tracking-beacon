@@ -24,7 +24,7 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 | Processor | Adafruit	Pro Trinket - 3V 12MHz | $9.95 | https://www.adafruit.com/products/2010 |
 | GNSS | Adafruit	Ultimate GPS Breakout | $39.95 | https://www.adafruit.com/products/746 |
 | IMU | Adafruit LSM303 - Triple-axis Accelerometer + Magnetometer | $14.95 | https://www.adafruit.com/products/1120 |
-| Real-time clock IC |	Maxim	DS3231SN	1	|	$9.00 |	https://www.digikey.ca/product-detail/en/maxim-integrated/DS3231SN-T-R/DS3231SN-T-RCT-ND/3894827
+| Real-time clock IC |	Maxim	DS3231SN |	$9.00 |	https://www.digikey.ca/product-detail/en/maxim-integrated/DS3231SN-T-R/DS3231SN-T-RCT-ND/3894827
 | Real-time clock PCB	| Adafruit SMT Breakout PCB for SOIC-16 | $3.95	|	https://www.adafruit.com/product/1207
 | Real-time clock battery	| Adafruit	20mm Coin Cell Breakout Board (CR2032)	|	$2.50	| https://www.adafruit.com/product/1870
 | EEPROM | Microchip	256K I2C EEPROM 24LC256 | $1.25 | https://www.digikey.ca/en/products/detail/microchip-technology/24LC256-I-P/273431 |
@@ -108,11 +108,11 @@ Development of the next version of the Cryologger is currently underway and will
 
 ## Repository Contents
 
-* **/Software** - Contains the Arduino code.
+* **/Software** - Contains the Arduino code
 
-* **/Bill of Materials** - Information on all components used construction and their associated costs.
+* **/Bill of Materials** - Information on all components used construction and their associated costs
 
-* **/Documentation** - All project documents
+* **/Documentation** - All project-related documents
 
 * **/Hardware** - Autodesk EAGLE schematics and Fusion 360 design files
 
