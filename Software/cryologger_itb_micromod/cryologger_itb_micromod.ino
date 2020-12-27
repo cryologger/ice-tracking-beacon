@@ -17,11 +17,12 @@
 // ----------------------------------------------------------------------------
 // Libraries
 // ----------------------------------------------------------------------------
-#include <IridiumSBD.h>                     // http://librarymanager/All#IridiumSBDI2C
+#include <ICM_20948.h>                      // https://github.com/sparkfun/SparkFun_ICM-20948_ArduinoLibrary
+#include <IridiumSBD.h>                     // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
 #include <RTC.h>
-#include <SparkFunBME280.h>                 // http://librarymanager/All#SparkFun_BME280_Arduino_Library
-#include <SparkFun_Ublox_Arduino_Library.h> // http://librarymanager/All#SparkFun_Ublox_GPS
-#include <SdFat.h>                          // http://librarymanager/All#SdFat
+#include <SparkFunBME280.h>                 // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
+#include <SparkFun_Ublox_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_Ublox_Arduino_Library
+#include <SdFat.h>                          // https://github.com/greiman/SdFat
 #include <SPI.h>
 #include <TimeLib.h>                        // https://github.com/PaulStoffregen/Time
 #include <WDT.h>
@@ -56,20 +57,20 @@
 // ----------------------------------------------------------------------------
 // Pin definitions
 // ----------------------------------------------------------------------------
-#define PIN_PWC_POWER           G1
-#define PIN_QWIIC_POWER         G2
-#define PIN_MICROSD_CHIP_SELECT 41
+#define PIN_PWC_POWER           33
+#define PIN_QWIIC_POWER         34
+#define PIN_SD_CHIP_SELECT      41
 
 // ----------------------------------------------------------------------------
 // Object instantiations
 // ----------------------------------------------------------------------------
-APM3_RTC      rtc;
-APM3_WDT      wdt;
-BME280        bme280;         // I2C Address: 0x77
-IridiumSBD    modem(Wire);    // I2C Address: 0x63
-SdFat         sd;             // File system object
-SdFile        file;           // Log file
-SFE_UBLOX_GPS gnss;           // I2C Address: 0x42
+APM3_RTC          rtc;
+APM3_WDT          wdt;
+BME280            bme280;         // I2C Address: 0x77
+IridiumSBD        modem(Wire);    // I2C Address: 0x63
+SdFat             sd;             // File system object
+SdFile            file;           // Log file
+SFE_UBLOX_GPS     gnss;           // I2C Address: 0x42
 
 // ----------------------------------------------------------------------------
 // User defined global variable declarations
@@ -94,8 +95,10 @@ byte          gnssFixCounter      = 0;      // GNSS valid fix counter
 byte          gnssFixCounterMax   = 5;      // GNSS max valid fix counter
 uint8_t       transmitBuffer[340] = {};     // Iridium 9603 transmission buffer (SBD MO message max: 340 bytes)
 char          fileName[30]        = "";     // Keep a record of this file name so that it can be re-opened upon wakeup from sleep
+
 unsigned int  sdPowerDelay        = 250;    // Delay before disabling power to microSD (milliseconds)
 unsigned int  qwiicPowerDelay     = 2000;   // Delay after enabling power to Qwiic connector (milliseconds)
+
 unsigned int  messageCounter      = 0;      // Iridium 9603 cumualtive transmission counter (zero indicates a reset)
 unsigned int  retransmitCounter   = 0;      // Iridium 9603 failed transmission counter
 unsigned int  transmitCounter     = 0;      // Iridium 9603 transmission interval counter
@@ -157,8 +160,11 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
 
-  qwiicPowerOn(); // Enable power to Qwiic connector
-  peripheralPowerOn(); // Enable power to peripherials
+  // Set analog resolution to 14-bits
+  analogReadResolution(14);
+
+  qwiicPowerOn();       // Enable power to Qwiic connector
+  peripheralPowerOn();  // Enable power to peripherials
 
   Wire.begin(); // Initialize I2C
   SPI.begin(); // Initialize SPI
@@ -180,7 +186,7 @@ void setup() {
   configureWdt();     // Configure and start Watchdog Timer
   configureSd();      // Configure microSD
   configureSensors(); // Configure attached sensors
-  createLogFile();
+  createLogFile();    // Create initial log file
 
   Serial.flush(); // Wait for transmission of any serial data to complete
 }
@@ -214,7 +220,7 @@ void loop() {
   }
 
   // Blink LED
-  blinkLed(1, 25);
+  blinkLed(1, 100);
 
   // Enter deep sleep and await RTC alarm interrupt
   goToSleep();
@@ -228,7 +234,7 @@ void loop() {
 extern "C" void am_rtc_isr(void) {
 
   // Clear the RTC alarm interrupt
-  am_hal_rtc_int_clear(AM_HAL_RTC_INT_ALM);
+  rtc.clearInterrupt();
 
   // Set alarm flag
   alarmFlag = true;

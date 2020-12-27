@@ -82,7 +82,7 @@ void printDateTime() {
 
 // Print the RTC's alarm
 void printAlarm() {
-  rtc.getTime(); // Get the RTC's date and time
+  rtc.getAlarm(); // Get the RTC's date and time
   char alarmBuffer[25];
   sprintf(alarmBuffer, "20%02d-%02d-%02d %02d:%02d:%02d",
           rtc.year, rtc.alarmMonth, rtc.alarmDayOfMonth,

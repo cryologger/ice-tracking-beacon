@@ -87,7 +87,7 @@ void wakeUp() {
 
     configureSd();      // Configure microSD
     configureGnss();    // Configure SAM-M8Q receiver
-    configureIridium(); // Configure Qwiic Iridium 9603N
+    configureIridium(); // Configure Iridium 9603
     configureSensors(); // Configure attached sensors
   }
 }
@@ -123,6 +123,8 @@ void peripheralPowerOff() {
 
 // Blink LED (non-blocking)
 void blinkLed(byte ledFlashes, unsigned int ledDelay) {
+
+  pinMode(LED_BUILTIN, OUTPUT);
 
   byte i = 0;
   while (i < ledFlashes * 2) {

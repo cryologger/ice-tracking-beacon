@@ -13,6 +13,7 @@ void configureGnss() {
   }
 }
 
+// Synchronize RTC with GNSS
 void syncRtc() {
 
   // Check if GNSS receiver is online

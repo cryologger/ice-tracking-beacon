@@ -1,6 +1,6 @@
 void configureSd() {
 
-  if (sd.begin(PIN_MICROSD_CHIP_SELECT, SD_SCK_MHZ(24))) {
+  if (sd.begin(PIN_SD_CHIP_SELECT, SD_SCK_MHZ(24))) {
     online.microSd = true;
   }
   else {

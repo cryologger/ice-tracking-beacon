@@ -2,8 +2,8 @@
 void configureIridium() {
 
   if (modem.isConnected()) {
-    modem.adjustATTimeout(15);          // Set AT timeout (Default = 20 seconds)
-    modem.adjustSendReceiveTimeout(60); // Set send/receive timeout (Default = 300 seconds)
+    modem.adjustATTimeout(30);          // Set AT timeout (Default = 20 seconds)
+    modem.adjustSendReceiveTimeout(180); // Set send/receive timeout (Default = 300 seconds)
     modem.enable841lowPower(true);      // Enable ATtiny841 low-power mode
     online.iridium = true;
   }
@@ -11,6 +11,21 @@ void configureIridium() {
     DEBUG_PRINTLN("Warning: Qwiic Iridium 9603N not detected! Please check wiring.");
     //while (1);
   }
+}
+
+// Write data to transmit buffer
+void writeBuffer() {
+
+  messageCounter++;                           // Increment message counter
+  moMessage.messageCounter = messageCounter;  // Write message counter data to union
+  transmitCounter++;                          // Increment data transmission counter
+
+  // Concatenate current message with existing message(s) stored in transmit buffer
+  memcpy(transmitBuffer + (sizeof(moMessage) * (transmitCounter + (retransmitCounter * transmitInterval) - 1)), moMessage.bytes, sizeof(moMessage));
+
+  printUnion();           // Print union
+  //printUnionHex();        // Print union in hex
+  //printTransmitBuffer();  // Print transmit buffer in hex
 }
 
 // Transmit data using SparkFun Qwiic Iridium 9603N
@@ -61,10 +76,10 @@ void transmitData() {
 
       // Check if transmission was successful
       if (err == ISBD_SUCCESS) {
-        
+
         retransmitCounter = 0;
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmit buffer array
-      
+
         DEBUG_PRINTLN("Transmission successful!");
 
         // Check for incoming SBD Mobile Terminated (MT) message
@@ -76,10 +91,12 @@ void transmitData() {
           char tempData[240];
           DEBUG_PRINTLN("Byte\tHex");
           for (int i = 0; i < sizeof(mtBuffer); ++i) {
-            mtMessage.bytes[i] = mtBuffer[i];
+            //mtMessage.bytes[i] = mtBuffer[i];
             sprintf(tempData, "%d\t0x%02X", i, mtBuffer[i]);
             DEBUG_PRINTLN(tempData);
           }
+
+          parseMtBuffer();
         }
       }
       else {
@@ -155,17 +172,24 @@ void ISBDDiagsCallback(IridiumSBD *device, char c) {
 }
 #endif
 
-// Write data to transmit buffer
-void writeBuffer() {
 
-  messageCounter++;                           // Increment message counter
-  moMessage.messageCounter = messageCounter;  // Write message counter data to union
-  transmitCounter++;                          // Increment data transmission counter
+// Parse the recieved Iridium SBD MT message
+void parseMtBuffer() {
 
-  // Concatenate current message with existing message(s) stored in transmit buffer
-  memcpy(transmitBuffer + (sizeof(moMessage) * (transmitCounter + (retransmitCounter * transmitInterval) - 1)), moMessage.bytes, sizeof(moMessage));
+}
 
-  printUnion();           // Print union
-  //printUnionHex();        // Print union in hex
-  //printTransmitBuffer();  // Print transmit buffer in hex
+void userFunction1() {
+
+}
+
+void userFunction2() {
+
+}
+
+void userFunction3() {
+
+}
+
+void userFunction4() {
+
 }
