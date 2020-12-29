@@ -122,7 +122,7 @@ typedef union {
     uint16_t  voltage;            // Battery voltage (V)            (2 bytes)
     uint16_t  transmitDuration;   // Previous transmission duration (2 bytes)
     uint16_t  messageCounter;     // Message counter                (2 bytes)
-  } __attribute__((packed));                                        // Total: (29 bytes)
+  } __attribute__((packed));                              // Total: (29 bytes)
   uint8_t bytes[29];
 } SBD_MO_MESSAGE;
 

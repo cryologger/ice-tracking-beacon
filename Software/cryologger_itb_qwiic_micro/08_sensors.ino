@@ -6,7 +6,7 @@ void configureSensors() {
     online.bme280 = true;
   }
   else {
-    SERIAL_PORT.println(F("Warning: SparkFun BME280 not detected at default I2C address! Please check wiring."));
+    DEBUG_PRINTLN("Warning: SparkFun BME280 not detected at default I2C address! Please check wiring.");
     online.bme280 = false;
   }
 }
@@ -20,17 +20,18 @@ void readSensors() {
 
   // Wake-up, take readings and re-enter sleep mode
   bme280.setMode(MODE_FORCED);
+
   float temperature = bme280.readTempC();
   float humidity = bme280.readFloatHumidity();
-  float pressure = bme280.readFloatPressure() / 1000;
+  float pressure = bme280.readFloatPressure();
 
   // Write data to union
-  message.temperature = temperature * 100;
-  message.humidity = humidity * 100;
-  message.pressure = pressure * 100;
+  moMessage.temperature = temperature * 100;
+  moMessage.humidity = humidity * 100;
+  moMessage.pressure = pressure / 10;
 
   setLedColour(green);
 
   unsigned long loopEndTime = millis() - loopStartTime; // Stop loop timer
-  //SERIAL_PORT.print(F("readSenors() function execution: ")); SERIAL_PORT.print(loopEndTime); SERIAL_PORT.println(F(" ms"));
+  DEBUG_PRINT("readSenors() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
 }

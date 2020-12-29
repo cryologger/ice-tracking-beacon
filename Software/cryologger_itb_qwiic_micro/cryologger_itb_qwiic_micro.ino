@@ -1,6 +1,6 @@
 /*
-    Title:    Cryologger Ice Tracking Beacon (ITB) - Version 3
-    Date:     November 30, 2020
+    Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0 Prototype
+    Date:     December 28, 2020
     Author:   Adam Garbo
 
     Components:
@@ -19,61 +19,93 @@
     3.3V bus directly, we're looking at 110-141 uA in sleep mode (total) at 7.4-12V.
     - Artemis MicroMod is currently sitting at 300 uA.
     - Initial prototype test conducted November 18, 2020.
+    - December 28, 2020 - 
 */
 
+// ----------------------------------------------------------------------------
 // Libraries
-#include <Wire.h>                                         // https://www.arduino.cc/en/Reference/Wire
-//#include <SPIMemory.h>                                    // https://github.com/Marzogh/SPIMemory
-#include <TimeLib.h>                                      // https://github.com/PaulStoffregen/Time
-#include <SparkFun_Ublox_Arduino_Library.h>               // https://github.com/sparkfun/SparkFun_Ublox_Arduino_Library
-#include <SparkFun_Qwiic_Power_Switch_Arduino_Library.h>  // https://github.com/sparkfun/SparkFun_Qwiic_Power_Switch_Arduino_Library
-#include <SparkFunBME280.h>                               // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
-#include <SAMD_AnalogCorrection.h>                        // https://github.com/arduino/ArduinoCore-samd/tree/master/libraries/SAMD_AnalogCorrection
-#include <RTCZero.h>                                      // https://github.com/arduino-libraries/RTCZero
-#include <IridiumSBD.h>                                   // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
-#include <ICM_20948.h>                                    // https://github.com/sparkfun/SparkFun_ICM-20948_ArduinoLibrary
-#include <ArduinoLowPower.h>                              // https://github.com/arduino-libraries/ArduinoLowPower
-#include <Adafruit_NeoPixel.h>                            // https://github.com/adafruit/Adafruit_NeoPixel
+// ----------------------------------------------------------------------------
+#include <Adafruit_NeoPixel.h>              // https://github.com/adafruit/Adafruit_NeoPixel
+#include <ArduinoLowPower.h>                // https://github.com/arduino-libraries/ArduinoLowPower
+#include <ICM_20948.h>                      // https://github.com/sparkfun/SparkFun_ICM-20948_ArduinoLibrary
+#include <IridiumSBD.h>                     // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
+#include <SAMD_AnalogCorrection.h>          // https://github.com/arduino/ArduinoCore-samd/tree/master/libraries/SAMD_AnalogCorrection
+#include <SparkFunBME280.h>                 // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
+#include <SparkFun_RV8803.h>                // https://github.com/sparkfun/SparkFun_RV-8803_Arduino_Library
+#include <SparkFun_Ublox_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_Ublox_Arduino_Library
+#include <TimeLib.h>                        // https://github.com/PaulStoffregen/Time
+#include <Wire.h>                           // https://www.arduino.cc/en/Reference/Wire
 
+// ----------------------------------------------------------------------------
+// Debugging macros
+// ----------------------------------------------------------------------------
+#define DEBUG           true    // Output debug messages to Serial Monitor
+#define DEBUG_GNSS      false   // Output GNSS debug information
+#define DEBUG_IRIDIUM   false   // Output Iridium diagnostic messages to Serial Monitor
+
+#if DEBUG
+#define DEBUG_PRINT(x)            Serial.print(x)
+#define DEBUG_PRINTLN(x)          Serial.println(x)
+#define DEBUG_PRINT_HEX(x)        Serial.print(x, HEX)
+#define DEBUG_PRINTLN_HEX(x)      Serial.println(x, HEX)
+#define DEBUG_PRINT_DEC(x, y)     Serial.print(x, y)
+#define DEBUG_PRINTLN_DEC(x, y)   Serial.println(x, y)
+#define DEBUG_WRITE(x)            Serial.write(x)
+
+#else
+#define DEBUG_PRINT(x)
+#define DEBUG_PRINTLN(x)
+#define DEBUG_PRINT_HEX(x)
+#define DEBUG_PRINTLN_HEX(x)
+#define DEBUG_PRINT_DEC(x, y)
+#define DEBUG_PRINTLN_DEC(x, y)
+#define DEBUG_WRITE(x)
+#endif
+
+// ----------------------------------------------------------------------------
 // Port definitions
+// ----------------------------------------------------------------------------
 #define SERIAL_PORT     SerialUSB   // Required by SparkFun Qwiic Micro
-#define IRIDIUM_PORT    Serial      
+#define IRIDIUM_PORT    Serial
 #define IRIDIUM_WIRE    Wire
 
-// Debugging definitions
-#define DEBUG           true        // Output debug messages to Serial Monitor
-#define DEBUG_GNSS      true        // Output GNSS debug information
-#define DEBUG_IRIDIUM   true        // Output Iridium diagnostic messages to Serial Monitor
-
+// ----------------------------------------------------------------------------
 // Pin definitions
-#define VBAT_PIN            A1
-#define IRIDIUM_SLEEP_PIN   7
+// ----------------------------------------------------------------------------
+#define PIN_VBAT            A1
+#define PIN_RTC_INT         5
+#define PIN_IRIDIUM_SLEEP   6
+#define PIN_LED             4
 
+// ----------------------------------------------------------------------------
 // Object instantiations
-Adafruit_NeoPixel pixels(1, 4, NEO_GRB + NEO_KHZ800);
+// ----------------------------------------------------------------------------
+Adafruit_NeoPixel pixels(1, PIN_LED, NEO_GRB + NEO_KHZ800);
 BME280            bme280;         // I2C Address: 0x77
 ICM_20948_I2C     imu;            // I2C Address: 0x69
-//IridiumSBD        modem(IRIDIUM_WIRE); // I2C Address: 0x63
-IridiumSBD        modem(IRIDIUM_PORT, IRIDIUM_SLEEP_PIN); // D16: Pin 1 (yellow) D17: Pin 6 (orange)
-QWIIC_POWER       mySwitch;       // I2C Address: 0x41
-RTCZero           rtc;
+IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP); // D16: Pin 1 (yellow) D17: Pin 6 (orange)
+RV8803            rtc;
 SFE_UBLOX_GPS     gps;            // I2C Address: 0x42
-//SPIFlash          flash(21, &SPI1); //
 
 // Global constants
 const float R1 = 9973000.0;   // Voltage divider resistor 1
 const float R2 = 998400.0;    // Voltage divider resistor 2
 
-// User defined global variables
-unsigned long alarmInterval         = 3600;    // Sleep duration in seconds (Default: 3600 seconds)
+// ----------------------------------------------------------------------------
+// User defined global variable declarations
+// ----------------------------------------------------------------------------
+unsigned long alarmInterval         = 300;    // Sleep duration in seconds (Default: 3600 seconds)
 byte          alarmSeconds          = 0;
-byte          alarmMinutes          = 5;
+byte          alarmMinutes          = 1;
 byte          alarmHours            = 0;
-byte          transmitInterval      = 1;      // Number of messages to include in each Iridium transmission (340-byte limit)
+byte          alarmDate             = 0;
+byte          transmitInterval      = 10;     // Number of messages to include in each Iridium transmission (340-byte limit)
 byte          maxRetransmitCounter  = 0;      // Number of failed data transmissions to reattempt (340-byte limit)
 
-// Global variables
-volatile bool alarmFlag             = true;   // Flag for alarm interrupt service routine
+// ----------------------------------------------------------------------------
+// Global variable declarations
+// ----------------------------------------------------------------------------
+volatile bool alarmFlag             = false;  // Flag for alarm interrupt service routine
 volatile bool watchdogFlag          = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter       = 0;      // Watchdog Timer interrupt counter
 bool          firstTimeFlag         = true;   // Flag to determine if the program is running for the first time
@@ -85,7 +117,6 @@ byte          gnssFixCounter        = 0;      // GNSS valid fix counter
 byte          gnssFixCounterMax     = 5;      // GNSS max valid fix counter
 
 float         voltage               = 0.0;
-
 uint8_t       transmitBuffer[340]   = {};     // Iridium 9603 transmission buffer (MO SBD message max length: 340 bytes)
 unsigned int  messageCounter        = 0;      // Iridium 9603 cumualtive transmission counter (zero indicates a reset)
 unsigned int  retransmitCounter     = 0;      // Iridium 9603 failed transmission counter
@@ -95,8 +126,9 @@ unsigned long previousMillis        = 0;      // Global millis() timer
 
 time_t        alarmTime, unixtime   = 0;      // Global RTC time variables
 
-
+// ----------------------------------------------------------------------------
 // WS2812B RGB LED colour definitons
+// ----------------------------------------------------------------------------
 uint32_t white    = pixels.Color(32, 32, 32);
 uint32_t red      = pixels.Color(32, 0, 0);
 uint32_t green    = pixels.Color(0, 32, 0);
@@ -110,7 +142,10 @@ uint32_t pink     = pixels.Color(32, 0, 16);
 uint32_t lime     = pixels.Color(16, 32, 0);
 uint32_t off      = pixels.Color(0, 0, 0);
 
-// Union to store and send data byte-by-byte via Iridium
+// ----------------------------------------------------------------------------
+// Data transmission unions/structures
+// ----------------------------------------------------------------------------
+// Union to store and transmit Iridium SBD Mobile Originated (MO) message
 typedef union {
   struct {
     uint32_t  unixtime;           // UNIX Epoch time                (4 bytes)
@@ -125,14 +160,26 @@ typedef union {
     uint16_t  voltage;            // Battery voltage (V)            (2 bytes)
     uint16_t  transmitDuration;   // Previous transmission duration (2 bytes)
     uint16_t  messageCounter;     // Message counter                (2 bytes)
-  } __attribute__((packed));                                        // Total: (29 bytes)
+  } __attribute__((packed));                              // Total: (29 bytes)
   uint8_t bytes[29];
-} SBDMESSAGE;
+} SBD_MO_MESSAGE;
 
-SBDMESSAGE message;
-size_t messageSize = sizeof(message);   // Size (in bytes) of message to be transmitted
+SBD_MO_MESSAGE moMessage;
 
-// Devices that may be online or offline.
+// Union to receive Iridium SBD Mobile Terminated (MT) message
+typedef union {
+  struct {
+    uint32_t  alarmInterval;      // (4 bytes)
+    uint16_t  transmitInterval;   // (4 bytes)
+    uint16_t  retransmitCounter;  // (4 bytes)
+    uint8_t   resetFlag;          // (1 byte)
+  } __attribute__((packed));      // Total: (13 bytes)
+  uint8_t bytes[13]; // Size of message to be received (in bytes)
+} SBD_MT_MESSAGE;
+
+SBD_MT_MESSAGE mtMessage;
+
+// Structure to store device online/offline states
 struct struct_online {
   bool imu = false;
   bool gnss = false;
@@ -141,7 +188,9 @@ struct struct_online {
   bool bme280 = false;
 } online;
 
+// ----------------------------------------------------------------------------
 // Setup
+// ----------------------------------------------------------------------------
 void setup() {
 
   // Pin assignments
@@ -154,57 +203,68 @@ void setup() {
   analogReadCorrection(17, 2057);
 
   Wire.begin(); // Initialize I2C
-  Wire.setClock(400000); // Set I2C clock speed to 400 kHz
-  //SPI1.begin(); // Initialize SPI
+  //Wire.setClock(400000); // Set I2C clock speed to 400 kHz
 
   SERIAL_PORT.begin(115200); // Begin serial at 115200 baud
   //while (!SERIAL_PORT); // Wait for user to open Serial Monitor
-  blinkLed(4, 1000); // Non-blocking delay to allow user to open Serial Monitor
+  blinkLed(4, 500); // Non-blocking delay to allow user to open Serial Monitor
 
-  SERIAL_PORT.println();
+  DEBUG_PRINTLN();
   printLine();
-  SERIAL_PORT.println(F("Cryologger - Iceberg Tracking Beacon v3.0"));
+  DEBUG_PRINTLN("Cryologger - Iceberg Tracking Beacon v3.0");
   printLine();
 
   // Configuration
-  configureQwiicPower();  // Configure Qwiic Power Switch
-  qwiicPowerOn();         // Enable power to Qwiic peripherals
   configureLed();         // Configure WS2812B RGB LED
-  configureWatchdog();    // Configure Watchdog Timer
+  configureWatchdog();    // Configure Watchdog Timer (WDT)
   configureRtc();         // Configure real-time clock (RTC)
   configureGnss();        // Configure Sparkfun SAM-M8Q
   configureImu();         // Configure SparkFun ICM-20948
   configureSensors();     // Configure attached sensors
-  //configureIridiumI2C();  // Configure SparkFun Qwiic Iridium 9603N
   configureIridium();     // Configure RockBLOCK Iridium 9603N
-  //syncRtc();              // Synchronize RTC with GNSS
+  syncRtc();              // Synchronize RTC with GNSS
+  configureRtcAlarm();    // Configure initial RTC alarm
+
+  DEBUG_PRINT("Datetime: "); printDateTime();
+  DEBUG_PRINT("Initial alarm: "); printAlarm();
 
   setLedColour(white);
 }
 
+// ----------------------------------------------------------------------------
 // Loop
+// ----------------------------------------------------------------------------
 void loop() {
 
-  // Check if alarm flag was set
+  // Check if alarm ISR flag was set (protects against false triggers)
   if (alarmFlag) {
-    alarmFlag = false; // Clear alarm flag
-    printDateTime(); // Print RTC's current date and time
+    alarmFlag = false; // Clear alarm ISR flag
+    readRtc(); // Read the RTC
 
-    // Perform measurements
-    readRtc();
-    petDog();             // Reset the Watchdog Timer
-    readBattery();        // Read the battery voltage
-    readSensors();        // Read attached sensors
-    readImu();            // Read the IMU
-    readGnss();           // Read the GNSS
-    writeBuffer();        // Write the data to transmit buffer
-    //transmitDataI2C();    // Transmit data
-    transmitData();       // Transmit data
-    qwiicPowerOff();      // Disable power to Qwiic peripheral devices
-    setRtcAlarm();        // Set the RTC alarm
+    // Check if RTC alarm flag was set
+    if (rtc.getInterruptFlag(FLAG_ALARM)) {
+
+      // Wake up
+      wakeUp();
+
+      DEBUG_PRINT("Alarm interrupt trigger: ");
+      printDateTime(); // Print RTC's current date and time
+
+      // Perform measurements
+      petDog();             // Reset the Watchdog Timer
+      readBattery();        // Read the battery voltage
+      readSensors();        // Read attached sensors
+      readImu();            // Read the IMU
+      readGnss();           // Read the GNSS
+      writeBuffer();        // Write the data to transmit buffer
+      transmitData();       // Transmit data
+      setRtcAlarm();        // Set the RTC alarm
+
+      disableSerial();
+    }
   }
 
-  // Check for watchdog interrupt
+  // Check for Watchdog Timer interrupts
   if (watchdogFlag) {
     petDog(); // Reset the Watchdog Timer
   }

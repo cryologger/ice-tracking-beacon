@@ -19,9 +19,9 @@ void configureWatchdog() {
   while (GCLK->STATUS.bit.SYNCBUSY);              // Wait for synchronization
 
   WDT->EWCTRL.bit.EWOFFSET = 0xA;                 // Set the Early Warning Interrupt Time Offset to 8 seconds // REG_WDT_EWCTRL = WDT_EWCTRL_EWOFFSET_8K;
-  WDT->INTENSET.bit.EW = 1;                       // Enable the Early Warning interrupt                       // REG_WDT_INTENSET = WDT_INTENSET_EW;
-  WDT->CONFIG.bit.PER = 0xB;                      // Set the WDT reset timeout to 16 seconds                  // REG_WDT_CONFIG = WDT_CONFIG_PER_16K;
-  WDT->CTRL.bit.ENABLE = 1;                       // Enable the WDT in normal mode                            // REG_WDT_CTRL = WDT_CTRL_ENABLE;
+  REG_WDT_INTENSET = WDT_INTENSET_EW;             // Enable the Early Warning interrupt                       // WDT->INTENSET.bit.EW = 1;
+  REG_WDT_CONFIG = WDT_CONFIG_PER_16K;            // Set the WDT reset timeout to 16 seconds                  // WDT->CONFIG.bit.PER = 0xB;
+  REG_WDT_CTRL = WDT_CTRL_ENABLE;                 // Enable the WDT in normal mode                            // WDT->CTRL.bit.ENABLE = 1;
   while (WDT->STATUS.bit.SYNCBUSY);               // Await synchronization of registers between clock domains
 
   // Configure and enable WDT interrupt
@@ -33,7 +33,7 @@ void configureWatchdog() {
 
 // Reset the Watchdog Timer
 void petDog() {
-  //SERIAL_PORT.print(F("Watchdog interrupt: ")); SERIAL_PORT.println(watchdogCounter);
+  //DEBUG_PRINT("Watchdog interrupt: "); SERIAL_PORT.println(watchdogCounter);
   WDT->CLEAR.bit.CLEAR = 0xA5;        // Clear the Watchdog Timer and restart time-out period //REG_WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
   while (WDT->STATUS.bit.SYNCBUSY);   // Await synchronization of registers between clock domains
   watchdogFlag = false;               // Clear watchdog flag

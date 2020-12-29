@@ -1,64 +1,60 @@
 void printLine() {
   for (byte i = 0; i < 79; i++) {
-    SERIAL_PORT.print("-");
+    DEBUG_PRINT("-");
   }
-  SERIAL_PORT.println();
+  DEBUG_PRINTLN();
 }
 
 void printTab(byte _times) {
   for (byte i = 0; i < _times; i++) {
-    SERIAL_PORT.print("\t");
+    DEBUG_PRINT("\t");
   }
+}
+
+// Print union/structure
+void printUnion() {
+  printLine();
+  DEBUG_PRINTLN("Union/structure");
+  printLine();
+  DEBUG_PRINT("unixtime:");         printTab(2);  DEBUG_PRINTLN(moMessage.unixtime);
+  DEBUG_PRINT("temperature:");      printTab(2);  DEBUG_PRINTLN(moMessage.temperature);
+  DEBUG_PRINT("humidity:");         printTab(2);  DEBUG_PRINTLN(moMessage.humidity);
+  DEBUG_PRINT("pressure:");         printTab(2);  DEBUG_PRINTLN(moMessage.pressure);
+  //DEBUG_PRINT("pitch:");            printTab(3);  DEBUG_PRINTLN(moMessage.pitch);
+  //DEBUG_PRINT("roll:");             printTab(3);  DEBUG_PRINTLN(moMessage.roll);
+  //DEBUG_PRINT("heading:");          printTab(2);  DEBUG_PRINTLN(moMessage.heading);
+  DEBUG_PRINT("latitude:");         printTab(2);  DEBUG_PRINTLN(moMessage.latitude);
+  DEBUG_PRINT("longitude:");        printTab(2);  DEBUG_PRINTLN(moMessage.longitude);
+  DEBUG_PRINT("satellites:");       printTab(2);  DEBUG_PRINTLN(moMessage.satellites);
+  DEBUG_PRINT("pdop:");             printTab(3);  DEBUG_PRINTLN(moMessage.pdop);
+  DEBUG_PRINT("rtcDrift:");         printTab(2);  DEBUG_PRINTLN(moMessage.rtcDrift);
+  DEBUG_PRINT("voltage:");          printTab(2);  DEBUG_PRINTLN(moMessage.voltage);
+  DEBUG_PRINT("transmitDuration:"); printTab(1);  DEBUG_PRINTLN(moMessage.transmitDuration);
+  DEBUG_PRINT("messageCounter:");   printTab(2);  DEBUG_PRINTLN(moMessage.messageCounter);
+  printLine();
 }
 
 // Print contents of union/structure
-void printUnion() {
+void printUnionHex() {
+  DEBUG_PRINTLN("Union/structure ");
   printLine();
-  SERIAL_PORT.println(F("Union/structure"));
-  printLine();
-  SERIAL_PORT.print(F("unixtime:")); printTab(2); SERIAL_PORT.println(message.unixtime);
-  SERIAL_PORT.print(F("temperature:")); printTab(2); SERIAL_PORT.println(message.temperature);
-  SERIAL_PORT.print(F("humidity:")); printTab(2); SERIAL_PORT.println(message.humidity);
-  SERIAL_PORT.print(F("pressure:")); printTab(2); SERIAL_PORT.println(message.pressure);
-  //SERIAL_PORT.print(F("pitch:")); printTab(3); SERIAL_PORT.println(message.pitch);
-  //SERIAL_PORT.print(F("roll:")); printTab(3); SERIAL_PORT.println(message.roll);
-  //SERIAL_PORT.print(F("heading:")); printTab(2); SERIAL_PORT.println(message.heading);
-  SERIAL_PORT.print(F("latitude:")); printTab(2); SERIAL_PORT.println(message.latitude);
-  SERIAL_PORT.print(F("longitude:")); printTab(2); SERIAL_PORT.println(message.longitude);
-  SERIAL_PORT.print(F("satellites:")); printTab(2); SERIAL_PORT.println(message.satellites);
-  SERIAL_PORT.print(F("pdop:")); printTab(3); SERIAL_PORT.println(message.pdop);
-  SERIAL_PORT.print(F("rtcDrift:")); printTab(2); SERIAL_PORT.println(message.rtcDrift);
-  SERIAL_PORT.print(F("voltage:")); printTab(2); SERIAL_PORT.println(message.voltage);
-  SERIAL_PORT.print(F("transmitDuration:")); printTab(1); SERIAL_PORT.println(message.transmitDuration);
-  SERIAL_PORT.print(F("messageCounter:")); printTab(2); SERIAL_PORT.println(message.messageCounter);
-  printLine();
-}
-
-// Print contents of union/structure in binary and hexadecimal
-void printUnionBinary() {
-  SERIAL_PORT.println(F("Union/structure "));
-  printLine();
-  SERIAL_PORT.println(F("Byte\tHex\tBinary"));
-  for (int i = 0; i < sizeof(message); ++i) {
-    SERIAL_PORT.print(i);
-    printTab(1);
-    SERIAL_PORT.print(message.bytes[i], HEX);
-    printTab(1);
-    SERIAL_PORT.println(message.bytes[i], BIN);
+  char tempData[340];
+  DEBUG_PRINTLN("Byte\tHex");
+  for (int i = 0; i < sizeof(moMessage); ++i) {
+    sprintf(tempData, "%d\t0x%02X", i, moMessage.bytes[i]);
+    DEBUG_PRINTLN(tempData);
   }
   printLine();
 }
 
-// Print contents of transmit buffer in binary and hexadecimal
+// Print contents of transmit buffer
 void printTransmitBuffer() {
-  SERIAL_PORT.println(F("Transmit buffer"));
+  DEBUG_PRINTLN("Transmit buffer");
   printLine();
-  SERIAL_PORT.println(F("Byte\tHex\tBinary"));
-  for (int i = 0; i < 340; i++) {
-    SERIAL_PORT.print(i);
-    printTab(1);
-    SERIAL_PORT.print(transmitBuffer[i], HEX);
-    printTab(1);
-    SERIAL_PORT.println(transmitBuffer[i], BIN);
+  char tempData[sizeof(transmitBuffer)];
+  DEBUG_PRINTLN("Byte\tHex");
+  for (int i = 0; i < sizeof(transmitBuffer); ++i) {
+    sprintf(tempData, "%d\t0x%02X", i, transmitBuffer[i]);
+    DEBUG_PRINTLN(tempData);
   }
 }

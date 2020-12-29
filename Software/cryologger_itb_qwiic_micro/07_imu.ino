@@ -3,7 +3,7 @@ void configureImu() {
 
   imu.begin(Wire, 1);
   if (imu.status != ICM_20948_Stat_Ok ) {
-    SERIAL_PORT.println(F("Warning: ICM-20948 not detected at default I2C address. Please check wiring."));
+    DEBUG_PRINTLN("Warning: ICM-20948 not detected at default I2C address. Please check wiring.");
     online.imu = false;
   }
   else {
@@ -26,28 +26,30 @@ void readImu() {
     blinkLed(1, 100);
 
     imu.getAGMT(); // Values are only updated when 'getAGMT' is called
-    SERIAL_PORT.print("Scaled. Acc (mg) [ ");
-    SERIAL_PORT.print(imu.accX(), 2);
-    SERIAL_PORT.print(", ");
-    SERIAL_PORT.print(imu.accY(), 2);
-    SERIAL_PORT.print(", ");
-    SERIAL_PORT.print(imu.accZ(), 2);
-    SERIAL_PORT.print(" ], Gyr (DPS) [ ");
-    SERIAL_PORT.print(imu.gyrX(), 2);
-    SERIAL_PORT.print(", ");
-    SERIAL_PORT.print(imu.gyrY(), 2);
-    SERIAL_PORT.print(", ");
-    SERIAL_PORT.print(imu.gyrZ(), 2);
-    SERIAL_PORT.print(" ], Mag (uT) [ ");
-    SERIAL_PORT.print(imu.magX(), 2);
-    SERIAL_PORT.print(", ");
-    SERIAL_PORT.print(imu.magY(), 2);
-    SERIAL_PORT.print(", ");
-    SERIAL_PORT.print(imu.magZ(), 2);
-    SERIAL_PORT.print(" ], Tmp (C) [ ");
-    SERIAL_PORT.print(imu.temp(), 2);
-    SERIAL_PORT.print(" ]");
-    SERIAL_PORT.println();
+#if DEBUG_IMU
+    DEBUG_PRINT("Scaled. Acc (mg) [ ");
+    DEBUG_PRINT_DEC(imu.accX(), 2);
+    DEBUG_PRINT(", ");
+    DEBUG_PRINT_DEC(imu.accY(), 2);
+    DEBUG_PRINT(", ");
+    DEBUG_PRINT_DEC(imu.accZ(), 2);
+    DEBUG_PRINT(" ], Gyr (DPS) [ ");
+    DEBUG_PRINT_DEC(imu.gyrX(), 2);
+    DEBUG_PRINT(", ");
+    DEBUG_PRINT_DEC(imu.gyrY(), 2);
+    DEBUG_PRINT(", ");
+    DEBUG_PRINT_DEC(imu.gyrZ(), 2);
+    DEBUG_PRINT(" ], Mag (uT) [ ");
+    DEBUG_PRINT_DEC(imu.magX(), 2);
+    DEBUG_PRINT(", ");
+    DEBUG_PRINT_DEC(imu.magY(), 2);
+    DEBUG_PRINT(", ");
+    DEBUG_PRINT_DEC(imu.magZ(), 2);
+    DEBUG_PRINT(" ], Tmp (C) [ ");
+    DEBUG_PRINT_DEC(imu.temp(), 2);
+    DEBUG_PRINT(" ]");
+    DEBUG_PRINTLN();
+#endif
     setLedColour(green);
 
     // Put the sensor to sleep
@@ -56,6 +58,6 @@ void readImu() {
   }
 
   unsigned long loopEndTime = millis() - loopStartTime; // Stop loop timer
-  SERIAL_PORT.print(F("readImu() function execution: ")); SERIAL_PORT.print(loopEndTime); SERIAL_PORT.println(F(" ms"));
+  DEBUG_PRINT("readImu() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
 
 }
