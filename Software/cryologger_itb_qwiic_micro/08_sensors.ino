@@ -1,22 +1,27 @@
 // Configure attached sensors
-void configureSensors() {
+void configureSensors()
+{
   // SparkFun BME280 Configuration
-  if (bme280.beginI2C()) {
+  if (bme280.beginI2C())
+  {
     bme280.setMode(MODE_SLEEP); // Enter sleep mode
     online.bme280 = true;
   }
-  else {
+  else
+  {
     DEBUG_PRINTLN("Warning: SparkFun BME280 not detected at default I2C address! Please check wiring.");
     online.bme280 = false;
   }
 }
 
 // Read attached sensors
-void readSensors() {
-
+void readSensors()
+{
+  // Change LED colour
   setLedColour(yellow);
 
-  unsigned long loopStartTime = millis(); // Start the loop timer
+  // Start the loop timer
+  unsigned long loopStartTime = millis();
 
   // Wake-up, take readings and re-enter sleep mode
   bme280.setMode(MODE_FORCED);
@@ -30,8 +35,10 @@ void readSensors() {
   moMessage.humidity = humidity * 100;
   moMessage.pressure = pressure / 10;
 
+  // Change LED colour
   setLedColour(green);
 
-  unsigned long loopEndTime = millis() - loopStartTime; // Stop loop timer
+  // Stop loop timer
+  unsigned long loopEndTime = millis() - loopStartTime;
   DEBUG_PRINT("readSenors() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
 }

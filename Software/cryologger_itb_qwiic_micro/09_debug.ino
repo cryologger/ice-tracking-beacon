@@ -1,12 +1,16 @@
-void printLine() {
-  for (byte i = 0; i < 79; i++) {
+void printLine()
+{
+  for (byte i = 0; i < 80; i++)
+  {
     DEBUG_PRINT("-");
   }
   DEBUG_PRINTLN();
 }
 
-void printTab(byte _times) {
-  for (byte i = 0; i < _times; i++) {
+void printTab(byte _times)
+{
+  for (byte i = 0; i < _times; i++)
+  {
     DEBUG_PRINT("\t");
   }
 }
@@ -35,12 +39,14 @@ void printUnion() {
 }
 
 // Print contents of union/structure
-void printUnionHex() {
+void printUnionHex() 
+{
   DEBUG_PRINTLN("Union/structure ");
   printLine();
   char tempData[340];
   DEBUG_PRINTLN("Byte\tHex");
-  for (int i = 0; i < sizeof(moMessage); ++i) {
+  for (int i = 0; i < sizeof(moMessage); ++i) 
+  {
     sprintf(tempData, "%d\t0x%02X", i, moMessage.bytes[i]);
     DEBUG_PRINTLN(tempData);
   }
@@ -48,12 +54,14 @@ void printUnionHex() {
 }
 
 // Print contents of transmit buffer
-void printTransmitBuffer() {
+void printTransmitBuffer() 
+{
   DEBUG_PRINTLN("Transmit buffer");
   printLine();
   char tempData[sizeof(transmitBuffer)];
   DEBUG_PRINTLN("Byte\tHex");
-  for (int i = 0; i < sizeof(transmitBuffer); ++i) {
+  for (int i = 0; i < sizeof(transmitBuffer); ++i) 
+  {
     sprintf(tempData, "%d\t0x%02X", i, transmitBuffer[i]);
     DEBUG_PRINTLN(tempData);
   }

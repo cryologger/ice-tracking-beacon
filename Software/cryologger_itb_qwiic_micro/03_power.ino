@@ -22,7 +22,7 @@ void readBattery() {
     moMessage.voltage = voltage * 1000;
   }
 
-  //DEBUG_PRINT("voltage: "); SERIAL_PORT.println(voltage);
+  //DEBUG_PRINT("voltage: "); DEBUG_PRINTLN(voltage);
 
   // Stop loop timer
   unsigned long loopEndTime = millis() - loopStartTime;
@@ -30,64 +30,91 @@ void readBattery() {
 }
 
 // Disable serial port
-void disableSerial() {
-
-  // Wait for transmission of any serial data to complete
-  SERIAL_PORT.flush();
-
-  // Close serial port
-  SERIAL_PORT.end();
-
-  // Safely detach USB prior to sleeping
-  USBDevice.detach();
+void disableSerial()
+{
+#if DEBUG
+  SERIAL_PORT.flush();  // Wait for transmission of any serial data to complete
+  SERIAL_PORT.end();    // Close serial port
+  USBDevice.detach();   // Safely detach USB prior to sleeping
+#endif
 }
 
 // Enable serial port
-void enableSerial() {
+void enableSerial()
+{
+#if DEBUG
   USBDevice.attach(); // Re-attach USB
   SERIAL_PORT.begin(115200);
   //while (!SERIAL_PORT);
   blinkLed(2, 1000); // Non-blocking delay to allow user to open Serial Monitor
+#endif
+}
+
+// Enable power to MOSFET
+void enablePower() {
+  digitalWrite(PIN_MOSFET, LOW);
+}
+
+// Disable power to MOSFET
+void disablePower() {
+  digitalWrite(PIN_MOSFET, HIGH);
 }
 
 // Enter deep sleep
 void goToSleep() {
 
-  if (firstTimeFlag) {
-    disableSerial();
-    firstTimeFlag = false;
-  }
   DEBUG_PRINTLN("Entering deep sleep...");
   DEBUG_PRINTLN();
 
-  setLedColour(off);
-  LowPower.deepSleep(); // Enter deep sleep
+  // Do not change serial settings on Watchdog Timer interrupts
+  if (!watchdogFlag)
+  {
+    disableSerial();
+  }
+
+  // Clear first-time flag after initial power-down
+  if (firstTimeFlag)
+  {
+    firstTimeFlag = false;
+  }
+
+  setLedColour(off); // Turn off LED
+  digitalWrite(LED_BUILTIN, LOW);
+  disablePower();
+
+  // Enter deep sleep
+  LowPower.deepSleep();
+
+  /* Code sleeps here and awaits RTC or WDT interrupt */
 }
 
 // Wake from deep sleep
 void wakeUp() {
 
+#if DEBUG
   // Re-configure all devices
   enableSerial();       // Re-enable serial port
+#endif
+
+  enablePower();
   configureLed();       // Configure WS2812B RGB LED
   configureGnss();      // Configure Sparkfun SAM-M8Q
   configureImu();       // Configure SparkFun ICM-20948
   configureSensors();   // Configure attached sensors
-  configureIridium();   // Configure SparkFun Qwiic Iridium 9603N
+  configureIridium();   // Configure Iridium 9603
 }
 
-// Blink LED (non-blocking)
-void blinkLed(byte ledFlashes, unsigned int ledDelay) {
-
-  pinMode(LED_BUILTIN, OUTPUT);
+// Blink LED (non-blocking) (https://forum.arduino.cc/index.php?topic=503368.0)
+void blinkLed(byte ledFlashes, unsigned int ledDelay)
+{
   byte i = 0;
-
-  while (i < ledFlashes * 2) {
-    unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis > ledDelay) {
+  while (i < ledFlashes * 2)
+  {
+    currentMillis = millis();
+    if (currentMillis - previousMillis >= ledDelay)
+    {
+      digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
       previousMillis = currentMillis;
-      ledStateFlag = !ledStateFlag;
-      digitalWrite(LED_BUILTIN, ledStateFlag);
       i++;
     }
   }

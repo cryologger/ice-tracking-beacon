@@ -28,7 +28,7 @@ void syncRtc() {
 
     setLedColour(pink);
 
-    while ((!dateValid || !timeValid) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
+    while ((!dateValid || !timeValid) && millis() - loopStartTime < 1UL * 10UL * 1000UL) {
 
       dateValid = gps.getDateValid();
       timeValid = gps.getTimeValid();
@@ -50,7 +50,7 @@ void syncRtc() {
 
         // Write data to union
         moMessage.rtcDrift = rtcDrift;
-        DEBUG_PRINT("RTC drift: "); SERIAL_PORT.println(rtcDrift);
+        DEBUG_PRINT("RTC drift: "); DEBUG_PRINTLN(rtcDrift);
 
         // Sync RTC date and time
         //rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond());
@@ -61,10 +61,10 @@ void syncRtc() {
                     gps.getDay(), gps.getMonth(), gps.getYear());
 
         rtcSyncFlag = true;
-
+        setLedColour(green);
         DEBUG_PRINT("RTC time synced: "); printDateTime();
       }
-      setLedColour(green);
+
       ISBDCallback();
     }
     if (!rtcSyncFlag) {
@@ -141,7 +141,7 @@ void readGnss() {
 
           // Write data to union
           moMessage.rtcDrift = rtcDrift;
-          DEBUG_PRINT("RTC drift: "); SERIAL_PORT.println(rtcDrift);
+          DEBUG_PRINT("RTC drift: "); DEBUG_PRINTLN(rtcDrift);
 
           // Sync RTC date and time
           //rtc.setTime(gps.getHour(), gps.getMinute(), gps.getSecond());
@@ -165,6 +165,6 @@ void readGnss() {
     }
 
     unsigned long loopEndTime = millis() - loopStartTime; // Stop loop timer
-    DEBUG_PRINT("readGnss() function execution: "); DEBUG_PRINT(loopEndTime); SERIAL_PORT.println(" ms");
+    DEBUG_PRINT("readGnss() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
   }
 }
