@@ -107,7 +107,7 @@ byte          alarmHours            = 0;      // RTC rolling alarm hours
 byte          alarmDate             = 0;      // RTC rolling alarm days
 byte          transmitInterval      = 1;      // Number of messages to include in each Iridium transmission (340-byte limit)
 byte          retransmitCounterMax  = 4;      // Number of failed data transmissions to reattempt (340-byte limit)
-unsigned long gnssDelay             = 300;    // Duration of GNSS signal acquisition (s)
+unsigned long gnssDelay             = 10;    // Duration of GNSS signal acquisition (s)
 unsigned long ledDelay              = 2000;   // Duration of RGB LED colour change (ms)
 
 // -----------------------------------------------------------------------------

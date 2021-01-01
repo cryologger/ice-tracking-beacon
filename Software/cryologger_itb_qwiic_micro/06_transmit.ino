@@ -20,8 +20,8 @@ void writeBuffer()
 
   // Print union/structure in hex/binary
   printMoSbd();
-  //printUnionHex();
-  //printTransmitBuffer();
+  printUnionHex();
+  printTransmitBuffer();
 }
 
 // Transmit data using RockBLOCK 9603
@@ -102,11 +102,17 @@ void transmitData()
         for (int i = 0; i < sizeof(mtBuffer); i++) {
           mtMessage.bytes[i] = mtBuffer[i];
 
-          DEBUG_PRINT("Address: "); DEBUG_PRINT(i); printTab(1);
-          DEBUG_PRINT("Value: "); DEBUG_PRINTLN_HEX(mtBuffer[i]);
+          // Print contents of mtBuffer in hexadecimal
+          char tempData[50];
+          DEBUG_PRINTLN("Byte\tHex");
+          for (int i = 0; i < sizeof(mtBuffer); ++i)
+          {
+            sprintf(tempData, "%d\t0x%02X", i, mtBuffer[i]);
+            DEBUG_PRINTLN(tempData);
+          }
         }
 
-        // Print MT-SBD message
+        // Print values MT-SBD message as stored in union/structure
         printMtSbd();
 
       }

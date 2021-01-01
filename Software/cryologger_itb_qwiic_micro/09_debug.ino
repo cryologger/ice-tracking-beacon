@@ -43,7 +43,7 @@ void printMtSbd() {
   printLine();
   DEBUG_PRINTLN("MT-SBD Message Data");
   printLine();
-  DEBUG_PRINT("alarmInterval:");      printTab(1);  DEBUG_PRINTLN(mtMessage.alarmInterval);
+  DEBUG_PRINT("alarmInterval:");      printTab(2);  DEBUG_PRINTLN(mtMessage.alarmInterval);
   DEBUG_PRINT("transmitInterval:");   printTab(1);  DEBUG_PRINTLN(mtMessage.transmitInterval);
   DEBUG_PRINT("retransmitCounter:");  printTab(1);  DEBUG_PRINTLN(mtMessage.retransmitCounter);
   DEBUG_PRINT("resetFlag:");          printTab(2);  DEBUG_PRINTLN(mtMessage.resetFlag);
