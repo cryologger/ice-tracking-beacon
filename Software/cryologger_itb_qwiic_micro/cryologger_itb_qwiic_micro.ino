@@ -1,6 +1,6 @@
 /*
     Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0 Prototype
-    Date:     December 30, 2020
+    Date:     January 1, 2020
     Author:   Adam Garbo
 
     Description:
@@ -12,17 +12,19 @@
     - SparkFun Real Time Clock Module - RV-8803 (Qwiic)
     - SparkFun Atmospheric Sensor Breakout - BME280 (Qwiic)
     - SparkFun GPS Breakout - SAM-M8Q (Qwiic)
+    - SparkFun 9DoF IMU Breakout - ICM-20948 (Qwiic)
     - Rock7 RockBLOCK 9603
     - Maxtena M1621HCT-P-SMA Iridium antenna
+    - NDP6020P P-Channel MOSFET
     - SparkFun Buck-Boost Converter
 
     Comments:
-    - The MicroMod system has potential, but it's really a pain in the ass.
+    - The MicroMod system has potential, but requires significant hardware bug fixes.
     - Added Qwiic Power Switch and the Buck-Boost Converter feeding the 3.3 V
       bus directly, we're looking at 110-141 uA in sleep mode (total) at 7.4-12V.
     - Artemis MicroMod is currently sitting at 300 uA.
     - Initial prototype test conducted November 18, 2020.
-    - December 28, 2020: Removed all SparkX code due to reliability issues
+    - December 28, 2020: Removed all SparkX components/code due to issues
 */
 
 // -----------------------------------------------------------------------------
@@ -42,9 +44,9 @@
 // -----------------------------------------------------------------------------
 // Debugging macros
 // -----------------------------------------------------------------------------
-#define DEBUG           true  // Output debug messages to Serial Monitor
-#define DEBUG_GNSS      false // Output GNSS debug information
-#define DEBUG_IRIDIUM   true  // Output Iridium debug messages to Serial Monitor
+#define DEBUG           true   // Output debug messages to Serial Monitor
+#define DEBUG_GNSS      true   // Output GNSS debug information
+#define DEBUG_IRIDIUM   true   // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
 #define DEBUG_PRINT(x)            SERIAL_PORT.print(x)
@@ -74,7 +76,7 @@
 // -----------------------------------------------------------------------------
 // Pin definitions
 // -----------------------------------------------------------------------------
-#define PIN_VBAT            A1
+#define PIN_VBAT            A0
 #define PIN_IRIDIUM_SLEEP   4
 #define PIN_LED             5
 #define PIN_MOSFET          6
@@ -88,22 +90,25 @@ BME280            bme280;         // I2C Address: 0x77
 ICM_20948_I2C     imu;            // I2C Address: 0x69
 IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP); // D16 (TX): Pin 1 (yellow) D17 (RX): Pin 6 (orange)
 RV8803            rtc;            // I2C Address: 0x32
-SFE_UBLOX_GPS     gps;            // I2C Address: 0x42
+SFE_UBLOX_GPS     gnss;           // I2C Address: 0x42
 
 // Global constants
-const float R1 = 9973000.0;   // Voltage divider resistor 1
-const float R2 = 998400.0;    // Voltage divider resistor 2
+//const float R1 = 9973000.0;   // Voltage divider resistor 1
+//const float R2 = 998400.0;    // Voltage divider resistor 2
+const float R1 = 1000000.0;   // Voltage divider resistor 1
+const float R2 = 1000000.0;    // Voltage divider resistor 2
 
 // -----------------------------------------------------------------------------
 // User defined global variable declarations
 // -----------------------------------------------------------------------------
-unsigned long alarmInterval         = 120;   // Sleep duration in seconds
-byte          alarmMinutes          = 2;      // RTC rolling alarm mintues
+unsigned long alarmInterval         = 3600;   // Sleep duration in seconds
+byte          alarmMinutes          = 0;      // RTC rolling alarm mintues
 byte          alarmHours            = 0;      // RTC rolling alarm hours
 byte          alarmDate             = 0;      // RTC rolling alarm days
 byte          transmitInterval      = 1;      // Number of messages to include in each Iridium transmission (340-byte limit)
 byte          retransmitCounterMax  = 4;      // Number of failed data transmissions to reattempt (340-byte limit)
-unsigned long ledDelay              = 2000;      // Duration to show RGB LED colours
+unsigned long gnssDelay             = 300;    // Duration of GNSS signal acquisition (s)
+unsigned long ledDelay              = 2000;   // Duration of RGB LED colour change (ms)
 
 // -----------------------------------------------------------------------------
 // Global variable declarations
@@ -121,8 +126,8 @@ uint8_t       transmitBuffer[340]   = {};     // Iridium 9603 transmission buffe
 unsigned int  messageCounter        = 0;      // Iridium 9603 transmission counter (zero indicates a reset)
 unsigned int  retransmitCounter     = 0;      // Iridium 9603 failed transmission counter
 unsigned int  transmitCounter       = 0;      // Iridium 9603 transmission interval counter
-unsigned long currentMillis         = 0;      // Global millis() timer
 unsigned long previousMillis        = 0;      // Global millis() timer
+unsigned long powerDelay            = 2500;   // Delay after power to MOSFET is enabled
 time_t        alarmTime, unixtime   = 0;      // Global RTC time variables
 
 // -----------------------------------------------------------------------------
@@ -167,17 +172,17 @@ typedef union
 
 SBD_MO_MESSAGE moMessage;
 
-// Union to receive store Iridium SBD Mobile Terminated (MT) message
+// Union to receive Iridium SBD Mobile Terminated (MT) message
 typedef union
 {
   struct
   {
     uint32_t  alarmInterval;      // (4 bytes)
-    uint16_t  transmitInterval;   // (4 bytes)
-    uint16_t  retransmitCounter;  // (4 bytes)
+    uint8_t   transmitInterval;   // (1 byte)
+    uint8_t   retransmitCounter;  // (1 byte)
     uint8_t   resetFlag;          // (1 byte)
-  } __attribute__((packed));      // Total: (13 bytes)
-  uint8_t bytes[13]; // Size of message to be received (in bytes)
+  };
+  uint8_t bytes[7]; // Size of message to be received (in bytes)
 } SBD_MT_MESSAGE;
 
 SBD_MT_MESSAGE mtMessage;
@@ -188,7 +193,6 @@ struct struct_online
   bool imu = false;
   bool gnss = false;
   bool iridium = false;
-  bool powerSwitch = false;
   bool bme280 = false;
 } online;
 
@@ -212,9 +216,16 @@ void setup()
   Wire.begin(); // Initialize I2C
   //Wire.setClock(400000); // Set I2C clock speed to 400 kHz
 
+  enablePower();          // Enable power to MOSFET controlled components
+  configureLed();         // Configure WS2812B RGB LED
+
+#if DEBUG
   SERIAL_PORT.begin(115200); // Begin serial at 115200 baud
-  //while (!SERIAL_PORT); // Wait for user to open Serial Monitor
-  blinkLed(4, 1000); // Non-blocking delay to allow user to open Serial Monitor
+  while (!SERIAL_PORT); // Wait for user to open Serial Monitor
+  //blinkLed(4, 1000); // Non-blocking delay to allow user to open Serial Monitor
+#endif
+
+  setLedColour(white);
 
   DEBUG_PRINTLN();
   printLine();
@@ -222,8 +233,6 @@ void setup()
   printLine();
 
   // Configure devices
-  enablePower();          // Enable power to MOSFET enabled components
-  configureLed();         // Configure WS2812B RGB LED
   configureWatchdog();    // Configure Watchdog Timer (WDT)
   configureRtc();         // Configure real-time clock (RTC)
   configureGnss();        // Configure GNSS receiver

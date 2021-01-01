@@ -22,11 +22,11 @@ void readBattery() {
     moMessage.voltage = voltage * 1000;
   }
 
-  //DEBUG_PRINT("voltage: "); DEBUG_PRINTLN(voltage);
+  DEBUG_PRINT("voltage: "); DEBUG_PRINTLN(voltage);
 
   // Stop loop timer
   unsigned long loopEndTime = millis() - loopStartTime;
-  //DEBUG_PRINT("readBattery() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
+  DEBUG_PRINT("readBattery() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
 }
 
 // Disable serial port
@@ -53,6 +53,12 @@ void enableSerial()
 // Enable power to MOSFET
 void enablePower() {
   digitalWrite(PIN_MOSFET, LOW);
+  // Non-blocking delay
+  unsigned long currentMillis = millis();
+  while (millis() - currentMillis < powerDelay) {
+    // delay
+  }
+
 }
 
 // Disable power to MOSFET
@@ -96,21 +102,21 @@ void wakeUp() {
   enableSerial();       // Re-enable serial port
 #endif
 
-  enablePower();
+  enablePower();        // Enable power to MOSFET controlled components
   configureLed();       // Configure WS2812B RGB LED
-  configureGnss();      // Configure Sparkfun SAM-M8Q
-  configureImu();       // Configure SparkFun ICM-20948
-  configureSensors();   // Configure attached sensors
-  configureIridium();   // Configure Iridium 9603
+  configureGnss();      // Configure GNSS receiver
+  configureImu();       // Configure interial measurement unit
+  //configureSensors();   // Configure attached sensors
+  //configureIridium();   // Configure Iridium 9603 modem
 }
 
-// Blink LED (non-blocking) (https://forum.arduino.cc/index.php?topic=503368.0)
+// Non-blocking blink LED (https://forum.arduino.cc/index.php?topic=503368.0)
 void blinkLed(byte ledFlashes, unsigned int ledDelay)
 {
   byte i = 0;
   while (i < ledFlashes * 2)
   {
-    currentMillis = millis();
+    unsigned long currentMillis = millis();
     if (currentMillis - previousMillis >= ledDelay)
     {
       digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
@@ -118,5 +124,6 @@ void blinkLed(byte ledFlashes, unsigned int ledDelay)
       i++;
     }
   }
+  // Ensure LED is off at end of blink cycle
   digitalWrite(LED_BUILTIN, LOW);
 }

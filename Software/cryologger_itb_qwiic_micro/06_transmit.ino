@@ -4,23 +4,24 @@ void configureIridium()
   //modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE); // Assume USB power
   modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
   modem.adjustATTimeout(20);            // Adjust timeout timer for serial AT commands (default = 20 s)
-  modem.adjustSendReceiveTimeout(60);  // Adjust timeout timer for library send/receive commands (default = 300 s)
+  modem.adjustSendReceiveTimeout(180);  // Adjust timeout timer for library send/receive commands (default = 300 s)
   online.iridium = true;
 }
 
 // Write data from structure to transmit buffer
 void writeBuffer()
 {
-  messageCounter++;                         // Increment message counter
-  moMessage.messageCounter = messageCounter;  // Write message counter data to union
-  transmitCounter++;                        // Increment data transmission counter
+  messageCounter++; // Increment message counter
+  transmitCounter++; // Increment data transmission counter
+  moMessage.messageCounter = messageCounter; // Write message counter data to union
 
   // Concatenate current message with existing message(s) stored in transmit buffer
   memcpy(transmitBuffer + (sizeof(moMessage) * (transmitCounter + (retransmitCounter * transmitInterval) - 1)), moMessage.bytes, sizeof(moMessage));
 
-  printUnion();
-  //printUnionHex(); // Print union/structure in hex/binary
-  //printTransmitBuffer();  // Print transmit buffer in hex/binary
+  // Print union/structure in hex/binary
+  printMoSbd();
+  //printUnionHex();
+  //printTransmitBuffer();
 }
 
 // Transmit data using RockBLOCK 9603
@@ -32,7 +33,8 @@ void transmitData()
     // Change LED colour
     setLedColour(purple);
 
-    unsigned long loopStartTime = millis(); // Start loop timer
+    // Start loop timer
+    unsigned long loopStartTime = millis();
 
     // Start the serial port connected to the satellite modem
     IRIDIUM_PORT.begin(19200);
@@ -63,7 +65,7 @@ void transmitData()
       DEBUG_PRINTLN(signalQuality);
     */
 
-    // Create buffer to store Mobile Terminated (MT) SBD message (270 bytes max)
+    // Create buffer to store Mobile Terminated SBD (MT-SBD) message (270 bytes max)
     uint8_t mtBuffer[270];
     size_t mtBufferSize = sizeof(mtBuffer);
     memset(mtBuffer, 0x00, sizeof(mtBuffer)); // Clear mtBuffer array
@@ -82,7 +84,7 @@ void transmitData()
     }
     else
     {
-      DEBUG_PRINTLN("Transmission successful!");
+      DEBUG_PRINTLN("MO-SBD transmission successful!");
       setLedColour(green); // Change LED colour to indicate a successful transmission
 
       retransmitCounter = 0; // Clear message retransmit counter
@@ -90,8 +92,28 @@ void transmitData()
 
       // Check if a Mobile Terminated (MT) message was received
       // If no message is available, mtBufferSize = 0
+
       if (mtBufferSize > 0)
       {
+        DEBUG_PRINT("MT-SBD message received. Size: ");
+        DEBUG_PRINT(sizeof(mtBuffer)); DEBUG_PRINTLN(" bytes.");
+
+        // Write incoming message buffer to union/structure
+        for (int i = 0; i < sizeof(mtBuffer); i++) {
+          mtMessage.bytes[i] = mtBuffer[i];
+
+          DEBUG_PRINT("Address: "); DEBUG_PRINT(i); printTab(1);
+          DEBUG_PRINT("Value: "); DEBUG_PRINTLN_HEX(mtBuffer[i]);
+        }
+
+        // Print MT-SBD message
+        printMtSbd();
+
+      }
+
+      /******************************************************************************************
+        if (mtBufferSize > 0)
+        {
         DEBUG_PRINT("MT message received. Size: ");
         DEBUG_PRINT(mtBufferSize); DEBUG_PRINTLN(" bytes");
 
@@ -126,7 +148,9 @@ void transmitData()
           retransmitCounterMax  = retransmitCounterMaxBuffer; // Update max retransmit counter
           resetFlag             = resetFlagBuffer;            // Update force reset flag
         }
-      }
+        }
+      **************************************************************************************/
+
     }
 
     // Clear the Mobile Originated message buffer
@@ -134,11 +158,8 @@ void transmitData()
     err = modem.clearBuffers(ISBD_CLEAR_MO); // Clear MO buffer
     if (err != ISBD_SUCCESS)
     {
-      DEBUG_PRINT("Warning: Clear buffer failed with error ");
-      DEBUG_PRINTLN(err);
-
-      // Change LED colour
-      setLedColour(orange); // Change LED colour to indicate failure
+      DEBUG_PRINT("Warning: Clear buffer failed with error "); DEBUG_PRINTLN(err);
+      setLedColour(orange); // Change LED colour to indicate buffer clear failure
     }
 
 
@@ -152,7 +173,7 @@ void transmitData()
         retransmitCounter = 0;
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmitBuffer array
       }
-      setLedColour(red);
+      setLedColour(red); // Change LED colour to indicate transmit failure
     }
 
     // Put modem to sleep
@@ -160,9 +181,8 @@ void transmitData()
     err = modem.sleep();
     if (err != ISBD_SUCCESS)
     {
-      DEBUG_PRINT("Warning: Sleep failed error ");
-      DEBUG_PRINTLN(err);
-      setLedColour(orange); // Change LED colour to indicate failure to sleep
+      DEBUG_PRINT("Warning: Sleep failed error "); DEBUG_PRINTLN(err);
+      setLedColour(orange); // Change LED colour to indicate sleep failure
     }
 
     // Close the serial port connected to the RockBLOCK
@@ -186,10 +206,11 @@ void transmitData()
   else
   {
     DEBUG_PRINTLN("Warning: Iridium 9603 not online!");
+    setLedColour(red); // Change LED colour to indicate modem failure
   }
 }
 
-// RockBLOCK callback function can be repeatedly called during transmission or GNSS signal acquisition
+// Non-blocking RockBLOCK callback function can be called during transmit or GNSS signal acquisition
 bool ISBDCallback()
 {
   unsigned long currentMillis = millis();
@@ -206,13 +227,13 @@ bool ISBDCallback()
 
 #if DEBUG_IRIDIUM
 // Callback to sniff the conversation with the Iridium modem
-void ISBDConsoleCallback(IridiumSBD *device, char c)
+void ISBDConsoleCallback(IridiumSBD * device, char c)
 {
   DEBUG_WRITE(c);
 }
 
 // Callback to to monitor Iridium modem library's run state
-void ISBDDiagsCallback(IridiumSBD *device, char c)
+void ISBDDiagsCallback(IridiumSBD * device, char c)
 {
   DEBUG_WRITE(c);
 }

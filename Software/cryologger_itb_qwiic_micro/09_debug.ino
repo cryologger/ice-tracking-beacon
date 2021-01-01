@@ -15,10 +15,10 @@ void printTab(byte _times)
   }
 }
 
-// Print union/structure
-void printUnion() {
+// Print contents of union/structure storing Mobile Originated (MO) SBD message data
+void printMoSbd() {
   printLine();
-  DEBUG_PRINTLN("Union/structure");
+  DEBUG_PRINTLN("MO-SBD Message Data");
   printLine();
   DEBUG_PRINT("unixtime:");         printTab(2);  DEBUG_PRINTLN(moMessage.unixtime);
   DEBUG_PRINT("temperature:");      printTab(2);  DEBUG_PRINTLN(moMessage.temperature);
@@ -35,6 +35,18 @@ void printUnion() {
   DEBUG_PRINT("voltage:");          printTab(2);  DEBUG_PRINTLN(moMessage.voltage);
   DEBUG_PRINT("transmitDuration:"); printTab(1);  DEBUG_PRINTLN(moMessage.transmitDuration);
   DEBUG_PRINT("messageCounter:");   printTab(2);  DEBUG_PRINTLN(moMessage.messageCounter);
+  printLine();
+}
+
+// Print contents of union/structure storing Mobile Originated (MT) SBD message data
+void printMtSbd() {
+  printLine();
+  DEBUG_PRINTLN("MT-SBD Message Data");
+  printLine();
+  DEBUG_PRINT("alarmInterval:");      printTab(1);  DEBUG_PRINTLN(mtMessage.alarmInterval);
+  DEBUG_PRINT("transmitInterval:");   printTab(1);  DEBUG_PRINTLN(mtMessage.transmitInterval);
+  DEBUG_PRINT("retransmitCounter:");  printTab(1);  DEBUG_PRINTLN(mtMessage.retransmitCounter);
+  DEBUG_PRINT("resetFlag:");          printTab(2);  DEBUG_PRINTLN(mtMessage.resetFlag);
   printLine();
 }
 

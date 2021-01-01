@@ -95,8 +95,8 @@ void setRtcAlarm()
       rtc.setItemsToMatchForAlarm(1, 0, 0, 0); // minutes, hours, weekday, date
 
       // Set initial alarm to occur on next hour rollover
-      //rtc.setAlarmMinutes(0);
-      rtc.setAlarmMinutes((rtc.getMinutes() + alarmMinutes) % 60);
+      rtc.setAlarmMinutes(0);
+      //rtc.setAlarmMinutes((rtc.getMinutes() + alarmMinutes) % 60);
     }
     else {
       // Select alarm interrupt registers to compare with the current time registers

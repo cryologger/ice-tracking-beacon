@@ -37,10 +37,8 @@ void setLedColour(uint32_t colour)
   pixels.show();   // Send the updated pixel colors to the hardware
 
   // Non-blocking delay
-  currentMillis = millis();
-  while (currentMillis - previousMillis >= ledDelay)
-  {
-    previousMillis = currentMillis;
+  unsigned long currentMillis = millis();
+  while (millis() - currentMillis < ledDelay) {
+    // delay
   }
-
 }

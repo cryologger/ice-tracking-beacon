@@ -14,18 +14,16 @@ void configureImu() {
 // Read SparkFun ICM-20948
 void readImu() {
 
-  setLedColour(magenta);
-
   unsigned long loopStartTime = millis(); // Start loop timer
+  
+  setLedColour(magenta);
 
   if (online.imu) {
     // Wake the sensor
     imu.sleep(false);
     imu.lowPower(false);
-
-    blinkLed(1, 100);
-
     imu.getAGMT(); // Values are only updated when 'getAGMT' is called
+    
 #if DEBUG_IMU
     DEBUG_PRINT("Scaled. Acc (mg) [ ");
     DEBUG_PRINT_DEC(imu.accX(), 2);
