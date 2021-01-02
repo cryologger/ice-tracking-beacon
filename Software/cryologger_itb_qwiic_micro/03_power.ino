@@ -22,11 +22,11 @@ void readBattery() {
     moMessage.voltage = voltage * 1000;
   }
 
-  DEBUG_PRINT("voltage: "); DEBUG_PRINTLN(voltage);
+  //DEBUG_PRINT("voltage: "); DEBUG_PRINTLN(voltage);
 
   // Stop loop timer
   unsigned long loopEndTime = millis() - loopStartTime;
-  DEBUG_PRINT("readBattery() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
+  //DEBUG_PRINT("readBattery() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
 }
 
 // Disable serial port

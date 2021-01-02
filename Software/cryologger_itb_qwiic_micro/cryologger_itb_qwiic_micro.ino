@@ -37,9 +37,9 @@
 // -----------------------------------------------------------------------------
 // Debugging macros
 // -----------------------------------------------------------------------------
-#define DEBUG           true   // Output debug messages to Serial Monitor
-#define DEBUG_GNSS      true   // Output GNSS debug information
-#define DEBUG_IRIDIUM   true   // Output Iridium debug messages to Serial Monitor
+#define DEBUG           false   // Output debug messages to Serial Monitor
+#define DEBUG_GNSS      false   // Output GNSS debug information
+#define DEBUG_IRIDIUM   false   // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
 #define DEBUG_PRINT(x)            SERIAL_PORT.print(x)
@@ -86,10 +86,10 @@ RV8803            rtc;            // I2C Address: 0x32
 SFE_UBLOX_GPS     gnss;           // I2C Address: 0x42
 
 // Global constants
-//const float R1 = 9973000.0;   // Voltage divider resistor 1
-//const float R2 = 998400.0;    // Voltage divider resistor 2
-const float R1 = 1000000.0;   // Voltage divider resistor 1
-const float R2 = 1000000.0;    // Voltage divider resistor 2
+const float R1 = 9973000.0;   // Voltage divider resistor 1
+const float R2 = 998700.0;    // Voltage divider resistor 2
+//const float R1 = 1000000.0;   // Voltage divider resistor 1
+//const float R2 = 1000000.0;    // Voltage divider resistor 2
 
 // -----------------------------------------------------------------------------
 // User defined global variable declarations
@@ -100,7 +100,7 @@ byte          alarmHours            = 0;      // RTC rolling alarm hours
 byte          alarmDate             = 0;      // RTC rolling alarm days
 byte          transmitInterval      = 1;      // Number of messages to include in each Iridium transmission (340-byte limit)
 byte          retransmitCounterMax  = 4;      // Number of failed data transmissions to reattempt (340-byte limit)
-unsigned long gnssDelay             = 10;    // Duration of GNSS signal acquisition (s)
+unsigned long gnssDelay             = 300;    // Duration of GNSS signal acquisition (s)
 unsigned long ledDelay              = 2000;   // Duration of RGB LED colour change (ms)
 
 // -----------------------------------------------------------------------------
@@ -207,15 +207,15 @@ void setup()
   analogReadCorrection(17, 2057);
 
   Wire.begin(); // Initialize I2C
-  //Wire.setClock(400000); // Set I2C clock speed to 400 kHz
+  Wire.setClock(400000); // Set I2C clock speed to 400 kHz
 
   enablePower();          // Enable power to MOSFET controlled components
   configureLed();         // Configure WS2812B RGB LED
 
 #if DEBUG
   SERIAL_PORT.begin(115200); // Begin serial at 115200 baud
-  while (!SERIAL_PORT); // Wait for user to open Serial Monitor
-  //blinkLed(4, 1000); // Non-blocking delay to allow user to open Serial Monitor
+  //while (!SERIAL_PORT); // Wait for user to open Serial Monitor
+  blinkLed(2, 1000); // Non-blocking delay to allow user to open Serial Monitor
 #endif
 
   setLedColour(white);

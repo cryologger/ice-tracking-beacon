@@ -195,9 +195,8 @@ bool ISBDCallback()
   {
     previousMillis = currentMillis;
     petDog();  // Reset the Watchdog Timer
-
-    // Blink LED
-    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+    readBattery(); // Measure battery voltage during transmission (period of highest draw)
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN)); // Blink LED
   }
   return true;
 }
