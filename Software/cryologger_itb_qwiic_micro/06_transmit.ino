@@ -112,51 +112,22 @@ void transmitData()
           }
         }
 
-        // Print values MT-SBD message as stored in union/structure
+        // Print MT-SBD message as stored in union/structure
         printMtSbd();
 
+        // Check if MT-SBD message data is valid and update global variables accordingly
+        if ((mtMessage.alarmInterval      >= 300  && mtMessage.alarmInterval      <= 1209600) &&
+            (mtMessage.transmitInterval   >= 1    && mtMessage.transmitInterval   <= 24) &&
+            (mtMessage.retransmitCounter  >= 0    && mtMessage.retransmitCounter  <= 24) &&
+            (mtMessage.resetFlag          == 0    || mtMessage.resetFlag          == 255))
+        {
+          alarmInterval         = mtMessage.alarmInterval;      // Update alarm interval
+          transmitInterval      = mtMessage.transmitInterval;   // Update transmit interval
+          retransmitCounterMax  = mtMessage.retransmitCounter;  // Update max retransmit counter
+          resetFlag             = mtMessage.resetFlag;          // Update force reset flag
+        }
+        printSettings();
       }
-
-      /******************************************************************************************
-        if (mtBufferSize > 0)
-        {
-        DEBUG_PRINT("MT message received. Size: ");
-        DEBUG_PRINT(mtBufferSize); DEBUG_PRINTLN(" bytes");
-
-        // Print each incoming byte of data contained in the mtBuffer
-        for (byte i = 0; i < mtBufferSize; i++)
-        {
-          DEBUG_PRINT("Address: "); DEBUG_PRINT(i);
-          DEBUG_PRINT("\tValue: "); DEBUG_PRINTLN_HEX(mtBuffer[i]);
-        }
-
-        // Recompose bits using bitshift
-        uint8_t  resetFlagBuffer            = (((uint8_t)mtBuffer[8] << 0) & 0xFF);
-        uint16_t retransmitCounterMaxBuffer = (((uint16_t)mtBuffer[7] << 0) & 0xFF) +
-                                              (((uint16_t)mtBuffer[6] << 8) & 0xFFFF);
-        uint16_t transmitIntervalBuffer     = (((uint16_t)mtBuffer[5] << 0) & 0xFF) +
-                                              (((uint16_t)mtBuffer[4] << 8) & 0xFFFF);
-        uint32_t alarmIntervalBuffer        = (((uint32_t)mtBuffer[3] << 0) & 0xFF) +
-                                              (((uint32_t)mtBuffer[2] << 8) & 0xFFFF) +
-                                              (((uint32_t)mtBuffer[1] << 16) & 0xFFFFFF) +
-                                              (((uint32_t)mtBuffer[0] << 24) & 0xFFFFFFFF);
-
-        // Check if incoming data is valid
-        if ((alarmIntervalBuffer        >= 300  && alarmIntervalBuffer        <= 1209600) &&
-            (transmitIntervalBuffer     >= 1    && transmitIntervalBuffer     <= 24) &&
-            (retransmitCounterMaxBuffer >= 0    && retransmitCounterMaxBuffer <= 24) &&
-            (resetFlagBuffer            == 0    || resetFlagBuffer            == 255))
-        {
-
-          // Update global variables
-          alarmInterval         = alarmIntervalBuffer;        // Update alarm interval
-          transmitInterval      = transmitIntervalBuffer;     // Update transmit interval
-          retransmitCounterMax  = retransmitCounterMaxBuffer; // Update max retransmit counter
-          resetFlag             = resetFlagBuffer;            // Update force reset flag
-        }
-        }
-      **************************************************************************************/
-
     }
 
     // Clear the Mobile Originated message buffer
@@ -245,6 +216,11 @@ void ISBDDiagsCallback(IridiumSBD * device, char c)
 }
 #endif
 
+// Function to test if data is in range
+bool inRange(unsigned long val, unsigned long minimum, unsigned long maximum)
+{
+  return ((minimum <= val) && (val <= maximum));
+}
 // Call user function 1
 void userFunction1()
 {

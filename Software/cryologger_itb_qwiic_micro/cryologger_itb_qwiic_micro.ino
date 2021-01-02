@@ -4,8 +4,9 @@
     Author:   Adam Garbo
 
     Description:
-    - Code is currently under development for the next iteration of the Cryologger iceberg
-    tracking beacon to be deployed during the 2021 Amundsen Expedition.
+    - Code is currently under development for the next iteration of the 
+    Cryologger iceberg tracking beacon to be deployed during the 2021 
+    Amundsen Expedition.
 
     Components:
     - SparkFun Qwiic Micro - SAMD21 Development Board
@@ -17,14 +18,6 @@
     - Maxtena M1621HCT-P-SMA Iridium antenna
     - NDP6020P P-Channel MOSFET
     - SparkFun Buck-Boost Converter
-
-    Comments:
-    - The MicroMod system has potential, but requires significant hardware bug fixes.
-    - Added Qwiic Power Switch and the Buck-Boost Converter feeding the 3.3 V
-      bus directly, we're looking at 110-141 uA in sleep mode (total) at 7.4-12V.
-    - Artemis MicroMod is currently sitting at 300 uA.
-    - Initial prototype test conducted November 18, 2020.
-    - December 28, 2020: Removed all SparkX components/code due to issues
 */
 
 // -----------------------------------------------------------------------------

@@ -14,7 +14,13 @@ void printTab(byte _times)
     DEBUG_PRINT("\t");
   }
 }
-
+// Print user-defined beacon settings
+void printSettings() {
+  DEBUG_PRINT("alarmInterval: ");     DEBUG_PRINTLN(alarmInterval);
+  DEBUG_PRINT("transmitInterval: ");  DEBUG_PRINTLN(transmitInterval);
+  DEBUG_PRINT("retransmitCounter: "); DEBUG_PRINTLN(retransmitCounter);
+  DEBUG_PRINT("resetFlag: ");         DEBUG_PRINTLN(resetFlag);
+}
 // Print contents of union/structure storing Mobile Originated (MO) SBD message data
 void printMoSbd() {
   printLine();
@@ -51,13 +57,13 @@ void printMtSbd() {
 }
 
 // Print contents of union/structure
-void printUnionHex() 
+void printUnionHex()
 {
   DEBUG_PRINTLN("Union/structure ");
   printLine();
   char tempData[340];
   DEBUG_PRINTLN("Byte\tHex");
-  for (int i = 0; i < sizeof(moMessage); ++i) 
+  for (int i = 0; i < sizeof(moMessage); ++i)
   {
     sprintf(tempData, "%d\t0x%02X", i, moMessage.bytes[i]);
     DEBUG_PRINTLN(tempData);
@@ -66,13 +72,13 @@ void printUnionHex()
 }
 
 // Print contents of transmit buffer
-void printTransmitBuffer() 
+void printTransmitBuffer()
 {
   DEBUG_PRINTLN("Transmit buffer");
   printLine();
   char tempData[sizeof(transmitBuffer)];
   DEBUG_PRINTLN("Byte\tHex");
-  for (int i = 0; i < sizeof(transmitBuffer); ++i) 
+  for (int i = 0; i < sizeof(transmitBuffer); ++i)
   {
     sprintf(tempData, "%d\t0x%02X", i, transmitBuffer[i]);
     DEBUG_PRINTLN(tempData);
