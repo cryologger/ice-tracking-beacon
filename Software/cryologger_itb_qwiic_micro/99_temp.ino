@@ -134,4 +134,13 @@ void printAlarm() {
   DEBUG_PRINTLN(signalQuality);
 */
 
-    
+/*
+   // Clear the Mobile Originated message buffer
+  DEBUG_PRINTLN("Clearing the MO buffer...");
+  err = modem.clearBuffers(ISBD_CLEAR_MO); // Clear MO buffer
+  if (err != ISBD_SUCCESS)
+  {
+    DEBUG_PRINT("Warning: Clear buffer failed with error "); DEBUG_PRINTLN(err);
+    setLedColourIridium(err); // Set LED colour to appropriate return code
+  }
+ */

@@ -4,7 +4,7 @@ void configureIridium()
   //modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE); // Assume USB power
   modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
   modem.adjustATTimeout(20); // Adjust timeout timer for serial AT commands (default = 20 s)
-  modem.adjustSendReceiveTimeout(180); // Adjust timeout timer for library send/receive commands (default = 300 s)
+  modem.adjustSendReceiveTimeout(iridiumTimeout); // Adjust timeout timer for library send/receive commands (default = 300 s)
   online.iridium = true;
 }
 
@@ -126,15 +126,6 @@ void transmitData()
       }
     }
 
-    // Clear the Mobile Originated message buffer
-    DEBUG_PRINTLN("Clearing the MO buffer...");
-    err = modem.clearBuffers(ISBD_CLEAR_MO); // Clear MO buffer
-    if (err != ISBD_SUCCESS)
-    {
-      DEBUG_PRINT("Warning: Clear buffer failed with error "); DEBUG_PRINTLN(err);
-      setLedColourIridium(err); // Set LED colour to appropriate return code
-    }
-
     // Store message in transmit buffer if transmission or modem begin fails
     if (err != ISBD_SUCCESS)
     {
@@ -178,11 +169,11 @@ void transmitData()
       while (true); // Wait for Watchdog Timer to reset system
     }
   }
-  else
-  {
-    DEBUG_PRINTLN("Warning: Iridium 9603 not online!");
-    setLedColour(red); // Set LED colour to indicate Iridium is offline
-  }
+  //else
+  //{
+  //  DEBUG_PRINTLN("Warning: Iridium 9603 not online!");
+  //  setLedColour(red); // Set LED colour to indicate Iridium is offline
+  //}
 }
 
 // Non-blocking RockBLOCK callback function can be called during transmit or GNSS signal acquisition
@@ -244,12 +235,6 @@ void setLedColourIridium(byte err)
     setLedColour(yellow);
   else if (err == 13) // ISBD_MSG_TOO_LONG
     setLedColour(yellow);
-
-  // Non-blocking delay
-  unsigned long currentMillis = millis();
-  while (millis() - currentMillis < 4000) {
-    // delay
-  }
 }
 
 // Function to test if data is in range

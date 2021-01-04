@@ -1,14 +1,14 @@
 // Configure GNSS receiver
 void configureGnss()
 {
-  if (!gnss.begin()) 
+  if (!gnss.begin())
   {
     DEBUG_PRINTLN("Warning: GNSS receiver not detected at default I2C address. Please check wiring.");
     online.gnss = false;
     setLedColour(red);
     //while (true); // Force Watchdog Timer to reset the system *DEBUGGING ONLY*
   }
-  else 
+  else
   {
     gnss.setI2COutput(COM_TYPE_UBX); // Set I2C port to output UBX only (turn off NMEA noise)
     //gnss.saveConfiguration(); // Save current settings to Flash and BBR
@@ -17,12 +17,15 @@ void configureGnss()
 }
 
 // Synchronize RTC with GNSS
-void syncRtc() 
+void syncRtc()
 {
   // Start loop timer
   unsigned long loopStartTime = millis();
 
-  if (online.gnss) {
+  // Check if GNSS initialized successfully
+  if (online.gnss)
+  {
+    // Clear flags
     bool dateValid = false;
     bool timeValid = false;
     rtcSyncFlag = false;
@@ -30,15 +33,15 @@ void syncRtc()
     // Attempt to sync RTC with GNSS for up to 5 minutes
     DEBUG_PRINTLN("Attempting to sync RTC with GNSS...");
 
-    setLedColour(pink);
+    setLedColour(pink); // Change LED colour to indicate signal acquisition
 
-    while ((!dateValid || !timeValid) && millis() - loopStartTime < gnssDelay * 1000UL)
+    while ((!dateValid || !timeValid) && millis() - loopStartTime < gnssTimeout * 1000UL)
     {
       dateValid = gnss.getDateValid();
       timeValid = gnss.getTimeValid();
 
       // Sync RTC with GNSS if date and time are valid
-      if (dateValid && timeValid) 
+      if (dateValid && timeValid)
       {
         // Calculate RTC drift
         tmElements_t tm;
@@ -77,7 +80,7 @@ void syncRtc()
 // Read GNSS
 void readGnss() {
 
-  // Check if GNSS is online
+  // Check if GNSS initialized successfully
   if (online.gnss)
   {
     setLedColour(cyan); // Change LED colour to indicate signal acquisition
@@ -89,7 +92,7 @@ void readGnss() {
     // Look for GNSS signal for up to 5 minutes
     DEBUG_PRINTLN("Beginning to listen for GNSS traffic...");
 
-    while (!gnssFixFlag && millis() - loopStartTime < gnssDelay * 1000UL)
+    while (!gnssFixFlag && millis() - loopStartTime < gnssTimeout * 1000UL)
     {
 #if DEBUG_GNSS
       char gnssBuffer[100];
@@ -110,7 +113,8 @@ void readGnss() {
       // Check if enough valid GNSS fixes have been collected
       if ((gnss.getFixType() == 3) || (gnssFixCounter == gnssFixCounterMax))
       {
-        gnssFixFlag = true; // Set GNSS valid fix flag
+        // Set GNSS valid fix flag
+        gnssFixFlag = true;
 
         DEBUG_PRINTLN("A GNSS fix was found!");
 

@@ -37,9 +37,9 @@
 // -----------------------------------------------------------------------------
 // Debugging macros
 // -----------------------------------------------------------------------------
-#define DEBUG           true   // Output debug messages to Serial Monitor
-#define DEBUG_GNSS      true   // Output GNSS debug information
-#define DEBUG_IRIDIUM   true   // Output Iridium debug messages to Serial Monitor
+#define DEBUG           false   // Output debug messages to Serial Monitor
+#define DEBUG_GNSS      false   // Output GNSS debug information
+#define DEBUG_IRIDIUM   false   // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
 #define DEBUG_PRINT(x)            SERIAL_PORT.print(x)
@@ -95,13 +95,14 @@ const float R2 = 998700.0;    // Voltage divider resistor 2
 // -----------------------------------------------------------------------------
 // User defined global variable declarations
 // -----------------------------------------------------------------------------
-unsigned long alarmInterval         = 1800;   // Sleep duration in seconds
-byte          alarmMinutes          = 5;      // RTC rolling alarm mintues
+unsigned long alarmInterval         = 3600;   // Sleep duration in seconds
+byte          alarmMinutes          = 2;      // RTC rolling alarm mintues
 byte          alarmHours            = 0;      // RTC rolling alarm hours
 byte          alarmDate             = 0;      // RTC rolling alarm days
-byte          transmitInterval      = 2;      // Number of messages to include in each Iridium transmission (340-byte limit)
-byte          retransmitCounterMax  = 4;      // Number of failed data transmissions to reattempt (340-byte limit)
-unsigned long gnssDelay             = 300;    // Duration of GNSS signal acquisition (s)
+byte          transmitInterval      = 1;      // Number of messages contained in each Iridium transmission (340-byte limit)
+byte          retransmitCounterMax  = 10;     // Number of failed data transmissions to reattempt (340-byte limit)
+int           gnssTimeout           = 300;    // Timeout for GNSS signal acquisition (s)
+int           iridiumTimeout        = 180;    // Timeout for Iridium transmission (s)
 unsigned long ledDelay              = 2000;   // Duration of RGB LED colour change (ms)
 
 // -----------------------------------------------------------------------------
@@ -111,7 +112,7 @@ volatile bool alarmFlag             = true;   // Flag for alarm interrupt servic
 volatile bool watchdogFlag          = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter       = 0;      // Watchdog Timer interrupt counter
 bool          firstTimeFlag         = true;   // Flag to determine if the program is running for the first time
-bool          rtcSyncFlag           = true;   // Flag to determine if RTC should be set using GNSS time
+bool          rtcSyncFlag           = false;  // Flag to determine if RTC has been synced with GNSS time
 bool          resetFlag             = 0;      // Flag to force system reset using Watchdog Timer
 byte          gnssFixCounterMax     = 5;      // GNSS max valid fix counter
 float         voltage               = 0.0;    // Battery voltage
@@ -211,15 +212,15 @@ void setup()
   Wire.begin(); // Initialize I2C
   Wire.setClock(400000); // Set I2C clock speed to 400 kHz
 
-  enablePower(); // Enable power to MOSFET controlled components
-  configureLed(); // Configure WS2812B RGB LED
-
 #if DEBUG
   SERIAL_PORT.begin(115200); // Begin serial at 115200 baud
   //while (!SERIAL_PORT); // Wait for user to open Serial Monitor
   blinkLed(2, 1000); // Non-blocking delay to allow user to open Serial Monitor
 #endif
 
+  enablePower(); // Enable power to MOSFET controlled components
+  configureLed(); // Configure WS2812B RGB LED
+  
   DEBUG_PRINTLN();
   printLine();
   DEBUG_PRINTLN("Cryologger - Iceberg Tracking Beacon v3.0");
@@ -232,7 +233,7 @@ void setup()
   configureImu();         // Configure interial measurement unit (IMU)
   configureSensors();     // Configure attached sensors
   configureIridium();     // Configure Iridium 9603 transceiver
-  syncRtc();              // Synchronize RTC with GNSS
+  //syncRtc();              // Synchronize RTC with GNSS
 
   DEBUG_PRINT("Datetime: "); printDateTime();
   DEBUG_PRINT("Initial alarm: "); printAlarm();

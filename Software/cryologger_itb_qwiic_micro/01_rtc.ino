@@ -21,11 +21,14 @@ void configureRtc()
   // Ensure all interrupt flags are cleared
   rtc.clearAllInterruptFlags();
 
+  // Set alarm to occur on next hour rollover
+  rtc.setAlarmMinutes(0);
+
   // Select alarm interrupt registers to compare with the current time registers
-  rtc.setItemsToMatchForAlarm(1, 0, 0, 0); // minutes, hours, weekday, date
+  //rtc.setItemsToMatchForAlarm(1, 0, 0, 0); // minutes, hours, weekday, date
 
   // Set initial alarm
-  rtc.setAlarmMinutes(0);
+  rtc.setAlarmMinutes((rtc.getMinutes() + alarmMinutes) % 60);
 
   // Generate an interrupt signal on the INT pin when an alarm match occurs
   rtc.enableHardwareInterrupt(ALARM_INTERRUPT);
