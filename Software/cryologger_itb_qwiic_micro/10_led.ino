@@ -1,40 +1,40 @@
 // Configure WS2812B RGB LED
 void configureLed()
 {
-  pixels.begin();
-  pixels.clear(); // Set all pixel colors to 'off'
-  pixels.show(); // Send the updated pixel colors to the hardware
+  led.begin();
+  led.clear(); // Set all pixel colors to 'off'
+  led.show(); // Send the updated pixel colors to the hardware
 }
 
 // Set WS2812B RGB LED color
 void setLedColour(uint32_t colour)
 {
   if (colour == white)
-    pixels.setPixelColor(0, white);
+    led.setPixelColor(0, white);
   else if (colour == red)
-    pixels.setPixelColor(0, red);
+    led.setPixelColor(0, red);
   else if (colour == green)
-    pixels.setPixelColor(0, green);
+    led.setPixelColor(0, green);
   else if (colour == blue)
-    pixels.setPixelColor(0, blue);
+    led.setPixelColor(0, blue);
   else if (colour == cyan)
-    pixels.setPixelColor(0, cyan);
+    led.setPixelColor(0, cyan);
   else if (colour == magenta)
-    pixels.setPixelColor(0, magenta);
+    led.setPixelColor(0, magenta);
   else if (colour == yellow)
-    pixels.setPixelColor(0, yellow);
+    led.setPixelColor(0, yellow);
   else if (colour == purple)
-    pixels.setPixelColor(0, purple);
+    led.setPixelColor(0, purple);
   else if (colour == orange)
-    pixels.setPixelColor(0, orange);
+    led.setPixelColor(0, orange);
   else if (colour == pink)
-    pixels.setPixelColor(0, pink);
+    led.setPixelColor(0, pink);
   else if (colour == lime)
-    pixels.setPixelColor(0, lime);
+    led.setPixelColor(0, lime);
   else if (colour == off)
-    pixels.clear(); // Set all pixel colors to 'off'
+    led.clear(); // Set all pixel colors to 'off'
 
-  pixels.show();   // Send the updated pixel colors to the hardware
+  led.show();   // Send the updated pixel colors to the hardware
 
   // Non-blocking delay
   unsigned long currentMillis = millis();

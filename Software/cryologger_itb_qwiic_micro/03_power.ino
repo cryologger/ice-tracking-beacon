@@ -56,9 +56,8 @@ void enablePower() {
   // Non-blocking delay
   unsigned long currentMillis = millis();
   while (millis() - currentMillis < powerDelay) {
-    // delay
+    // Wait...
   }
-
 }
 
 // Disable power to MOSFET
@@ -84,7 +83,7 @@ void goToSleep() {
     firstTimeFlag = false;
   }
 
-  setLedColour(off); // Turn off LED
+  //setLedColour(off); // Turn off LED
   digitalWrite(LED_BUILTIN, LOW);
   disablePower();
 

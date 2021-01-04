@@ -2,23 +2,26 @@
 void configureImu() {
 
   imu.begin(Wire, 1);
-  if (imu.status != ICM_20948_Stat_Ok ) {
+  if (imu.status != ICM_20948_Stat_Ok ) 
+  {
     DEBUG_PRINTLN("Warning: ICM-20948 not detected at default I2C address. Please check wiring.");
     online.imu = false;
   }
-  else {
+  else 
+  {
     online.imu = true;
   }
 }
 
 // Read SparkFun ICM-20948
-void readImu() {
-
+void readImu() 
+{
   unsigned long loopStartTime = millis(); // Start loop timer
   
   setLedColour(magenta);
 
-  if (online.imu) {
+  if (online.imu) 
+  {
     // Wake the sensor
     imu.sleep(false);
     imu.lowPower(false);

@@ -1,11 +1,11 @@
 /*
     Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0 Prototype
-    Date:     January 1, 2020
+    Date:     January 3, 2020
     Author:   Adam Garbo
 
     Description:
-    - Code is currently under development for the next iteration of the 
-    Cryologger iceberg tracking beacon to be deployed during the 2021 
+    - Code is currently under development for the next iteration of the
+    Cryologger iceberg tracking beacon to be deployed during the 2021
     Amundsen Expedition.
 
     Components:
@@ -37,9 +37,9 @@
 // -----------------------------------------------------------------------------
 // Debugging macros
 // -----------------------------------------------------------------------------
-#define DEBUG           false   // Output debug messages to Serial Monitor
-#define DEBUG_GNSS      false   // Output GNSS debug information
-#define DEBUG_IRIDIUM   false   // Output Iridium debug messages to Serial Monitor
+#define DEBUG           true   // Output debug messages to Serial Monitor
+#define DEBUG_GNSS      true   // Output GNSS debug information
+#define DEBUG_IRIDIUM   true   // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
 #define DEBUG_PRINT(x)            SERIAL_PORT.print(x)
@@ -70,6 +70,7 @@
 // Pin definitions
 // -----------------------------------------------------------------------------
 #define PIN_VBAT            A0
+#define PIN_IRIDIUM_EN      3
 #define PIN_IRIDIUM_SLEEP   4
 #define PIN_LED             5
 #define PIN_MOSFET          6
@@ -78,7 +79,7 @@
 // -----------------------------------------------------------------------------
 // Object instantiations
 // -----------------------------------------------------------------------------
-Adafruit_NeoPixel pixels(1, PIN_LED, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel led(1, PIN_LED, NEO_GRB + NEO_KHZ800);
 BME280            bme280;         // I2C Address: 0x77
 ICM_20948_I2C     imu;            // I2C Address: 0x69
 IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP); // D16 (TX): Pin 1 (yellow) D17 (RX): Pin 6 (orange)
@@ -94,11 +95,11 @@ const float R2 = 998700.0;    // Voltage divider resistor 2
 // -----------------------------------------------------------------------------
 // User defined global variable declarations
 // -----------------------------------------------------------------------------
-unsigned long alarmInterval         = 3600;   // Sleep duration in seconds
-byte          alarmMinutes          = 0;      // RTC rolling alarm mintues
+unsigned long alarmInterval         = 1800;   // Sleep duration in seconds
+byte          alarmMinutes          = 5;      // RTC rolling alarm mintues
 byte          alarmHours            = 0;      // RTC rolling alarm hours
 byte          alarmDate             = 0;      // RTC rolling alarm days
-byte          transmitInterval      = 1;      // Number of messages to include in each Iridium transmission (340-byte limit)
+byte          transmitInterval      = 2;      // Number of messages to include in each Iridium transmission (340-byte limit)
 byte          retransmitCounterMax  = 4;      // Number of failed data transmissions to reattempt (340-byte limit)
 unsigned long gnssDelay             = 300;    // Duration of GNSS signal acquisition (s)
 unsigned long ledDelay              = 2000;   // Duration of RGB LED colour change (ms)
@@ -112,13 +113,12 @@ volatile int  watchdogCounter       = 0;      // Watchdog Timer interrupt counte
 bool          firstTimeFlag         = true;   // Flag to determine if the program is running for the first time
 bool          rtcSyncFlag           = true;   // Flag to determine if RTC should be set using GNSS time
 bool          resetFlag             = 0;      // Flag to force system reset using Watchdog Timer
-byte          gnssFixCounter        = 0;      // GNSS valid fix counter
 byte          gnssFixCounterMax     = 5;      // GNSS max valid fix counter
 float         voltage               = 0.0;    // Battery voltage
 uint8_t       transmitBuffer[340]   = {};     // Iridium 9603 transmission buffer (MO SBD message max length: 340 bytes)
 unsigned int  messageCounter        = 0;      // Iridium 9603 transmission counter (zero indicates a reset)
-unsigned int  retransmitCounter     = 0;      // Iridium 9603 failed transmission counter
-unsigned int  transmitCounter       = 0;      // Iridium 9603 transmission interval counter
+byte          retransmitCounter     = 0;      // Iridium 9603 failed transmission counter
+byte          transmitCounter       = 0;      // Iridium 9603 transmission interval counter
 unsigned long previousMillis        = 0;      // Global millis() timer
 unsigned long powerDelay            = 2500;   // Delay after power to MOSFET is enabled
 time_t        alarmTime, unixtime   = 0;      // Global RTC time variables
@@ -126,18 +126,18 @@ time_t        alarmTime, unixtime   = 0;      // Global RTC time variables
 // -----------------------------------------------------------------------------
 // WS2812B RGB LED colour definitons
 // -----------------------------------------------------------------------------
-uint32_t white    = pixels.Color(32, 32, 32);
-uint32_t red      = pixels.Color(32, 0, 0);
-uint32_t green    = pixels.Color(0, 32, 0);
-uint32_t blue     = pixels.Color(0, 0, 32);
-uint32_t cyan     = pixels.Color(0, 32, 32);
-uint32_t magenta  = pixels.Color(32, 0, 32);
-uint32_t yellow   = pixels.Color(32, 32, 0);
-uint32_t purple   = pixels.Color(16, 0, 32);
-uint32_t orange   = pixels.Color(32, 16, 0);
-uint32_t pink     = pixels.Color(32, 0, 16);
-uint32_t lime     = pixels.Color(16, 32, 0);
-uint32_t off      = pixels.Color(0, 0, 0);
+uint32_t white    = led.Color(32, 32, 32);
+uint32_t red      = led.Color(32, 0, 0);
+uint32_t green    = led.Color(0, 32, 0);
+uint32_t blue     = led.Color(0, 0, 32);
+uint32_t cyan     = led.Color(0, 32, 32);
+uint32_t magenta  = led.Color(32, 0, 32);
+uint32_t yellow   = led.Color(32, 32, 0);
+uint32_t purple   = led.Color(16, 0, 32);
+uint32_t orange   = led.Color(32, 16, 0);
+uint32_t pink     = led.Color(32, 0, 16);
+uint32_t lime     = led.Color(16, 32, 0);
+uint32_t off      = led.Color(0, 0, 0);
 
 // -----------------------------------------------------------------------------
 // Data transmission unions/structures
@@ -196,10 +196,12 @@ void setup()
 {
   // Pin assignments
   pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(PIN_IRIDIUM_EN, OUTPUT);
   pinMode(PIN_MOSFET, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
-  digitalWrite(PIN_MOSFET, HIGH);
-
+  digitalWrite(PIN_MOSFET, HIGH);     // Disable MOSFET
+  digitalWrite(PIN_IRIDIUM_EN, LOW);  // Disable power to Iridium 9603
+  
   // Set analog resolution to 12-bits
   analogReadResolution(12);
 
@@ -209,16 +211,14 @@ void setup()
   Wire.begin(); // Initialize I2C
   Wire.setClock(400000); // Set I2C clock speed to 400 kHz
 
-  enablePower();          // Enable power to MOSFET controlled components
-  configureLed();         // Configure WS2812B RGB LED
+  enablePower(); // Enable power to MOSFET controlled components
+  configureLed(); // Configure WS2812B RGB LED
 
 #if DEBUG
   SERIAL_PORT.begin(115200); // Begin serial at 115200 baud
   //while (!SERIAL_PORT); // Wait for user to open Serial Monitor
   blinkLed(2, 1000); // Non-blocking delay to allow user to open Serial Monitor
 #endif
-
-  setLedColour(white);
 
   DEBUG_PRINTLN();
   printLine();

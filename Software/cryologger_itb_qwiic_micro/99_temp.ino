@@ -118,3 +118,20 @@ void printAlarm() {
   DEBUG_PRINTLN(alarmBuffer);
 }
 */
+
+
+/*
+  // Test the signal quality
+  int signalQuality = -1;
+  err = modem.getSignalQuality(signalQuality);
+  if (err != ISBD_SUCCESS)
+  {
+    DEBUG_PRINT("Warning: Signal quality failed with error ");
+    DEBUG_PRINTLN(err);
+    return;
+  }
+  DEBUG_PRINT("On a scale of 0 to 5, signal quality is currently: ");
+  DEBUG_PRINTLN(signalQuality);
+*/
+
+    

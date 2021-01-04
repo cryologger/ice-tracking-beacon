@@ -22,7 +22,8 @@ void printSettings() {
   DEBUG_PRINT("resetFlag: ");         DEBUG_PRINTLN(resetFlag);
 }
 // Print contents of union/structure storing Mobile Originated (MO) SBD message data
-void printMoSbd() {
+void printMoSbd() 
+{
   printLine();
   DEBUG_PRINTLN("MO-SBD Message Data");
   printLine();
@@ -57,7 +58,7 @@ void printMtSbd() {
 }
 
 // Print contents of union/structure
-void printUnionHex()
+void printMoSbdHex()
 {
   DEBUG_PRINTLN("Union/structure ");
   printLine();
