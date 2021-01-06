@@ -25,15 +25,16 @@
 #include <SdFat.h>                          // https://github.com/greiman/SdFat
 #include <SPI.h>
 #include <TimeLib.h>                        // https://github.com/PaulStoffregen/Time
+#include <TimeLib.h>                        // https://github.com/PaulStoffregen/Time
 #include <WDT.h>
-#include <Wire.h>
+#include <Wire.h>                           // https://www.arduino.cc/en/Reference/Wire
 
-// ----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
 // Debugging macros
-// ----------------------------------------------------------------------------
-#define DEBUG         true
-#define DEBUG_IRIDUM  false
-#define DEBUG_GNSS    false
+// -----------------------------------------------------------------------------
+#define DEBUG           true   // Output debug messages to Serial Monitor
+#define DEBUG_GNSS      true   // Output GNSS debug information
+#define DEBUG_IRIDIUM   true   // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
 #define DEBUG_PRINT(x)            Serial.print(x)
@@ -57,9 +58,11 @@
 // ----------------------------------------------------------------------------
 // Pin definitions
 // ----------------------------------------------------------------------------
-#define PIN_PWC_POWER           33
-#define PIN_QWIIC_POWER         34
-#define PIN_SD_CHIP_SELECT      41
+#define PIN_VBAT          A0
+#define PIN_PWC_POWER     G1 // 33
+#define PIN_QWIIC_POWER   34 // G2
+#define PIN_SD_CS         CS // 41
+#define PIN_LED           D0
 
 // ----------------------------------------------------------------------------
 // Object instantiations
@@ -75,41 +78,51 @@ SFE_UBLOX_GPS     gnss;           // I2C Address: 0x42
 // ----------------------------------------------------------------------------
 // User defined global variable declarations
 // ----------------------------------------------------------------------------
+const float   R1                    = 9973000.0;   // Voltage divider resistor 1
+const float   R2                    = 998700.0;    // Voltage divider resistor 2
+unsigned long alarmInterval         = 3600;   // Sleep duration in seconds
 byte          alarmSeconds          = 0;
-byte          alarmMinutes          = 30;
+byte          alarmMinutes          = 60;
 byte          alarmHours            = 0;
-unsigned int  transmitInterval      = 1;    // Number of messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitCounterMax  = 10;   // Number of failed data transmissions to reattempt (340 byte limit)
+unsigned int  transmitInterval      = 10;     // Number of messages to transmit in each Iridium transmission (340 byte limit)
+unsigned int  retransmitCounterMax  = 0;      // Number of failed data transmissions to reattempt (340 byte limit)
+int           gnssTimeout           = 300;    // Timeout for GNSS signal acquisition (s)
+int           iridiumTimeout        = 180;    // Timeout for Iridium transmission (s)
+unsigned long ledDelay              = 2000;   // Duration of RGB LED colour change (ms)
 
 // ----------------------------------------------------------------------------
 // Global variable declarations
 // ----------------------------------------------------------------------------
-volatile bool alarmFlag           = false;  // Flag for alarm interrupt service routine
+volatile bool alarmFlag           = true;  // Flag for alarm interrupt service routine
 volatile bool watchdogFlag        = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter     = 0;      // Watchdog Timer interrupt counter
 bool          firstTimeFlag       = true;   // Flag to determine if the program is running for the first time
-bool          ledStateFlag        = LOW;    // Flag to toggle LED in blinkLed() function
 bool          rtcSyncFlag         = true;   // Flag to determine if RTC should be set using GNSS time
 bool          resetFlag           = 0;      // Flag to force system reset using Watchdog Timer
 byte          gnssFixCounter      = 0;      // GNSS valid fix counter
-byte          gnssFixCounterMax   = 5;      // GNSS max valid fix counter
+byte          gnssFixCounterMax   = 10;      // GNSS max valid fix counter
 uint8_t       transmitBuffer[340] = {};     // Iridium 9603 transmission buffer (SBD MO message max: 340 bytes)
 char          fileName[30]        = "";     // Keep a record of this file name so that it can be re-opened upon wakeup from sleep
-
 unsigned int  sdPowerDelay        = 250;    // Delay before disabling power to microSD (milliseconds)
 unsigned int  qwiicPowerDelay     = 2000;   // Delay after enabling power to Qwiic connector (milliseconds)
-
 unsigned int  messageCounter      = 0;      // Iridium 9603 cumualtive transmission counter (zero indicates a reset)
 unsigned int  retransmitCounter   = 0;      // Iridium 9603 failed transmission counter
 unsigned int  transmitCounter     = 0;      // Iridium 9603 transmission interval counter
 unsigned long previousMillis      = 0;      // Global millis() timer
+float         voltage             = 0.0;    // Battery voltage
+unsigned long unixtime            = 0;
+unsigned long alarmTime           = 0;
+unsigned long rtcTimer, gnssTimer, sdTimer, iridiumTimer, sensorTimer = 0;
+
 
 // ----------------------------------------------------------------------------
 // Data transmission unions/structures
 // ----------------------------------------------------------------------------
 // Union to store and transmit Iridium SBD Mobile Originated (MO) message
-typedef union {
-  struct {
+typedef union
+{
+  struct
+  {
     uint32_t  unixtime;           // UNIX Epoch time                (4 bytes)
     int16_t   temperature;        // Temperature (°C)               (2 bytes)
     uint16_t  humidity;           // Humidity (%)                   (2 bytes)
@@ -129,20 +142,23 @@ typedef union {
 SBD_MO_MESSAGE moMessage;
 
 // Union to receive Iridium SBD Mobile Terminated (MT) message
-typedef union {
-  struct {
+typedef union
+{
+  struct
+  {
     uint32_t  alarmInterval;      // (4 bytes)
-    uint16_t  transmitInterval;   // (4 bytes)
-    uint16_t  retransmitCounter;  // (4 bytes)
+    uint8_t   transmitInterval;   // (1 byte)
+    uint8_t   retransmitCounter;  // (1 byte)
     uint8_t   resetFlag;          // (1 byte)
-  } __attribute__((packed));      // Total: (13 bytes)
-  uint8_t bytes[13]; // Size of message to be received (in bytes)
+  };
+  uint8_t bytes[7]; // Size of message to be received (in bytes)
 } SBD_MT_MESSAGE;
 
 SBD_MT_MESSAGE mtMessage;
 
 // Union to store device online/offline states
-struct struct_online {
+struct struct_online
+{
   bool bme280 = false;
   bool microSd = false;
   bool iridium = false;
@@ -152,8 +168,8 @@ struct struct_online {
 // ----------------------------------------------------------------------------
 // Setup
 // ----------------------------------------------------------------------------
-void setup() {
-
+void setup()
+{
   // Pin assignments
   pinMode(PIN_QWIIC_POWER, OUTPUT);
   pinMode(PIN_PWC_POWER, OUTPUT);
@@ -177,8 +193,7 @@ void setup() {
   DEBUG_PRINTLN("Cryologger Iceberg Tracking Beacon v3.0");
   printLine();
 
-  DEBUG_PRINT("Datetime: "); printDateTime();
-
+  // Configure devices
   configureGnss();    // Configure Sparkfun SAM-M8Q
   syncRtc();          // Synchronize RTC with GNSS
   configureIridium(); // Configure SparkFun Qwiic Iridium 9603N
@@ -188,16 +203,24 @@ void setup() {
   configureSensors(); // Configure attached sensors
   createLogFile();    // Create initial log file
 
-  Serial.flush(); // Wait for transmission of any serial data to complete
+  DEBUG_PRINT("Datetime: "); printDateTime();
+  DEBUG_PRINT("Initial alarm: "); printAlarm();
+
+  // Wait for transmission of any serial data to complete
+  Serial.flush();
+
+  // Change LED colour to indicate completion of setup
+  //setLedColour(white);
 }
 
 // ----------------------------------------------------------------------------
 // Loop
 // ----------------------------------------------------------------------------
-void loop() {
-
+void loop()
+{
   // Check if alarm flag was set
-  if (alarmFlag) {
+  if (alarmFlag)
+  {
     alarmFlag = false; // Clear alarm flag
 
     DEBUG_PRINT("Alarm trigger: "); printDateTime();
@@ -208,14 +231,14 @@ void loop() {
     readRtc();      // Read RTC
     readSensors();  // Read attached sensors
     readGnss();     // Read GNSS
-    writeBuffer();  // Write the data to transmit buffer
     logData();      // Write data to SD
+    writeBuffer();  // Write the data to transmit buffer
     transmitData(); // Transmit data
-
   }
 
   // Check for watchdog interrupt
-  if (watchdogFlag) {
+  if (watchdogFlag)
+  {
     petDog();
   }
 
@@ -231,8 +254,8 @@ void loop() {
 // ----------------------------------------------------------------------------
 
 // Interrupt handler for the RTC
-extern "C" void am_rtc_isr(void) {
-
+extern "C" void am_rtc_isr(void)
+{
   // Clear the RTC alarm interrupt
   rtc.clearInterrupt();
 
@@ -241,13 +264,14 @@ extern "C" void am_rtc_isr(void) {
 }
 
 // Interrupt handler for the watchdog
-extern "C" void am_watchdog_isr(void) {
-
+extern "C" void am_watchdog_isr(void)
+{
   // Clear the watchdog interrupt
   wdt.clear();
 
-  // Perform system reset after 15 watchdog interrupts (should not occur)
-  if (watchdogCounter < 25 ) {
+  // Perform system reset after 10 watchdog interrupts (should not occur)
+  if (watchdogCounter < 10 )
+  {
     wdt.restart(); // "Pet" the dog
   }
   watchdogFlag = true; // Set the watchdog flag

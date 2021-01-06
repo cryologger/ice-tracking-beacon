@@ -21,12 +21,10 @@ void configureRtc() {
   rtc.setAlarm(0, 0, 0, 0, 0, 0); // (hour, minutes, seconds, hundredth, day, month)
 
   // Set the RTC alarm mode
-  rtc.setAlarmMode(5); // Alarm match on hundredths, seconds and minutes
+  rtc.setAlarmMode(5); // Alarm match on hundredths, seconds
 
   // Attach RTC alarm interrupt
   rtc.attachInterrupt();
-
-  DEBUG_PRINT("Initial alarm set: "); printAlarm();
 }
 
 // Read the real-time clock
@@ -35,21 +33,25 @@ void readRtc() {
   unsigned long loopStartTime = micros(); // Start loop timer
 
   // Get RTC's UNIX Epoch time
-  unsigned long unixtime = rtc.getEpoch();
+  unixtime = rtc.getEpoch();
 
   // Write data to union
   moMessage.unixtime = unixtime;
 
   //DEBUG_PRINT("Epoch time: "); DEBUG_PRINTLN(unixtime);
 
-  unsigned long loopEndTime = micros() - loopStartTime;
+  rtcTimer = micros() - loopStartTime;
+  //unsigned long loopEndTime = micros() - loopStartTime;
   //DEBUG_PRINT("readRtc() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" us");
 }
 
 // Set RTC alarm
-void setRtcAlarm() {
-
+void setRtcAlarm()
+{
   //(rtc.seconds + alarmSeconds) % 60
+
+  // Calculate next alarm
+  alarmTime = unixtime + alarmInterval;
 
   // Clear the RTC alarm interrupt
   rtc.clearInterrupt();
@@ -58,10 +60,13 @@ void setRtcAlarm() {
   rtc.getTime();
 
   // Set the RTC's rolling alarm
-  rtc.setAlarm((rtc.hour + alarmHours) % 24,
-               (rtc.minute + alarmMinutes) % 60,
-               0,
-               0, rtc.dayOfMonth, rtc.month);
+  //rtc.setAlarm((rtc.hour + alarmHours) % 24,
+  //             (rtc.minute + alarmMinutes) % 60,
+  //             0,
+  //             0, rtc.dayOfMonth, rtc.month);
+
+  rtc.setAlarm(hour(alarmTime), minute(alarmTime), second(alarmTime),
+               0, day(alarmTime), month(alarmTime));
 
   // Set the RTC alarm mode
   rtc.setAlarmMode(5); // Alarm match on hundredths, seconds and minutes
@@ -71,7 +76,8 @@ void setRtcAlarm() {
 }
 
 // Print the RTC's current date and time
-void printDateTime() {
+void printDateTime()
+{
   rtc.getTime(); // Get the RTC's date and time
   char dateTimeBuffer[25];
   sprintf(dateTimeBuffer, "20%02d-%02d-%02d %02d:%02d:%02d",
@@ -81,7 +87,8 @@ void printDateTime() {
 }
 
 // Print the RTC's alarm
-void printAlarm() {
+void printAlarm()
+{
   rtc.getAlarm(); // Get the RTC's date and time
   char alarmBuffer[25];
   sprintf(alarmBuffer, "20%02d-%02d-%02d %02d:%02d:%02d",

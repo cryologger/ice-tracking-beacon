@@ -1,15 +1,48 @@
-// Read battery voltage (broken)
-void readBattery() {
+// Read battery voltage from voltage divider
+void readBattery()
+{
+  /*
+    // Start loop timer
+    unsigned long loopStartTime = millis();
 
+    int reading = 0;
+    byte samples = 30;
+
+    for (byte i = 0; i < samples; ++i)
+    {
+    reading += analogRead(PIN_VBAT); // Read VIN across a 1/10 MΩ resistor divider
+    delay(1);
+    }
+
+    voltage = (float)reading / samples * 3.3 * ((R2 + R1) / R2) / 4096.0; // Convert 1/10 VIN to VIN (12-bit resolution)
+
+    // Write minimum battery voltage value to union
+    if (moMessage.voltage == 0)
+    {
+    moMessage.voltage = voltage * 1000;
+    }
+    else if ((voltage * 1000) < moMessage.voltage)
+    {
+    moMessage.voltage = voltage * 1000;
+    }
+
+    //DEBUG_PRINT("voltage: "); DEBUG_PRINTLN(voltage);
+
+    // Stop loop timer
+    unsigned long loopEndTime = millis() - loopStartTime;
+    //DEBUG_PRINT("readBattery() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
+  */
 }
 
 // Enter deep sleep
-void goToSleep() {
-
+void goToSleep()
+{
+#if DEBUG
   Serial.flush();       // Wait for transmission of serial data to complete
+  Serial.end();         // Disable Serial
+#endif
   Wire.end();           // Disable I2C
   SPI.end();            // Disable SPI
-  Serial.end();         // Disable Serial
   power_adc_disable();  // Disable power to ADC
 
   // Force peripherals off
@@ -38,11 +71,10 @@ void goToSleep() {
   peripheralPowerOff(); // Disable power to peripherals
 
   // Mark devices as offline
-  online.gnss = true;
   online.bme280 = false;
-  online.microSd = false;
-  online.iridium = false;
   online.gnss = false;
+  online.iridium = false;
+  online.microSd = false;
 
   // Disable power to Flash, SRAM, and cache
   am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_CACHE); // Turn off CACHE
@@ -66,8 +98,8 @@ void goToSleep() {
 }
 
 // Wake from deep sleep
-void wakeUp() {
-
+void wakeUp()
+{
   // Enable power to SRAM, turn on entire Flash
   am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_MAX);
 
@@ -75,66 +107,70 @@ void wakeUp() {
   am_hal_stimer_config(AM_HAL_STIMER_CFG_CLEAR | AM_HAL_STIMER_CFG_FREEZE);
   am_hal_stimer_config(AM_HAL_STIMER_HFRC_3MHZ);
 
-  Serial.begin(115200); // Enable Serial
   ap3_adc_setup();      // Enable power to ADC
+
   Wire.begin();         // Enable I2C
   SPI.begin();          // Enable SPI
+#if DEBUG
+  Serial.begin(115200); // Enable Serial
+#endif
 
   // If alarm is triggered, enable power to system
-  if (alarmFlag) {
+  if (alarmFlag)
+  {
     qwiicPowerOn();       // Enable power to Qwiic connector
     peripheralPowerOn();  // Enable power to peripherals
-
-    configureSd();      // Configure microSD
-    configureGnss();    // Configure SAM-M8Q receiver
-    configureIridium(); // Configure Iridium 9603
-    configureSensors(); // Configure attached sensors
-  }
-}
-
-// Delay to allow Qwiic devices time to power up
-void qwiicPowerOnDelay() {
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis > qwiicPowerDelay) {
-    previousMillis = currentMillis;
+    configureSd();        // Configure microSD
+    configureGnss();      // Configure SAM-M8Q receiver
+    configureIridium();   // Configure Iridium 9603
+    configureSensors();   // Configure attached sensors
   }
 }
 
 // Enable power to Qwiic connector
-void qwiicPowerOn() {
+void qwiicPowerOn()
+{
   digitalWrite(PIN_QWIIC_POWER, HIGH);
-  qwiicPowerOnDelay();
+  // Non-blocking delay to allow Qwiic devices time to power up
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis > qwiicPowerDelay)
+  {
+    previousMillis = currentMillis;
+  }
 }
 
 // Disable power to Qwiic connector
-void qwiicPowerOff() {
+void qwiicPowerOff()
+{
   digitalWrite(PIN_QWIIC_POWER, LOW);
 }
 
 // Enable power to microSD and peripherals
-void peripheralPowerOn() {
+void peripheralPowerOn()
+{
   digitalWrite(PIN_PWC_POWER, HIGH);
 }
 
 // Disable power to microSD and peripherals
-void peripheralPowerOff() {
+void peripheralPowerOff()
+{
   digitalWrite(PIN_PWC_POWER, LOW);
 }
 
-// Blink LED (non-blocking)
-void blinkLed(byte ledFlashes, unsigned int ledDelay) {
-
-  pinMode(LED_BUILTIN, OUTPUT);
-
+// Non-blocking blink LED (https://forum.arduino.cc/index.php?topic=503368.0)
+void blinkLed(byte ledFlashes, unsigned int ledDelay)
+{
   byte i = 0;
-  while (i < ledFlashes * 2) {
+  while (i < ledFlashes * 2)
+  {
     unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis > ledDelay) {
+    if (currentMillis - previousMillis >= ledDelay)
+    {
+      digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
       previousMillis = currentMillis;
-      ledStateFlag = !ledStateFlag;
-      digitalWrite(LED_BUILTIN, ledStateFlag);
       i++;
     }
   }
+  // Ensure LED is off at end of blink cycle
   digitalWrite(LED_BUILTIN, LOW);
 }

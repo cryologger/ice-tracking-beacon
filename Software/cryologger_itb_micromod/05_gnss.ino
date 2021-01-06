@@ -1,24 +1,30 @@
 // Configure SparkFun GPS Breakout SAM-M8Q
-void configureGnss() {
-
-  if (gnss.begin()) {
+void configureGnss()
+{
+  if (gnss.begin())
+  {
     gnss.setI2COutput(COM_TYPE_UBX); // Set I2C port to output UBX only (turn off NMEA noise)
     gnss.saveConfiguration();        // Save current settings to Flash and BBR
     online.gnss = true;
   }
-  else {
-    DEBUG_PRINTLN("Warning: GNSS not detected at default I2C address. Please check wiring.");
+  else
+  {
+    DEBUG_PRINTLN("Warning: u-blox GNSS not detected at default I2C address. Please check wiring.");
     online.gnss = false;
     //while (1);
   }
 }
 
 // Synchronize RTC with GNSS
-void syncRtc() {
+void syncRtc()
+{
+  // Start loop timer
+  unsigned long loopStartTime = millis();
 
-  // Check if GNSS receiver is online
-  if (online.gnss) {
-    unsigned long loopStartTime = millis(); // Loop timer
+  // Check if GNSS initialized successfully
+  if (online.gnss)
+  {
+    // Clear flags
     bool dateValid = false;
     bool timeValid = false;
     rtcSyncFlag = false;
@@ -26,47 +32,67 @@ void syncRtc() {
     // Attempt to sync RTC with GNSS for up to 5 minutes
     DEBUG_PRINTLN("Attempting to sync RTC with GNSS...");
 
-    while ((!dateValid || !timeValid) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
+    //setLedColour(pink); // Change LED colour to indicate signal acquisition
 
+    while ((!dateValid || !timeValid) && millis() - loopStartTime < gnssTimeout * 1000UL)
+    {
       dateValid = gnss.getDateValid();
       timeValid = gnss.getTimeValid();
 
       // Sync RTC with GNSS if date and time are valid
-      if (dateValid && timeValid) {
+      if (dateValid && timeValid)
+      {
+        // Calculate RTC drift
+        tmElements_t tm;
+        tm.Year = gnss.getYear() - 1970;
+        tm.Month = gnss.getMonth();
+        tm.Day = gnss.getDay();
+        tm.Hour = gnss.getHour();
+        tm.Minute = gnss.getMinute();
+        tm.Second = gnss.getSecond();
+        time_t gnssEpoch = makeTime(tm); // Convert tmElements to time_t
+        int rtcDrift = rtc.getEpoch() - gnssEpoch; // Calculate time difference
+
+        // Write data to union
+        moMessage.rtcDrift = rtcDrift;
+        DEBUG_PRINT("RTC drift: "); DEBUG_PRINTLN(rtcDrift);
+
+        // Sync RTC date and time
         rtc.setTime(gnss.getHour(), gnss.getMinute(), gnss.getSecond(), gnss.getMillisecond() / 10,
                     gnss.getDay(), gnss.getMonth(), gnss.getYear() - 2000);
 
-        rtcSyncFlag = true; // Set flag
-        blinkLed(10, 50);
+        rtcSyncFlag = true;
+        //setLedColour(green);
         DEBUG_PRINT("RTC time synced: "); printDateTime();
       }
-
-      //blinkLed(1, 500);
       ISBDCallback();
     }
-    if (!rtcSyncFlag) {
+    if (!rtcSyncFlag)
+    {
       DEBUG_PRINTLN("Warning: RTC sync failed!");
+      //setLedColour(red); // Change LED colour to indicate RTC sync failure
     }
-
   }
   else {
-    Serial.println(F("Warning: No u-blox GNSS receiver detected on Qwiic bus!"));
+    DEBUG_PRINTLN("Warning: u-blox GNSS not detected at default I2C address. Please check wiring.");
   }
+
+  gnssTimer = millis() - loopStartTime;
 }
 
 // Read the GNSS receiver
-void readGnss() {
-
+void readGnss()
+{
   // Check if u-blox GNSS receiver is online
-  if (online.gnss) {
-    unsigned long loopStartTime = millis(); // Loop timer
-
-    // Begin listening to the GNSS
-    DEBUG_PRINTLN("Beginning to listen for GNSS traffic...");
+  if (online.gnss)
+  {
+    // Start loop timer
+    unsigned long loopStartTime = millis();
 
     // Look for GNSS signal for up to 5 minutes
-    while ((gnssFixCounter != gnssFixCounterMax) && millis() - loopStartTime < 5UL * 60UL * 1000UL) {
-
+    DEBUG_PRINTLN("Beginning to listen for GNSS traffic...");
+    while ((gnssFixCounter != gnssFixCounterMax) && millis() - loopStartTime < gnssTimeout * 1000UL)
+    {
 #if DEBUG_GNSS
       char gnssBuffer[75];
       sprintf(gnssBuffer, "%04u-%02d-%02d %02d:%02d:%02d,%ld,%ld,%d,%d,%d",
@@ -95,9 +121,9 @@ void readGnss() {
 
         // Sync RTC with GNSS if date and time are valid
         if (gnss.getDateValid() && gnss.getTimeValid()) {
-          rtc.setTime(gnss.getHour(), gnss.getMinute(), gnss.getSecond(), gnss.getMillisecond() / 10,
-                      gnss.getDay(), gnss.getMonth(), gnss.getYear() - 2000);
 
+          // Get RTC's UNIX Epoch time
+          time_t rtcEpoch = rtc.getEpoch();
 
           // Calculate RTC drift
           tmElements_t tm;
@@ -111,11 +137,11 @@ void readGnss() {
           // Convert GNSS date and time to UNIX Epoch time (tmElements to time_t)
           time_t gnssEpoch = makeTime(tm);
 
-          // Get RTC's UNIX Epoch time
-          time_t rtcEpoch = rtc.getEpoch();
-
           // Calculate RTC drift
           int rtcDrift = rtcEpoch - gnssEpoch;
+
+          // Set RTC date and time
+          rtc.setEpoch(gnssEpoch);
 
           // Write data to union
           moMessage.rtcDrift = rtcDrift;
@@ -141,7 +167,7 @@ void readGnss() {
     DEBUG_PRINTLN(" ms");
   }
   else {
-    DEBUG_PRINTLN("Warning: GNSS offline!");
+    DEBUG_PRINTLN("Warning: u-blox GNSS offline!");
     return;
   }
 }
