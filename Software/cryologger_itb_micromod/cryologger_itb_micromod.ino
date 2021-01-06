@@ -59,10 +59,9 @@
 // Pin definitions
 // ----------------------------------------------------------------------------
 #define PIN_VBAT          A0
-#define PIN_PWC_POWER     G1 // 33
+#define PIN_PWC_POWER     33 // G1
 #define PIN_QWIIC_POWER   34 // G2
-#define PIN_SD_CS         CS // 41
-#define PIN_LED           D0
+#define PIN_SD_CS         41 // CS
 
 // ----------------------------------------------------------------------------
 // Object instantiations
@@ -80,7 +79,7 @@ SFE_UBLOX_GPS     gnss;           // I2C Address: 0x42
 // ----------------------------------------------------------------------------
 const float   R1                    = 9973000.0;   // Voltage divider resistor 1
 const float   R2                    = 998700.0;    // Voltage divider resistor 2
-unsigned long alarmInterval         = 3600;   // Sleep duration in seconds
+unsigned long alarmInterval         = 300;   // Sleep duration in seconds
 byte          alarmSeconds          = 0;
 byte          alarmMinutes          = 60;
 byte          alarmHours            = 0;
@@ -222,10 +221,8 @@ void loop()
   if (alarmFlag)
   {
     alarmFlag = false; // Clear alarm flag
-
+    
     DEBUG_PRINT("Alarm trigger: "); printDateTime();
-
-    setRtcAlarm();  // Set the next RTC alarm
 
     // Perform measurements
     readRtc();      // Read RTC
@@ -234,6 +231,7 @@ void loop()
     logData();      // Write data to SD
     writeBuffer();  // Write the data to transmit buffer
     transmitData(); // Transmit data
+    setRtcAlarm();  // Set the next RTC alarm
   }
 
   // Check for watchdog interrupt
@@ -257,7 +255,7 @@ void loop()
 extern "C" void am_rtc_isr(void)
 {
   // Clear the RTC alarm interrupt
-  rtc.clearInterrupt();
+  am_hal_rtc_int_clear(AM_HAL_RTC_INT_ALM);
 
   // Set alarm flag
   alarmFlag = true;

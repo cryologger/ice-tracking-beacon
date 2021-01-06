@@ -54,8 +54,11 @@ void setRtcAlarm()
   alarmTime = unixtime + alarmInterval;
 
   // Clear the RTC alarm interrupt
-  rtc.clearInterrupt();
+  //rtc.clearInterrupt();
 
+  // Clear the RTC alarm interrupt
+  am_hal_rtc_int_clear(AM_HAL_RTC_INT_ALM);
+  
   // Get the RTC's date and time
   rtc.getTime();
 
