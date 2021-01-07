@@ -6,6 +6,7 @@ void configureGnss()
     gnss.setI2COutput(COM_TYPE_UBX); // Set I2C port to output UBX only (turn off NMEA noise)
     gnss.saveConfiguration();        // Save current settings to Flash and BBR
     online.gnss = true;
+    blinkLed(6, 250);
   }
   else
   {
@@ -77,18 +78,18 @@ void syncRtc()
     DEBUG_PRINTLN("Warning: u-blox GNSS not detected at default I2C address. Please check wiring.");
   }
 
-  gnssTimer = millis() - loopStartTime;
+  syncTimer = millis() - loopStartTime;
 }
 
 // Read the GNSS receiver
 void readGnss()
 {
+  // Start loop timer
+  unsigned long loopStartTime = millis();
+
   // Check if u-blox GNSS receiver is online
   if (online.gnss)
   {
-    // Start loop timer
-    unsigned long loopStartTime = millis();
-
     // Look for GNSS signal for up to 5 minutes
     DEBUG_PRINTLN("Beginning to listen for GNSS traffic...");
     while ((gnssFixCounter != gnssFixCounterMax) && millis() - loopStartTime < gnssTimeout * 1000UL)
@@ -166,8 +167,10 @@ void readGnss()
     DEBUG_PRINT(loopEndTime);
     DEBUG_PRINTLN(" ms");
   }
-  else {
+  else
+  {
     DEBUG_PRINTLN("Warning: u-blox GNSS offline!");
     return;
   }
+  gnssTimer = millis() - loopStartTime;
 }

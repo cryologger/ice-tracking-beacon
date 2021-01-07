@@ -18,7 +18,7 @@ void configureRtc() {
   //rtc.setTime(12, 59, 50, 0, 1, 11, 20); // 2020-11-01 12:59:50.000 (hour, minutes, seconds, hundredths, day, month, year)
 
   // Set the initial RTC alarm to occur on hour rollover
-  rtc.setAlarm(0, 0, 0, 0, 0, 0); // (hour, minutes, seconds, hundredth, day, month)
+  rtc.setAlarm(rtc.hour, (rtc.minute + alarmMinutes) % 60, 0, 0, rtc.dayOfMonth, rtc.month); // (hour, minutes, seconds, hundredths, day, month)
 
   // Set the RTC alarm mode
   rtc.setAlarmMode(5); // Alarm match on hundredths, seconds
@@ -31,6 +31,9 @@ void configureRtc() {
 void readRtc() {
 
   unsigned long loopStartTime = micros(); // Start loop timer
+  
+  // Get the RTC's date and time
+  rtc.getTime();
 
   // Get RTC's UNIX Epoch time
   unixtime = rtc.getEpoch();
@@ -54,11 +57,8 @@ void setRtcAlarm()
   alarmTime = unixtime + alarmInterval;
 
   // Clear the RTC alarm interrupt
-  //rtc.clearInterrupt();
+  rtc.clearInterrupt();
 
-  // Clear the RTC alarm interrupt
-  am_hal_rtc_int_clear(AM_HAL_RTC_INT_ALM);
-  
   // Get the RTC's date and time
   rtc.getTime();
 
@@ -68,11 +68,25 @@ void setRtcAlarm()
   //             0,
   //             0, rtc.dayOfMonth, rtc.month);
 
-  rtc.setAlarm(hour(alarmTime), minute(alarmTime), second(alarmTime),
-               0, day(alarmTime), month(alarmTime));
 
-  // Set the RTC alarm mode
-  rtc.setAlarmMode(5); // Alarm match on hundredths, seconds and minutes
+  // Clear first-time flag after initial power-down
+  if (firstTimeFlag)
+  {
+    // Set the initial RTC alarm to occur on hour rollover
+    rtc.setAlarm(0, 0, 0, 0, 0, 0); // (hour, minutes, seconds, hundredth, day, month)
+
+    // Set the RTC alarm mode
+    rtc.setAlarmMode(5); // Alarm match on hundredths, seconds, minutes
+  }
+  else
+  {
+    // Set alarm according to specified interval
+    rtc.setAlarm(hour(alarmTime), minute(alarmTime), second(alarmTime),
+                 0, day(alarmTime), month(alarmTime));
+
+    // Set the RTC alarm mode
+    rtc.setAlarmMode(4); // Alarm match on hundredths, seconds and minutes, hours
+  }
 
   // Print the next RTC alarm date and time
   DEBUG_PRINT("Next alarm: "); printAlarm();

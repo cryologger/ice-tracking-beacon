@@ -95,6 +95,7 @@ void transmitData() {
       }
       else
       {
+        blinkLed(10, 100);
         DEBUG_PRINTLN("MO-SBD transmission successful!");
         setLedColourIridium(err); // Set LED colour to appropriate return code
 

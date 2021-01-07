@@ -12,6 +12,7 @@
     - SparkFun Buck-Boost Converter
 
     Comments:
+    Serial.flush() will crash the program when DEBUG is enabled
 */
 
 // ----------------------------------------------------------------------------
@@ -25,16 +26,15 @@
 #include <SdFat.h>                          // https://github.com/greiman/SdFat
 #include <SPI.h>
 #include <TimeLib.h>                        // https://github.com/PaulStoffregen/Time
-#include <TimeLib.h>                        // https://github.com/PaulStoffregen/Time
 #include <WDT.h>
 #include <Wire.h>                           // https://www.arduino.cc/en/Reference/Wire
 
 // -----------------------------------------------------------------------------
 // Debugging macros
 // -----------------------------------------------------------------------------
-#define DEBUG           true   // Output debug messages to Serial Monitor
-#define DEBUG_GNSS      true   // Output GNSS debug information
-#define DEBUG_IRIDIUM   true   // Output Iridium debug messages to Serial Monitor
+#define DEBUG           false   // Output debug messages to Serial Monitor
+#define DEBUG_GNSS      false   // Output GNSS debug information
+#define DEBUG_IRIDIUM   false   // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
 #define DEBUG_PRINT(x)            Serial.print(x)
@@ -79,11 +79,11 @@ SFE_UBLOX_GPS     gnss;           // I2C Address: 0x42
 // ----------------------------------------------------------------------------
 const float   R1                    = 9973000.0;   // Voltage divider resistor 1
 const float   R2                    = 998700.0;    // Voltage divider resistor 2
-unsigned long alarmInterval         = 300;   // Sleep duration in seconds
+unsigned long alarmInterval         = 10800;   // Sleep duration in seconds
 byte          alarmSeconds          = 0;
-byte          alarmMinutes          = 60;
+byte          alarmMinutes          = 1;
 byte          alarmHours            = 0;
-unsigned int  transmitInterval      = 10;     // Number of messages to transmit in each Iridium transmission (340 byte limit)
+unsigned int  transmitInterval      = 1;     // Number of messages to transmit in each Iridium transmission (340 byte limit)
 unsigned int  retransmitCounterMax  = 0;      // Number of failed data transmissions to reattempt (340 byte limit)
 int           gnssTimeout           = 300;    // Timeout for GNSS signal acquisition (s)
 int           iridiumTimeout        = 180;    // Timeout for Iridium transmission (s)
@@ -110,9 +110,8 @@ unsigned int  transmitCounter     = 0;      // Iridium 9603 transmission interva
 unsigned long previousMillis      = 0;      // Global millis() timer
 float         voltage             = 0.0;    // Battery voltage
 unsigned long unixtime            = 0;
-unsigned long alarmTime           = 0;
-unsigned long rtcTimer, gnssTimer, sdTimer, iridiumTimer, sensorTimer = 0;
-
+time_t        alarmTime           = 0;
+unsigned long rtcTimer, syncTimer, gnssTimer, sdTimer, iridiumTimer, sensorTimer = 0;
 
 // ----------------------------------------------------------------------------
 // Data transmission unions/structures
@@ -184,9 +183,11 @@ void setup()
   Wire.begin(); // Initialize I2C
   SPI.begin(); // Initialize SPI
 
+#if DEBUG
   Serial.begin(115200);
   //while (!Serial); // Wait for user to open Serial Monitor
-  delay(5000); // Delay to allow user to open Serial Monitor
+  blinkLed(4, 1000); // Non-blocking delay to allow user to open Serial Monitor
+#endif
 
   printLine();
   DEBUG_PRINTLN("Cryologger Iceberg Tracking Beacon v3.0");
@@ -205,11 +206,10 @@ void setup()
   DEBUG_PRINT("Datetime: "); printDateTime();
   DEBUG_PRINT("Initial alarm: "); printAlarm();
 
-  // Wait for transmission of any serial data to complete
-  Serial.flush();
-
   // Change LED colour to indicate completion of setup
   //setLedColour(white);
+
+  blinkLed(10, 100);
 }
 
 // ----------------------------------------------------------------------------
@@ -221,7 +221,7 @@ void loop()
   if (alarmFlag)
   {
     alarmFlag = false; // Clear alarm flag
-    
+
     DEBUG_PRINT("Alarm trigger: "); printDateTime();
 
     // Perform measurements
@@ -255,7 +255,7 @@ void loop()
 extern "C" void am_rtc_isr(void)
 {
   // Clear the RTC alarm interrupt
-  am_hal_rtc_int_clear(AM_HAL_RTC_INT_ALM);
+  rtc.clearInterrupt();
 
   // Set alarm flag
   alarmFlag = true;

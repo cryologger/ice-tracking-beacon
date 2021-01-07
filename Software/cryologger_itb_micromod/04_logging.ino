@@ -2,6 +2,7 @@ void configureSd() {
 
   if (sd.begin(PIN_SD_CS, SD_SCK_MHZ(24))) {
     online.microSd = true;
+    blinkLed(3, 250);
   }
   else {
     DEBUG_PRINTLN("Warning: microSD not detected! Please check wiring.");
@@ -17,7 +18,6 @@ void createLogFile()
   {
     file.close();
   }
-
 
   // Get the RTC's current date and time
   rtc.getTime();
