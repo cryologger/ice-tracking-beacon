@@ -21,7 +21,7 @@ void writeBuffer()
   // Print MO-SBD union/structure
   printMoSbd();
   printMoSbdHex();
-  printTransmitBuffer();
+  //printTransmitBuffer();
 
   // Write zeroes to MO-SBD union/structure
   memset(&moMessage, 0, sizeof(moMessage));

@@ -28,7 +28,7 @@ void configureRtc()
   //rtc.setItemsToMatchForAlarm(1, 0, 0, 0); // minutes, hours, weekday, date
 
   // Set initial alarm
-  rtc.setAlarmMinutes((rtc.getMinutes() + alarmMinutes) % 60);
+  //rtc.setAlarmMinutes((rtc.getMinutes() + alarmMinutes) % 60);
 
   // Generate an interrupt signal on the INT pin when an alarm match occurs
   rtc.enableHardwareInterrupt(ALARM_INTERRUPT);

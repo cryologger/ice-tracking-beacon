@@ -23,8 +23,10 @@ void readSensors()
   // Start the loop timer
   unsigned long loopStartTime = millis();
 
-  // Wake-up, take readings and re-enter sleep mode
+  // Wake sensor and return to sleep once measurement is made
   bme280.setMode(MODE_FORCED);
+  // Delay required to allow sensor to perform the measurement
+  while (bme280.isMeasuring() && millis() - loopStartTime < 1000);
 
   float temperature = bme280.readTempC();
   float humidity = bme280.readFloatHumidity();

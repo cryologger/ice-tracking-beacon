@@ -1,6 +1,6 @@
 /*
     Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0 Prototype
-    Date:     January 3, 2020
+    Date:     January 8, 2020
     Author:   Adam Garbo
 
     Description:
@@ -72,9 +72,9 @@
 #define PIN_VBAT            A0
 #define PIN_IRIDIUM_EN      3
 #define PIN_IRIDIUM_SLEEP   4
-#define PIN_LED             5
+#define PIN_RTC_INT         5
 #define PIN_MOSFET          6
-#define PIN_RTC_INT         7
+#define PIN_LED             7
 
 // -----------------------------------------------------------------------------
 // Object instantiations
@@ -95,7 +95,7 @@ const float R2 = 998700.0;    // Voltage divider resistor 2
 // -----------------------------------------------------------------------------
 // User defined global variable declarations
 // -----------------------------------------------------------------------------
-unsigned long alarmInterval         = 3600;   // Sleep duration in seconds
+unsigned long alarmInterval         = 10800;   // Sleep duration in seconds
 byte          alarmMinutes          = 2;      // RTC rolling alarm mintues
 byte          alarmHours            = 0;      // RTC rolling alarm hours
 byte          alarmDate             = 0;      // RTC rolling alarm days
