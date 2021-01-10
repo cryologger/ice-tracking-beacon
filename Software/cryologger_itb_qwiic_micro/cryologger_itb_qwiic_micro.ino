@@ -20,23 +20,23 @@
     - SparkFun Buck-Boost Converter
 */
 
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 // Libraries
-// -----------------------------------------------------------------------------
-#include <Adafruit_NeoPixel.h>              // https://github.com/adafruit/Adafruit_NeoPixel
-#include <ArduinoLowPower.h>                // https://github.com/arduino-libraries/ArduinoLowPower
-#include <ICM_20948.h>                      // https://github.com/sparkfun/SparkFun_ICM-20948_ArduinoLibrary
-#include <IridiumSBD.h>                     // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
-#include <SAMD_AnalogCorrection.h>          // https://github.com/arduino/ArduinoCore-samd/tree/master/libraries/SAMD_AnalogCorrection
-#include <SparkFunBME280.h>                 // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
-#include <SparkFun_RV8803.h>                // https://github.com/sparkfun/SparkFun_RV-8803_Arduino_Library
-#include <SparkFun_Ublox_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_Ublox_Arduino_Library
-#include <TimeLib.h>                        // https://github.com/PaulStoffregen/Time
-#include <Wire.h>                           // https://www.arduino.cc/en/Reference/Wire
+// ------------------------------------------------------------------------------------------------
+#include <Adafruit_NeoPixel.h>                    // https://github.com/adafruit/Adafruit_NeoPixel
+#include <ArduinoLowPower.h>                      // https://github.com/arduino-libraries/ArduinoLowPower
+#include <ICM_20948.h>                            // https://github.com/sparkfun/SparkFun_ICM-20948_ArduinoLibrary
+#include <IridiumSBD.h>                           // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
+#include <SAMD_AnalogCorrection.h>                // https://github.com/arduino/ArduinoCore-samd/tree/master/libraries/SAMD_AnalogCorrection
+#include <SparkFunBME280.h>                       // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
+#include <SparkFun_RV8803.h>                      // https://github.com/sparkfun/SparkFun_RV-8803_Arduino_Library
+#include <SparkFun_u-blox_GNSS_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_u-blox_GNSS_Arduino_Library
+#include <TimeLib.h>                              // https://github.com/PaulStoffregen/Time
+#include <Wire.h>                                 // https://www.arduino.cc/en/Reference/Wire
 
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 // Debugging macros
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 #define DEBUG           false   // Output debug messages to Serial Monitor
 #define DEBUG_GNSS      false   // Output GNSS debug information
 #define DEBUG_IRIDIUM   false   // Output Iridium debug messages to Serial Monitor
@@ -60,15 +60,15 @@
 #define DEBUG_WRITE(x)
 #endif
 
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 // Port definitions
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 #define SERIAL_PORT     SerialUSB   // Required by SparkFun Qwiic Micro
 #define IRIDIUM_PORT    Serial
 
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------
 // Pin definitions
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 #define PIN_VBAT            A0
 #define PIN_IRIDIUM_EN      3
 #define PIN_IRIDIUM_SLEEP   4
@@ -76,15 +76,15 @@
 #define PIN_MOSFET          6
 #define PIN_LED             7
 
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 // Object instantiations
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 Adafruit_NeoPixel led(1, PIN_LED, NEO_GRB + NEO_KHZ800);
 BME280            bme280;         // I2C Address: 0x77
 ICM_20948_I2C     imu;            // I2C Address: 0x69
 IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP); // D16 (TX): Pin 1 (yellow) D17 (RX): Pin 6 (orange)
 RV8803            rtc;            // I2C Address: 0x32
-SFE_UBLOX_GPS     gnss;           // I2C Address: 0x42
+SFE_UBLOX_GNSS    gnss;           // I2C Address: 0x42
 
 // Global constants
 const float R1 = 9973000.0;   // Voltage divider resistor 1
@@ -92,9 +92,9 @@ const float R2 = 998700.0;    // Voltage divider resistor 2
 //const float R1 = 1000000.0;   // Voltage divider resistor 1
 //const float R2 = 1000000.0;    // Voltage divider resistor 2
 
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 // User defined global variable declarations
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 unsigned long alarmInterval         = 10800;   // Sleep duration in seconds
 byte          alarmMinutes          = 2;      // RTC rolling alarm mintues
 byte          alarmHours            = 0;      // RTC rolling alarm hours
@@ -105,9 +105,9 @@ int           gnssTimeout           = 300;    // Timeout for GNSS signal acquisi
 int           iridiumTimeout        = 180;    // Timeout for Iridium transmission (s)
 unsigned long ledDelay              = 2000;   // Duration of RGB LED colour change (ms)
 
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 // Global variable declarations
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 volatile bool alarmFlag             = true;   // Flag for alarm interrupt service routine
 volatile bool watchdogFlag          = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter       = 0;      // Watchdog Timer interrupt counter
@@ -124,9 +124,9 @@ unsigned long previousMillis        = 0;      // Global millis() timer
 unsigned long powerDelay            = 2500;   // Delay after power to MOSFET is enabled
 time_t        alarmTime, unixtime   = 0;      // Global RTC time variables
 
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 // WS2812B RGB LED colour definitons
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 uint32_t white    = led.Color(32, 32, 32);
 uint32_t red      = led.Color(32, 0, 0);
 uint32_t green    = led.Color(0, 32, 0);
@@ -140,26 +140,26 @@ uint32_t pink     = led.Color(32, 0, 16);
 uint32_t lime     = led.Color(16, 32, 0);
 uint32_t off      = led.Color(0, 0, 0);
 
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 // Data transmission unions/structures
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 // Union to transmit Iridium Short Burst Data (SBD) Mobile Originated (MO) message
 typedef union
 {
   struct
   {
-    uint32_t  unixtime;           // UNIX Epoch time                (4 bytes)
-    int16_t   temperature;        // Temperature (°C)               (2 bytes)
-    uint16_t  humidity;           // Humidity (%)                   (2 bytes)
-    uint16_t  pressure;           // Pressure (Pa)                  (2 bytes)
-    int32_t   latitude;           // Latitude (DD)                  (4 bytes)
-    int32_t   longitude;          // Longitude (DD)                 (4 bytes)
-    uint8_t   satellites;         // # of satellites                (1 byte)
-    uint16_t  pdop;               // PDOP                           (2 bytes)
-    int16_t   rtcDrift;           // RTC offset from GNSS time      (2 bytes)
-    uint16_t  voltage;            // Battery voltage (V)            (2 bytes)
-    uint16_t  transmitDuration;   // Previous transmission duration (2 bytes)
-    uint16_t  messageCounter;     // Message counter                (2 bytes)
+    uint32_t  unixtime;         // UNIX Epoch time                (4 bytes)
+    int16_t   temperature;      // Temperature (°C)               (2 bytes)
+    uint16_t  humidity;         // Humidity (%)                   (2 bytes)
+    uint16_t  pressure;         // Pressure (Pa)                  (2 bytes)
+    int32_t   latitude;         // Latitude (DD)                  (4 bytes)
+    int32_t   longitude;        // Longitude (DD)                 (4 bytes)
+    uint8_t   satellites;       // # of satellites                (1 byte)
+    uint16_t  pdop;             // PDOP                           (2 bytes)
+    int16_t   rtcDrift;         // RTC offset from GNSS time      (2 bytes)
+    uint16_t  voltage;          // Battery voltage (V)            (2 bytes)
+    uint16_t  transmitDuration; // Previous transmission duration (2 bytes)
+    uint16_t  messageCounter;   // Message counter                (2 bytes)
   } __attribute__((packed));                              // Total: (29 bytes)
   uint8_t bytes[29];
 } SBD_MO_MESSAGE;
@@ -190,9 +190,9 @@ struct struct_online
   bool bme280 = false;
 } online;
 
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 // Setup
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 void setup()
 {
   // Pin assignments
@@ -241,9 +241,9 @@ void setup()
   setLedColour(white); // Change LED colour to indicate completion of setup
 }
 
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 // Loop
-// -----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 void loop()
 {
   // Check if alarm ISR flag was set (protects against false triggers)

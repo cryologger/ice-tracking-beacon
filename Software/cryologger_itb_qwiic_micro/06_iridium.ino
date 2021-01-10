@@ -5,7 +5,7 @@ void configureIridium()
   modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
   modem.adjustATTimeout(20); // Adjust timeout timer for serial AT commands (default = 20 s)
   modem.adjustSendReceiveTimeout(iridiumTimeout); // Adjust timeout timer for library send/receive commands (default = 300 s)
-  online.iridium = true;
+  modem.adjustStartupTimeout(120); // Adjust timeout for Iridium modem startup (default = 240 s)
 }
 
 // Write data from structure to transmit buffer
@@ -32,7 +32,7 @@ void transmitData()
 {
   // Enable power to Iridium 9603
   digitalWrite(PIN_IRIDIUM_EN, HIGH);
-  //(online.iridium) &&
+
   // Check if data transmission is required
   if ((transmitCounter == transmitInterval) || firstTimeFlag)
   {
@@ -87,7 +87,6 @@ void transmitData()
 
         // Check if a Mobile Terminated (MT) message was received
         // If no message is available, mtBufferSize = 0
-
         if (mtBufferSize > 0)
         {
           DEBUG_PRINT("MT-SBD message received. Size: ");
@@ -169,11 +168,6 @@ void transmitData()
       while (true); // Wait for Watchdog Timer to reset system
     }
   }
-  //else
-  //{
-  //  DEBUG_PRINTLN("Warning: Iridium 9603 not online!");
-  //  setLedColour(red); // Set LED colour to indicate Iridium is offline
-  //}
 }
 
 // Non-blocking RockBLOCK callback function can be called during transmit or GNSS signal acquisition
