@@ -1,6 +1,6 @@
 /*
     Title:    Cryologger Ice Tracking Beacon (ITB) v3.0 Prototype
-    Date:     December 24, 2020
+    Date:     January 13, 2020
     Author:   Adam Garbo
 
     Components:
@@ -18,16 +18,16 @@
 // ----------------------------------------------------------------------------
 // Libraries
 // ----------------------------------------------------------------------------
-#include <ICM_20948.h>                      // https://github.com/sparkfun/SparkFun_ICM-20948_ArduinoLibrary
-#include <IridiumSBD.h>                     // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
+#include <ICM_20948.h>                            // https://github.com/sparkfun/SparkFun_ICM-20948_ArduinoLibrary
+#include <IridiumSBD.h>                           // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
 #include <RTC.h>
-#include <SparkFunBME280.h>                 // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
-#include <SparkFun_Ublox_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_Ublox_Arduino_Library
-#include <SdFat.h>                          // https://github.com/greiman/SdFat
+#include <SparkFunBME280.h>                       // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
+#include <SparkFun_u-blox_GNSS_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_Ublox_Arduino_Library
+#include <SdFat.h>                                // https://github.com/greiman/SdFat
 #include <SPI.h>
-#include <TimeLib.h>                        // https://github.com/PaulStoffregen/Time
+#include <TimeLib.h>                              // https://github.com/PaulStoffregen/Time
 #include <WDT.h>
-#include <Wire.h>                           // https://www.arduino.cc/en/Reference/Wire
+#include <Wire.h>                                 // https://www.arduino.cc/en/Reference/Wire
 
 // -----------------------------------------------------------------------------
 // Debugging macros
@@ -70,32 +70,30 @@ APM3_RTC          rtc;
 APM3_WDT          wdt;
 BME280            bme280;         // I2C Address: 0x77
 IridiumSBD        modem(Wire);    // I2C Address: 0x63
-SdFat             sd;             // File system object
-SdFile            file;           // Log file
-SFE_UBLOX_GPS     gnss;           // I2C Address: 0x42
+SdFs              sd;             // File system object
+FsFile            file;           // Log file
+SFE_UBLOX_GNSS    gnss;           // I2C Address: 0x42
 
 // ----------------------------------------------------------------------------
 // User defined global variable declarations
 // ----------------------------------------------------------------------------
-const float   R1                    = 9973000.0;   // Voltage divider resistor 1
-const float   R2                    = 998700.0;    // Voltage divider resistor 2
-unsigned long alarmInterval         = 10800;   // Sleep duration in seconds
+unsigned long alarmInterval         = 3600;  // Sleep duration in seconds
 byte          alarmSeconds          = 0;
-byte          alarmMinutes          = 1;
+byte          alarmMinutes          = 5;
 byte          alarmHours            = 0;
-unsigned int  transmitInterval      = 1;     // Number of messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitCounterMax  = 0;      // Number of failed data transmissions to reattempt (340 byte limit)
-int           gnssTimeout           = 300;    // Timeout for GNSS signal acquisition (s)
-int           iridiumTimeout        = 180;    // Timeout for Iridium transmission (s)
-unsigned long ledDelay              = 2000;   // Duration of RGB LED colour change (ms)
+unsigned int  transmitInterval      = 1;    // Number of messages to transmit in each Iridium transmission (340 byte limit)
+unsigned int  retransmitCounterMax  = 0;    // Number of failed data transmissions to reattempt (340 byte limit)
+int           gnssTimeout           = 300;  // Timeout for GNSS signal acquisition (s)
+int           iridiumTimeout        = 180;   // Timeout for Iridium transmission (s)
+unsigned long ledDelay              = 2000; // Duration of RGB LED colour change (ms)
 
 // ----------------------------------------------------------------------------
 // Global variable declarations
 // ----------------------------------------------------------------------------
-volatile bool alarmFlag           = true;  // Flag for alarm interrupt service routine
+volatile bool alarmFlag           = false;  // Flag for alarm interrupt service routine
 volatile bool watchdogFlag        = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter     = 0;      // Watchdog Timer interrupt counter
-bool          firstTimeFlag       = true;   // Flag to determine if the program is running for the first time
+bool          firstTimeFlag       = false;   // Flag to determine if the program is running for the first time
 bool          rtcSyncFlag         = true;   // Flag to determine if RTC should be set using GNSS time
 bool          resetFlag           = 0;      // Flag to force system reset using Watchdog Timer
 byte          gnssFixCounter      = 0;      // GNSS valid fix counter
@@ -111,7 +109,8 @@ unsigned long previousMillis      = 0;      // Global millis() timer
 float         voltage             = 0.0;    // Battery voltage
 unsigned long unixtime            = 0;
 time_t        alarmTime           = 0;
-unsigned long rtcTimer, syncTimer, gnssTimer, sdTimer, iridiumTimer, sensorTimer = 0;
+
+char outputData[512 * 2]; //Factor of 512 for easier recording to SD in 512 chunks
 
 // ----------------------------------------------------------------------------
 // Data transmission unions/structures
@@ -163,6 +162,17 @@ struct struct_online
   bool gnss = false;
 } online;
 
+// Union to store loop timers
+struct struct_timer
+{
+  unsigned long rtc;
+  unsigned long sync;
+  unsigned long microSd;
+  unsigned long sensor;
+  unsigned long gnss;
+  unsigned long iridium;
+} timer;
+
 // ----------------------------------------------------------------------------
 // Setup
 // ----------------------------------------------------------------------------
@@ -181,6 +191,8 @@ void setup()
   peripheralPowerOn();  // Enable power to peripherials
 
   Wire.begin(); // Initialize I2C
+  //Wire.setClock(400000); // Set I2C clock speed to 400 kHz
+
   SPI.begin(); // Initialize SPI
 
 #if DEBUG
@@ -189,6 +201,7 @@ void setup()
   blinkLed(4, 1000); // Non-blocking delay to allow user to open Serial Monitor
 #endif
 
+  DEBUG_PRINTLN();
   printLine();
   DEBUG_PRINTLN("Cryologger Iceberg Tracking Beacon v3.0");
   printLine();
@@ -225,12 +238,12 @@ void loop()
     DEBUG_PRINT("Alarm trigger: "); printDateTime();
 
     // Perform measurements
-    readRtc();      // Read RTC
     readSensors();  // Read attached sensors
     readGnss();     // Read GNSS
     logData();      // Write data to SD
     writeBuffer();  // Write the data to transmit buffer
     transmitData(); // Transmit data
+    printTimers();  // Print function execution timers
     setRtcAlarm();  // Set the next RTC alarm
   }
 

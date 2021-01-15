@@ -38,9 +38,10 @@ void readBattery()
 void goToSleep()
 {
   // Clear first-time flag after initial power-down
-  if (firstTimeFlag)
+  if (firstTimeFlag) {
     firstTimeFlag = false;
-
+  }
+  
 #if DEBUG
   Serial.flush();       // Wait for transmission of serial data to complete
   Serial.end();         // Disable Serial
@@ -122,6 +123,7 @@ void wakeUp()
   // If alarm is triggered, enable power to system
   if (alarmFlag)
   {
+    readRtc();            // Read RTC
     qwiicPowerOn();       // Enable power to Qwiic connector
     peripheralPowerOn();  // Enable power to peripherals
     configureSd();        // Configure microSD

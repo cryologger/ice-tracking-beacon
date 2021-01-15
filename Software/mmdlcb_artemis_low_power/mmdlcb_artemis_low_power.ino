@@ -18,17 +18,16 @@
 #include <SPI.h>
 #include <Wire.h>
 
-const byte peripheralPowerControl = G1;
-const byte qwiicPowerControl= G2;
+const byte peripheralPowerControl = 33;
+const byte qwiicPowerControl = 34;
 const byte sdChipSelect = 41;
 
 APM3_RTC myRTC;
 
-
 volatile bool alarmFlag       = false;
 bool ledState                 = LOW;    // LED toggle flag for blink() function
-byte alarmSeconds             = 0;
-byte alarmMinutes             = 1;
+byte alarmSeconds             = 30;
+byte alarmMinutes             = 0;
 byte alarmHours               = 0;
 unsigned long previousMillis  = 0;
 
@@ -79,7 +78,7 @@ void loop()
     Serial.print("Next rolling alarm: "); printAlarm();
   }
 
-  blinkLed(1, 100);
+  blinkLed(1, 2000);
 
   // Enter deep sleep and await RTC alarm interrupt
   goToSleep();

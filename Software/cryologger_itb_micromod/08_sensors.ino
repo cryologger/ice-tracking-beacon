@@ -22,14 +22,10 @@ void readSensors()
 
   if (online.bme280)
   {
-    // Change LED colour
-    //setLedColour(yellow);
-
-
-
-    // Wake-up, take readings and re-enter sleep mode
+    // Wake sensor and return to sleep once the measurement is made
     bme280.setMode(MODE_FORCED);
-
+    // Delay required to allow sensor to perform the measurement
+    while (bme280.isMeasuring() && millis() - loopStartTime < 1000);
     float temperature = bme280.readTempC();
     float humidity = bme280.readFloatHumidity();
     float pressure = bme280.readFloatPressure();
@@ -39,9 +35,6 @@ void readSensors()
     moMessage.humidity = humidity * 100;
     moMessage.pressure = pressure / 10;
 
-    // Change LED colour
-    //setLedColour(green);
-
     // Stop loop timer
     unsigned long loopEndTime = millis() - loopStartTime;
     DEBUG_PRINT("readSenors() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
@@ -50,6 +43,6 @@ void readSensors()
   {
     DEBUG_PRINTLN("Warning: SparkFun BME280 offline");
   }
-
-  sensorTimer = millis() - loopStartTime;
+  // Stop the loop timer
+  timer.sensor = millis() - loopStartTime;
 }

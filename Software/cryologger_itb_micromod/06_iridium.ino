@@ -3,9 +3,10 @@ void configureIridium()
 {
   if (modem.isConnected())
   {
-    modem.adjustATTimeout(30);          // Set AT timeout (Default = 20 seconds)
-    modem.adjustSendReceiveTimeout(iridiumTimeout); // Set send/receive timeout (Default = 300 seconds)
-    modem.enable841lowPower(true);      // Enable ATtiny841 low-power mode
+    modem.adjustATTimeout(30);                      // Set AT timeout (Default: 20 seconds)
+    modem.adjustSendReceiveTimeout(iridiumTimeout); // Set send/receive timeout (Default: 300 seconds)
+    modem.adjustStartupTimeout(180);                // Set Iridium transceiver startup timeout (Default: 240 seconds)
+    modem.enable841lowPower(true);                  // Enable ATtiny841 low-power mode
     online.iridium = true;
   }
   else
@@ -28,7 +29,7 @@ void writeBuffer()
   // Print MO-SBD union/structure
   printMoSbd();
   printMoSbdHex();
-  //printTransmitBuffer();
+  printTransmitBuffer();
 
   // Write zeroes to MO-SBD union/structure
   memset(&moMessage, 0, sizeof(moMessage));
@@ -41,10 +42,6 @@ void transmitData() {
   if ((online.iridium && (transmitCounter == transmitInterval)) ||
       (online.iridium && firstTimeFlag))
   {
-
-    // Change LED colour
-    //setLedColour(purple);
-
     // Start loop timer
     unsigned long loopStartTime = millis();
 
@@ -71,7 +68,6 @@ void transmitData() {
       if (err == ISBD_NO_MODEM_DETECTED)
       {
         DEBUG_PRINTLN("Warning: No modem detected! Check wiring.");
-        setLedColourIridium(err); // Set LED colour to appropriate return code
       }
     }
     else
@@ -91,13 +87,11 @@ void transmitData() {
       {
         DEBUG_PRINT("Warning: Transmission failed with error code ");
         DEBUG_PRINTLN(err);
-        setLedColourIridium(err); // Set LED colour to appropriate return code
       }
       else
       {
         blinkLed(10, 100);
         DEBUG_PRINTLN("MO-SBD transmission successful!");
-        setLedColourIridium(err); // Set LED colour to appropriate return code
 
         retransmitCounter = 0; // Clear message retransmit counter
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmit buffer array
@@ -152,7 +146,6 @@ void transmitData() {
         retransmitCounter = 0;
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmitBuffer array
       }
-      setLedColourIridium(err); // Set LED colour to appropriate return code
     }
 
     // Put modem to sleep
@@ -161,7 +154,6 @@ void transmitData() {
     if (err != ISBD_SUCCESS)
     {
       DEBUG_PRINT("Warning: Sleep failed error "); DEBUG_PRINTLN(err);
-      setLedColourIridium(err); // Set LED colour to appropriate return code
     }
 
     // Disable power to Qwiic Iridium 9603N
@@ -176,15 +168,17 @@ void transmitData() {
     DEBUG_PRINTLN("Enabling ATtiny841 low power mode...");
     modem.enable841lowPower(true);      // Enable the ATtiny841 low power mode
 
-    transmitCounter = 0;  // Reset transmit counter
-    unsigned long loopEndTime = millis() - loopStartTime; // Stop loop timer
-    iridiumTimer = loopEndTime;
-    moMessage.transmitDuration = loopEndTime / 1000;
+    // Reset transmit counter
+    transmitCounter = 0;
 
-    DEBUG_PRINT("transmitDuration: "); DEBUG_PRINTLN(loopEndTime / 1000);
+    // Stop the loop timer
+    timer.iridium = millis() - loopStartTime;
+    moMessage.transmitDuration = timer.iridium / 1000;
+
+    DEBUG_PRINT("transmitDuration: "); DEBUG_PRINTLN(moMessage.transmitDuration);
     DEBUG_PRINT("retransmitCounter: "); DEBUG_PRINTLN(retransmitCounter);
 
-    DEBUG_PRINT("transmitData() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
+    printSettings();
 
     // Check if reset flag was transmitted
     if (resetFlag)
@@ -222,40 +216,6 @@ void ISBDDiagsCallback(IridiumSBD *device, char c) {
 }
 #endif
 
-// Change LED colour to indicate return error code
-void setLedColourIridium(byte err)
-{
-  /*
-  if (err == 0) // ISBD_SUCCESS
-    setLedColour(green);
-  else if (err == 1) // ISBD_ALREADY_AWAKE
-    setLedColour(yellow);
-  else if (err == 2) // ISBD_SERIAL_FAILURE
-    setLedColour(yellow);
-  else if (err == 3) // ISBD_PROTOCOL_ERROR
-    setLedColour(blue);
-  else if (err == 4) // ISBD_CANCELLED
-    setLedColour(yellow);
-  else if (err == 5) // ISBD_NO_MODEM_DETECTED
-    setLedColour(red);
-  else if (err == 6) // ISBD_SBDIX_FATAL_ERROR
-    setLedColour(yellow);
-  else if (err == 7) // ISBD_SENDRECEIVE_TIMEOUT
-    setLedColour(orange);
-  else if (err == 8) // ISBD_RX_OVERFLOW
-    setLedColour(yellow);
-  else if (err == 9) // ISBD_REENTRANT
-    setLedColour(yellow);
-  else if (err == 10) // ISBD_IS_ASLEEP
-    setLedColour(yellow);
-  else if (err == 11) // ISBD_NO_SLEEP_PIN
-    setLedColour(yellow);
-  else if (err == 12) // ISBD_NO_NETWORK
-    setLedColour(yellow);
-  else if (err == 13) // ISBD_MSG_TOO_LONG
-    setLedColour(yellow);
-    */
-}
 
 // Call user function 1
 void userFunction1()

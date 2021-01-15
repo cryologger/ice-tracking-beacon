@@ -6,7 +6,6 @@ void configureGnss()
     gnss.setI2COutput(COM_TYPE_UBX); // Set I2C port to output UBX only (turn off NMEA noise)
     gnss.saveConfiguration();        // Save current settings to Flash and BBR
     online.gnss = true;
-    blinkLed(6, 250);
   }
   else
   {
@@ -71,14 +70,13 @@ void syncRtc()
     if (!rtcSyncFlag)
     {
       DEBUG_PRINTLN("Warning: RTC sync failed!");
-      //setLedColour(red); // Change LED colour to indicate RTC sync failure
     }
   }
   else {
     DEBUG_PRINTLN("Warning: u-blox GNSS not detected at default I2C address. Please check wiring.");
   }
 
-  syncTimer = millis() - loopStartTime;
+  timer.sync = millis() - loopStartTime;
 }
 
 // Read the GNSS receiver
@@ -162,15 +160,12 @@ void readGnss()
     // Reset valFix counter
     gnssFixCounter = 0;
 
-    unsigned long loopEndTime = millis() - loopStartTime;
-    DEBUG_PRINT("readGnss() function execution: ");
-    DEBUG_PRINT(loopEndTime);
-    DEBUG_PRINTLN(" ms");
   }
   else
   {
     DEBUG_PRINTLN("Warning: u-blox GNSS offline!");
     return;
   }
-  gnssTimer = millis() - loopStartTime;
+  // Stop the loop timer
+  timer.gnss = millis() - loopStartTime;
 }

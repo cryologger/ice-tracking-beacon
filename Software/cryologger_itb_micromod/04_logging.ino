@@ -1,6 +1,6 @@
 void configureSd() {
 
-  if (sd.begin(PIN_SD_CS, SD_SCK_MHZ(24))) {
+  if (sd.begin(SdSpiConfig(PIN_SD_CS, DEDICATED_SPI))) {
     online.microSd = true;
     blinkLed(3, 250);
   }
@@ -45,9 +45,10 @@ void createLogFile()
   updateFileCreate();
 
   // Write header to file
-  file.println("unixtime,temperature,humidity,pressure,latitude,longitude,satellites,"
-               "pdop,drift,voltage,transmitDuration,messageCounter,"
-               "rtcTimer, sdTimer, gnssTimer, iridiumTimer");
+  file.println("unixtime,temperature,humidity,pressure,latitude,longitude,"
+               "satellites,pdop,drift,voltage,transmitDuration,messageCounter,"
+               "rtcTimer,sdTimer,sensorTimer,gnssTimer,iridiumTimer,"
+               "bme280, microsd,iridium,gnss");
 
   // Sync the log file
   file.sync();
@@ -62,27 +63,32 @@ void createLogFile()
 // Log data to microSD
 void logData()
 {
-  unsigned long loopStartTime = micros(); // Start loop timer
+  unsigned long loopStartTime = millis(); // Start loop timer
 
   // Open log file and append data
   if (file.open(fileName, O_APPEND | O_WRITE))
   {
-    file.print(moMessage.unixtime);             file.print(", ");
-    file.print(moMessage.temperature / 100.0);  file.print(", ");
-    file.print(moMessage.humidity / 100.0);     file.print(", ");
-    file.print(moMessage.pressure / 100.0);     file.print(", ");
-    file.print(moMessage.latitude);             file.print(", ");
-    file.print(moMessage.longitude);            file.print(", ");
-    file.print(moMessage.satellites);           file.print(", ");
-    file.print(moMessage.pdop);                 file.print(", ");
-    file.print(moMessage.rtcDrift);             file.print(", ");
-    file.print(moMessage.voltage, 2);           file.print(", ");
-    file.print(moMessage.transmitDuration);     file.print(", ");
-    file.print(moMessage.messageCounter);       file.print(", ");
-    file.print(rtcTimer);                       file.print(", ");
-    file.print(sdTimer);                        file.print(", ");
-    file.print(gnssTimer);                      file.print(", ");
-    file.println(iridiumTimer);
+    file.print(moMessage.unixtime);             file.print(",");
+    file.print(moMessage.temperature / 100.0);  file.print(",");
+    file.print(moMessage.humidity / 100.0);     file.print(",");
+    file.print(moMessage.pressure / 100.0);     file.print(",");
+    file.print(moMessage.latitude);             file.print(",");
+    file.print(moMessage.longitude);            file.print(",");
+    file.print(moMessage.satellites);           file.print(",");
+    file.print(moMessage.pdop);                 file.print(",");
+    file.print(moMessage.rtcDrift);             file.print(",");
+    file.print(moMessage.voltage, 2);           file.print(",");
+    file.print(moMessage.transmitDuration);     file.print(",");
+    file.print(moMessage.messageCounter);       file.print(",");
+    file.print(timer.rtc);                      file.print(",");
+    file.print(timer.microSd);                  file.print(",");
+    file.print(timer.gnss);                     file.print(",");
+    file.print(timer.sensor);                   file.print(",");
+    file.print(timer.iridium);                  file.print(",");
+    file.print(online.bme280);                  file.print(",");
+    file.print(online.microSd);                 file.print(",");
+    file.print(online.gnss);                    file.print(",");
+    file.println(online.iridium);
 
     updateFileAccess(); // Update file access and write timestamps
   }
@@ -94,22 +100,22 @@ void logData()
   // Sync log file
   if (!file.sync())
   {
-    DEBUG_PRINTLN(F("Warning: File sync error!"));
+    DEBUG_PRINTLN("Warning: File sync error!");
   }
 
   // Check for write error
   if (file.getWriteError())
   {
-    DEBUG_PRINTLN(F("Warning: File write error!"));
+    DEBUG_PRINTLN("Warning: File write error!");
   }
 
   // Close log file
   if (!file.close())
   {
-    DEBUG_PRINTLN(F("Warning: File close error!"));
+    DEBUG_PRINTLN("Warning: File close error!");
   }
-
-  sdTimer = micros() - loopStartTime;
+  // Stop the loop timer
+  timer.microSd = millis() - loopStartTime;
 
   // Blink LED
   blinkLed(2, 100);

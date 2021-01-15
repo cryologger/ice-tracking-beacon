@@ -18,20 +18,23 @@ void configureRtc() {
   //rtc.setTime(12, 59, 50, 0, 1, 11, 20); // 2020-11-01 12:59:50.000 (hour, minutes, seconds, hundredths, day, month, year)
 
   // Set the initial RTC alarm to occur on hour rollover
-  rtc.setAlarm(rtc.hour, (rtc.minute + alarmMinutes) % 60, 0, 0, rtc.dayOfMonth, rtc.month); // (hour, minutes, seconds, hundredths, day, month)
+  rtc.setAlarm(rtc.hour, 0, 0, 0, rtc.dayOfMonth, rtc.month); // (hour, minutes, seconds, hundredths, day, month)
 
   // Set the RTC alarm mode
   rtc.setAlarmMode(5); // Alarm match on hundredths, seconds
 
   // Attach RTC alarm interrupt
   rtc.attachInterrupt();
+
+  // Clear the RTC alarm interrupt
+  rtc.clearInterrupt();
 }
 
 // Read the real-time clock
 void readRtc() {
 
   unsigned long loopStartTime = micros(); // Start loop timer
-  
+
   // Get the RTC's date and time
   rtc.getTime();
 
@@ -43,31 +46,17 @@ void readRtc() {
 
   //DEBUG_PRINT("Epoch time: "); DEBUG_PRINTLN(unixtime);
 
-  rtcTimer = micros() - loopStartTime;
-  //unsigned long loopEndTime = micros() - loopStartTime;
-  //DEBUG_PRINT("readRtc() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" us");
+  timer.rtc = micros() - loopStartTime;
 }
 
 // Set RTC alarm
 void setRtcAlarm()
 {
-  //(rtc.seconds + alarmSeconds) % 60
-
   // Calculate next alarm
   alarmTime = unixtime + alarmInterval;
 
   // Clear the RTC alarm interrupt
   rtc.clearInterrupt();
-
-  // Get the RTC's date and time
-  rtc.getTime();
-
-  // Set the RTC's rolling alarm
-  //rtc.setAlarm((rtc.hour + alarmHours) % 24,
-  //             (rtc.minute + alarmMinutes) % 60,
-  //             0,
-  //             0, rtc.dayOfMonth, rtc.month);
-
 
   // Clear first-time flag after initial power-down
   if (firstTimeFlag)
@@ -75,20 +64,24 @@ void setRtcAlarm()
     // Set the initial RTC alarm to occur on hour rollover
     rtc.setAlarm(0, 0, 0, 0, 0, 0); // (hour, minutes, seconds, hundredth, day, month)
 
+    // Set the initial RTC rolling alarm
+    //rtc.setAlarm((rtc.hour + alarmHours) % 24, (rtc.minute + alarmMinutes) % 60, 0, 0, rtc.dayOfMonth, rtc.month);
+    //(rtc.seconds + alarmSeconds) % 60
+
     // Set the RTC alarm mode
-    rtc.setAlarmMode(5); // Alarm match on hundredths, seconds, minutes
+    rtc.setAlarmMode(6); // Alarm match on hundredths, seconds, minutes
   }
   else
   {
     // Set alarm according to specified interval
-    rtc.setAlarm(hour(alarmTime), minute(alarmTime), second(alarmTime),
-                 0, day(alarmTime), month(alarmTime));
+    rtc.setAlarm(hour(alarmTime), minute(alarmTime), 0, 0, day(alarmTime), month(alarmTime));
 
     // Set the RTC alarm mode
     rtc.setAlarmMode(4); // Alarm match on hundredths, seconds and minutes, hours
   }
 
   // Print the next RTC alarm date and time
+  DEBUG_PRINT("Datetime: "); printDateTime();
   DEBUG_PRINT("Next alarm: "); printAlarm();
 }
 
