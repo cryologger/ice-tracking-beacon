@@ -79,11 +79,11 @@ void logData()
     file.print(moMessage.rtcDrift);             file.print(",");
     file.print(moMessage.voltage, 2);           file.print(",");
     file.print(moMessage.transmitDuration);     file.print(",");
-    file.print(moMessage.messageCounter);       file.print(",");
+    file.print(messageCounter);                 file.print(",");
     file.print(timer.rtc);                      file.print(",");
     file.print(timer.microSd);                  file.print(",");
-    file.print(timer.gnss);                     file.print(",");
     file.print(timer.sensor);                   file.print(",");
+    file.print(timer.gnss);                     file.print(",");
     file.print(timer.iridium);                  file.print(",");
     file.print(online.bme280);                  file.print(",");
     file.print(online.microSd);                 file.print(",");

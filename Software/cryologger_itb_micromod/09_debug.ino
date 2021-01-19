@@ -35,7 +35,7 @@ void printTimers()
   printLine();
   DEBUG_PRINT("rtc: ");     printTab(2);  DEBUG_PRINTLN(timer.rtc);
   DEBUG_PRINT("sync: ");    printTab(2);  DEBUG_PRINTLN(timer.sync);
-  DEBUG_PRINT("microsd: "); printTab(1);  DEBUG_PRINTLN(timer.microsd);
+  DEBUG_PRINT("microsd: "); printTab(1);  DEBUG_PRINTLN(timer.microSd);
   DEBUG_PRINT("sensor: ");  printTab(1);  DEBUG_PRINTLN(timer.sensor);
   DEBUG_PRINT("gnss: ");    printTab(2);  DEBUG_PRINTLN(timer.gnss);
   DEBUG_PRINT("iridium: "); printTab(1);  DEBUG_PRINTLN(timer.iridium);

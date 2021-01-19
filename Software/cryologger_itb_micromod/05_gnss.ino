@@ -51,7 +51,7 @@ void syncRtc()
         tm.Minute = gnss.getMinute();
         tm.Second = gnss.getSecond();
         time_t gnssEpoch = makeTime(tm); // Convert tmElements to time_t
-        int rtcDrift = rtc.getEpoch() - gnssEpoch; // Calculate time difference
+        long rtcDrift = rtc.getEpoch() - gnssEpoch; // Calculate time difference
 
         // Write data to union
         moMessage.rtcDrift = rtcDrift;
@@ -121,8 +121,8 @@ void readGnss()
         // Sync RTC with GNSS if date and time are valid
         if (gnss.getDateValid() && gnss.getTimeValid()) {
 
-          // Get RTC's UNIX Epoch time
-          time_t rtcEpoch = rtc.getEpoch();
+          rtc.getTime(); // Get the RTC's date and time
+          time_t rtcEpoch = rtc.getEpoch(); // Get UNIX Epoch time
 
           // Calculate RTC drift
           tmElements_t tm;
@@ -137,10 +137,11 @@ void readGnss()
           time_t gnssEpoch = makeTime(tm);
 
           // Calculate RTC drift
-          int rtcDrift = rtcEpoch - gnssEpoch;
+          long rtcDrift = rtcEpoch - gnssEpoch;
 
-          // Set RTC date and time
-          rtc.setEpoch(gnssEpoch);
+          // Sync RTC date and time
+          rtc.setTime(gnss.getHour(), gnss.getMinute(), gnss.getSecond(), gnss.getMillisecond() / 10,
+                      gnss.getDay(), gnss.getMonth(), gnss.getYear() - 2000);
 
           // Write data to union
           moMessage.rtcDrift = rtcDrift;

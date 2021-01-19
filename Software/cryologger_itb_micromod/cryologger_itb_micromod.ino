@@ -32,9 +32,9 @@
 // -----------------------------------------------------------------------------
 // Debugging macros
 // -----------------------------------------------------------------------------
-#define DEBUG           false   // Output debug messages to Serial Monitor
-#define DEBUG_GNSS      false   // Output GNSS debug information
-#define DEBUG_IRIDIUM   false   // Output Iridium debug messages to Serial Monitor
+#define DEBUG           true   // Output debug messages to Serial Monitor
+#define DEBUG_GNSS      true   // Output GNSS debug information
+#define DEBUG_IRIDIUM   true   // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
 #define DEBUG_PRINT(x)            Serial.print(x)
@@ -96,7 +96,7 @@ volatile int  watchdogCounter     = 0;      // Watchdog Timer interrupt counter
 bool          firstTimeFlag       = false;   // Flag to determine if the program is running for the first time
 bool          rtcSyncFlag         = true;   // Flag to determine if RTC should be set using GNSS time
 bool          resetFlag           = 0;      // Flag to force system reset using Watchdog Timer
-byte          gnssFixCounter      = 0;      // GNSS valid fix counter
+byte          gnssFixCounter      = 0;      // GNSS valid fix counter 
 byte          gnssFixCounterMax   = 10;      // GNSS max valid fix counter
 uint8_t       transmitBuffer[340] = {};     // Iridium 9603 transmission buffer (SBD MO message max: 340 bytes)
 char          fileName[30]        = "";     // Keep a record of this file name so that it can be re-opened upon wakeup from sleep
