@@ -14,7 +14,14 @@ The Cryologger is based on the open-source Arduino platform (www.arduino.cc) and
 
 Planned for extended deployments in harsh Arctic conditions, the Cryologger can provide long-term measurements of GPS position, temperature, pressure, pitch, roll, tilt-compensated heading and battery voltage. Data are transmitted over the Iridium satellite network at specified intervals and can be remotely updated based on the desired sampling frequency. Collected data are made freely available and can be viewed in near-real time at https://cryologger.org.
 
-#### Materials
+To access the project archives for Cryologger v1.0, deployed in 2018, and v2.0, deployed in 2019, please see the following links:
+#### v1.0
+https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/master/Archive/v1.0
+#### v2.0
+https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/master/Archive/v2.0
+
+
+#### Materials (v3.0 prototype)
 
 | Component | Product | Cost (USD) |
 | --- | --- | :---: | 
