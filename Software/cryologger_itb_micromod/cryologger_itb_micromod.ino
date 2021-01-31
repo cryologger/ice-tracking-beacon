@@ -77,15 +77,15 @@ SFE_UBLOX_GNSS    gnss;           // I2C Address: 0x42
 // ----------------------------------------------------------------------------
 // User defined global variable declarations
 // ----------------------------------------------------------------------------
-unsigned long alarmInterval         = 300;  // Sleep duration in seconds
+unsigned long alarmInterval         = 120;  // Sleep duration in seconds
 byte          alarmSeconds          = 0;
 byte          alarmMinutes          = 5;
 byte          alarmHours            = 0;
 unsigned int  transmitInterval      = 4;    // Number of messages to transmit in each Iridium transmission (340 byte limit)
 unsigned int  retransmitCounterMax  = 1;    // Number of failed data transmissions to reattempt (340 byte limit)
-unsigned int  gnssTimeout           = 300;   // Timeout for GNSS signal acquisition (s)
+unsigned int  gnssTimeout           = 30;   // Timeout for GNSS signal acquisition (s)
 int           iridiumTimeout        = 30;   // Timeout for Iridium transmission (s)
-unsigned int  rtcSyncTimeout        = 300;   // Timeout for GNSS sync RTC function (s)
+unsigned int  rtcSyncTimeout        = 30;   // Timeout for GNSS sync RTC function (s)
 
 // ----------------------------------------------------------------------------
 // Global variable declarations

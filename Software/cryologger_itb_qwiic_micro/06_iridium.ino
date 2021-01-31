@@ -30,6 +30,9 @@ void writeBuffer()
 // Transmit data using RockBLOCK 9603
 void transmitData()
 {
+  // Start loop timer
+  unsigned long loopStartTime = millis();
+
   // Enable power to Iridium 9603
   digitalWrite(PIN_IRIDIUM_EN, HIGH);
 
@@ -38,9 +41,6 @@ void transmitData()
   {
     // Change LED colour
     setLedColour(purple);
-
-    // Start loop timer
-    unsigned long loopStartTime = millis();
 
     // Start the serial port connected to the satellite modem
     IRIDIUM_PORT.begin(19200);
@@ -72,12 +72,6 @@ void transmitData()
 
       // Check if transmission was successful
       if (err != ISBD_SUCCESS)
-      {
-        DEBUG_PRINT("Warning: Transmission failed with error code ");
-        DEBUG_PRINTLN(err);
-        setLedColourIridium(err); // Set LED colour to appropriate return code
-      }
-      else
       {
         DEBUG_PRINTLN("MO-SBD transmission successful!");
         setLedColourIridium(err); // Set LED colour to appropriate return code
@@ -123,6 +117,13 @@ void transmitData()
           printSettings();
         }
       }
+      else
+      {
+        DEBUG_PRINT("Warning: Transmission failed with error code ");
+        DEBUG_PRINTLN(err);
+        setLedColourIridium(err); // Set LED colour to appropriate return code
+      }
+
     }
 
     // Store message in transmit buffer if transmission or modem begin fails
@@ -130,12 +131,19 @@ void transmitData()
     {
       retransmitCounter++;
       // Reset counter if reattempt limit is exceeded
-      if (retransmitCounter >= retransmitCounterMax)
+      if (retransmitCounter > retransmitCounterMax)
       {
         retransmitCounter = 0;
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmitBuffer array
       }
       setLedColourIridium(err); // Set LED colour to appropriate return code
+    }
+
+    // Clear transmit buffer if program running for the first time
+    if (firstTimeFlag)
+    {
+      retransmitCounter = 0;
+      memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmitBuffer array
     }
 
     // Put modem to sleep
@@ -154,10 +162,12 @@ void transmitData()
     //digitalWrite(PIN_IRIDIUM_EN, LOW);
 
     transmitCounter = 0;  // Reset transmit counter
-    unsigned long loopEndTime = millis() - loopStartTime; // Stop loop timer
-    moMessage.transmitDuration = loopEndTime / 1000;
 
-    DEBUG_PRINT("transmitData() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
+    // Stop the loop timer
+    timer.iridium = millis() - loopStartTime;
+    moMessage.transmitDuration = timer.iridium / 1000;
+
+    DEBUG_PRINT("transmitDuration: "); DEBUG_PRINTLN(moMessage.transmitDuration);
     DEBUG_PRINT("retransmitCounter: "); DEBUG_PRINTLN(retransmitCounter);
 
     // Check if reset flag was transmitted

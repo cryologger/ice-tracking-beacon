@@ -61,29 +61,21 @@ void enablePower() {
 }
 
 // Disable power to MOSFET
-void disablePower() {
+void disablePower()
+{
   digitalWrite(PIN_MOSFET, HIGH);
 }
 
 // Enter deep sleep
-void goToSleep() {
-
-  DEBUG_PRINTLN("Entering deep sleep...");
-  DEBUG_PRINTLN();
-
-  // Do not change serial settings on Watchdog Timer interrupts
-  if (!watchdogFlag)
-  {
-    disableSerial();
-  }
-
+void goToSleep()
+{
   // Clear first-time flag after initial power-down
   if (firstTimeFlag)
   {
     firstTimeFlag = false;
   }
 
-  //setLedColour(off); // Turn off LED
+  setLedColour(off); // Turn off LED
   digitalWrite(LED_BUILTIN, LOW);
   disablePower();
 
@@ -96,16 +88,13 @@ void goToSleep() {
 // Wake from deep sleep
 void wakeUp() {
 
-#if DEBUG
   // Re-configure all devices
   enableSerial();       // Re-enable serial port
-#endif
-
   enablePower();        // Enable power to MOSFET controlled components
   configureLed();       // Configure WS2812B RGB LED
   configureGnss();      // Configure GNSS receiver
   configureImu();       // Configure interial measurement unit
-  //configureSensors();   // Configure attached sensors
+  configureSensors();   // Configure attached sensors
   //configureIridium();   // Configure Iridium 9603 modem
 }
 

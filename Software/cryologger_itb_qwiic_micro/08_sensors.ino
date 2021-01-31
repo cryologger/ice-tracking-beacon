@@ -19,7 +19,7 @@ void readSensors()
 {
   // Check if sensor(s) online
   if (online.bme280) {
-    
+
     setLedColour(yellow); // Change LED colour
 
     // Start the loop timer
@@ -41,12 +41,12 @@ void readSensors()
     // Change LED colour
     setLedColour(green);
 
-    // Stop loop timer
-    unsigned long loopEndTime = millis() - loopStartTime;
-    DEBUG_PRINT("readSenors() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
+    // Stop the loop timer
+    timer.sensor = millis() - loopStartTime;
   }
-  else {
-    DEBUG_PRINTLN("Warning: BME280 offline!");
+  else 
+  {
+    DEBUG_PRINTLN("Warning: SparkFun BME280 offline!");
     setLedColour(red); // Change LED colour
   }
 }

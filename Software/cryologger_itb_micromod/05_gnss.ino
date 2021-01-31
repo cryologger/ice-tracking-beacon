@@ -25,7 +25,7 @@ void readGnss()
   byte gnssFixCounter = 0; // Reset GNSS fix counter
   bool rtcSyncFlag = false; // Clear RTC sync flag
 
-  // Check if GNSS receiver is online
+  // Check if GNSS initialized successfully
   if (online.gnss)
   {
     DEBUG_PRINTLN("Acquiring GNSS fix...");

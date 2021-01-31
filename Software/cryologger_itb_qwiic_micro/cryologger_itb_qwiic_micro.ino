@@ -68,7 +68,7 @@
 
 // ------------------------------------------------------------------------------------------------
 // Pin definitions
-// ------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------
 #define PIN_VBAT            A0
 #define PIN_IRIDIUM_EN      3
 #define PIN_IRIDIUM_SLEEP   4
@@ -76,9 +76,9 @@
 #define PIN_MOSFET          6
 #define PIN_LED             7
 
-// ------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------
 // Object instantiations
-// ------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------
 Adafruit_NeoPixel led(1, PIN_LED, NEO_GRB + NEO_KHZ800);
 BME280            bme280;         // I2C Address: 0x77
 ICM_20948_I2C     imu;            // I2C Address: 0x69
@@ -92,23 +92,24 @@ const float R2 = 998700.0;    // Voltage divider resistor 2
 //const float R1 = 1000000.0;   // Voltage divider resistor 1
 //const float R2 = 1000000.0;    // Voltage divider resistor 2
 
-// ------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------
 // User defined global variable declarations
-// ------------------------------------------------------------------------------------------------ 
-unsigned long alarmInterval         = 10800;   // Sleep duration in seconds
+// ------------------------------------------------------------------------------------------------
+unsigned long alarmInterval         = 3600;  // Sleep duration in seconds
 byte          alarmMinutes          = 2;      // RTC rolling alarm mintues
 byte          alarmHours            = 0;      // RTC rolling alarm hours
 byte          alarmDate             = 0;      // RTC rolling alarm days
-byte          transmitInterval      = 1;      // Number of messages contained in each Iridium transmission (340-byte limit)
-byte          retransmitCounterMax  = 10;     // Number of failed data transmissions to reattempt (340-byte limit)
-int           gnssTimeout           = 300;    // Timeout for GNSS signal acquisition (s)
-int           iridiumTimeout        = 180;    // Timeout for Iridium transmission (s)
+unsigned int  transmitInterval      = 1;      // Number of messages to transmit in each Iridium transmission (340 byte limit)
+unsigned int  retransmitCounterMax  = 1;      // Number of failed data transmissions to reattempt (340 byte limit)
+unsigned int  gnssTimeout           = 300;    // Timeout for GNSS signal acquisition (s)
+int           iridiumTimeout        = 180;     // Timeout for Iridium transmission (s)
+unsigned int  rtcSyncTimeout        = 300;    // Timeout for GNSS sync RTC function (s)
 unsigned long ledDelay              = 2000;   // Duration of RGB LED colour change (ms)
 
-// ------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------
 // Global variable declarations
-// ------------------------------------------------------------------------------------------------ 
-volatile bool alarmFlag             = true;   // Flag for alarm interrupt service routine
+// ------------------------------------------------------------------------------------------------
+volatile bool alarmFlag             = true;  // Flag for alarm interrupt service routine
 volatile bool watchdogFlag          = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter       = 0;      // Watchdog Timer interrupt counter
 bool          firstTimeFlag         = true;   // Flag to determine if the program is running for the first time
@@ -124,9 +125,9 @@ unsigned long previousMillis        = 0;      // Global millis() timer
 unsigned long powerDelay            = 2500;   // Delay after power to MOSFET is enabled
 time_t        alarmTime, unixtime   = 0;      // Global RTC time variables
 
-// ------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------
 // WS2812B RGB LED colour definitons
-// ------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------
 uint32_t white    = led.Color(32, 32, 32);
 uint32_t red      = led.Color(32, 0, 0);
 uint32_t green    = led.Color(0, 32, 0);
@@ -140,9 +141,9 @@ uint32_t pink     = led.Color(32, 0, 16);
 uint32_t lime     = led.Color(16, 32, 0);
 uint32_t off      = led.Color(0, 0, 0);
 
-// ------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------
 // Data transmission unions/structures
-// ------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------
 // Union to transmit Iridium Short Burst Data (SBD) Mobile Originated (MO) message
 typedef union
 {
@@ -190,9 +191,19 @@ struct struct_online
   bool bme280 = false;
 } online;
 
-// ------------------------------------------------------------------------------------------------ 
+// Union to store loop timers
+struct struct_timer
+{
+  unsigned long rtc;
+  unsigned long sync;
+  unsigned long sensor;
+  unsigned long gnss;
+  unsigned long iridium;
+} timer;
+
+// ------------------------------------------------------------------------------------------------
 // Setup
-// ------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------
 void setup()
 {
   // Pin assignments
@@ -202,7 +213,7 @@ void setup()
   digitalWrite(LED_BUILTIN, LOW);
   digitalWrite(PIN_MOSFET, HIGH);     // Disable MOSFET
   digitalWrite(PIN_IRIDIUM_EN, LOW);  // Disable power to Iridium 9603
-  
+
   // Set analog resolution to 12-bits
   analogReadResolution(12);
 
@@ -210,7 +221,7 @@ void setup()
   analogReadCorrection(17, 2057);
 
   Wire.begin(); // Initialize I2C
-  Wire.setClock(400000); // Set I2C clock speed to 400 kHz
+  Wire.setClock(100000); // Set I2C clock speed to 400 kHz
 
 #if DEBUG
   SERIAL_PORT.begin(115200); // Begin serial at 115200 baud
@@ -220,7 +231,7 @@ void setup()
 
   enablePower(); // Enable power to MOSFET controlled components
   configureLed(); // Configure WS2812B RGB LED
-  
+
   DEBUG_PRINTLN();
   printLine();
   DEBUG_PRINTLN("Cryologger - Iceberg Tracking Beacon v3.0");
@@ -233,7 +244,7 @@ void setup()
   configureImu();         // Configure interial measurement unit (IMU)
   configureSensors();     // Configure attached sensors
   configureIridium();     // Configure Iridium 9603 transceiver
-  //syncRtc();              // Synchronize RTC with GNSS
+  syncRtc();              // Synchronize RTC with GNSS
 
   DEBUG_PRINT("Datetime: "); printDateTime();
   DEBUG_PRINT("Initial alarm: "); printAlarm();
@@ -241,9 +252,9 @@ void setup()
   setLedColour(white); // Change LED colour to indicate completion of setup
 }
 
-// ------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------
 // Loop
-// ------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------
 void loop()
 {
   // Check if alarm ISR flag was set (protects against false triggers)
@@ -271,7 +282,14 @@ void loop()
       readGnss();           // Read the GNSS
       writeBuffer();        // Write the data to transmit buffer
       transmitData();       // Transmit data
+      printTimers();        // Print function execution timers
       setRtcAlarm();        // Set the RTC alarm
+
+      DEBUG_PRINTLN("Entering deep sleep...");
+      DEBUG_PRINTLN();
+
+      // Disable serial
+      disableSerial();
     }
   }
 

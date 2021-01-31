@@ -14,13 +14,33 @@ void printTab(byte _times)
     DEBUG_PRINT("\t");
   }
 }
+
 // Print user-defined beacon settings
-void printSettings() {
-  DEBUG_PRINT("alarmInterval: ");     DEBUG_PRINTLN(alarmInterval);
-  DEBUG_PRINT("transmitInterval: ");  DEBUG_PRINTLN(transmitInterval);
-  DEBUG_PRINT("retransmitCounter: "); DEBUG_PRINTLN(retransmitCounter);
-  DEBUG_PRINT("resetFlag: ");         DEBUG_PRINTLN(resetFlag);
+void printSettings()
+{
+  printLine();
+  DEBUG_PRINTLN("Settings");
+  printLine();
+  DEBUG_PRINT("alarmInterval: ");     printTab(2);  DEBUG_PRINTLN(alarmInterval);
+  DEBUG_PRINT("transmitInterval: ");  printTab(1);  DEBUG_PRINTLN(transmitInterval);
+  DEBUG_PRINT("retransmitCounter: "); printTab(1);  DEBUG_PRINTLN(retransmitCounter);
+  DEBUG_PRINT("resetFlag: ");         printTab(2);  DEBUG_PRINTLN(resetFlag);
+  printLine();
 }
+
+void printTimers()
+{
+  //printLine();
+  DEBUG_PRINTLN("Function Execution Timers (ms)");
+  printLine();
+  DEBUG_PRINT("rtc: ");     printTab(2);  DEBUG_PRINTLN(timer.rtc);
+  DEBUG_PRINT("sync: ");    printTab(2);  DEBUG_PRINTLN(timer.sync);
+  DEBUG_PRINT("sensor: ");  printTab(1);  DEBUG_PRINTLN(timer.sensor);
+  DEBUG_PRINT("gnss: ");    printTab(2);  DEBUG_PRINTLN(timer.gnss);
+  DEBUG_PRINT("iridium: "); printTab(1);  DEBUG_PRINTLN(timer.iridium);
+  printLine();
+}
+
 // Print contents of union/structure storing Mobile Originated (MO) SBD message data
 void printMoSbd() 
 {
