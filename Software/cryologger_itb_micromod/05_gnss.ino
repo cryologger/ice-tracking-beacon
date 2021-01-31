@@ -3,9 +3,8 @@ void configureGnss()
 {
   if (gnss.begin())
   {
-    gnss.setNavigationFrequency(1);
-    gnss.setI2COutput(COM_TYPE_UBX); // Set I2C port to output UBX only (turn off NMEA noise)
-    gnss.saveConfiguration();        // Save current settings to Flash and BBR
+    gnss.setI2COutput(COM_TYPE_UBX);  // Set I2C port to output UBX only
+    gnss.saveConfiguration();         // Save current settings to Flash and BBR
     online.gnss = true;
   }
   else
@@ -22,16 +21,16 @@ void readGnss()
   // Start loop timer
   unsigned long loopStartTime = millis();
 
-  bool gnssFixFlag = false; // Reset fix flag
-  byte gnssFixCounter = 0; // Reset fix counter
+  bool gnssFixFlag = false; // Reset GNSS fix flag
+  byte gnssFixCounter = 0; // Reset GNSS fix counter
   bool rtcSyncFlag = false; // Clear RTC sync flag
 
   // Check if GNSS receiver is online
   if (online.gnss)
   {
-    // Acquire valid GNSS position fix
-    Serial.println(F("Acquiring GNSS fix..."));
+    DEBUG_PRINTLN("Acquiring GNSS fix...");
 
+    // Attempt to acquire a valid GNSS position fix
     while (!gnssFixFlag && millis() - loopStartTime < gnssTimeout * 1000UL)
     {
       byte fixType = gnss.getFixType();
@@ -48,19 +47,19 @@ void readGnss()
       DEBUG_PRINTLN(gnssBuffer);
 #endif
 
-      // Check for 3D GNSS fix
+      // Check if GNSS fix is valid
       if (fixType == 3)
       {
-        gnssFixCounter += 2; // Increment counter
+        gnssFixCounter += 2; // Increment fix counter
       }
       else if (fixType == 2)
       {
         gnssFixCounter += 1; // Increment counter
       }
 
-      // Check if GNSS fix threshold has been reached
-      if (gnssFixCounter >= gnssFixCounterMax) {
-
+      // If GNSS fix threshold has been reached record GNSS position
+      if (gnssFixCounter >= gnssFixCounterMax)
+      {
         DEBUG_PRINTLN("A GNSS fix was found!");
         gnssFixFlag = true; // Set fix flag
 
@@ -70,10 +69,10 @@ void readGnss()
         moMessage.satellites = gnss.getSIV();
         moMessage.pdop = gnss.getPDOP();
 
-        // Sync RTC with GNSS
-        if ((fixType == 3) && timeValidFlag && dateValidFlag) {
-
-          // Calculate RTC drift
+        // Attempt to sync RTC with GNSS
+        if ((fixType == 3) && timeValidFlag && dateValidFlag)
+        {
+          // Convert to Unix Epoch time
           tmElements_t tm;
           tm.Year = gnss.getYear() - 1970;
           tm.Month = gnss.getMonth();
@@ -81,10 +80,8 @@ void readGnss()
           tm.Hour = gnss.getHour();
           tm.Minute = gnss.getMinute();
           tm.Second = gnss.getSecond();
-          time_t gnssEpoch = makeTime(tm); // Convert tmElements to time_t
-
-          // Get the RTC's date and time
-          rtc.getTime();
+          time_t gnssEpoch = makeTime(tm);
+          rtc.getTime(); // Get the RTC's date and time
 
           // Calculate drift
           int rtcDrift = rtc.getEpoch() - gnssEpoch;
@@ -94,12 +91,12 @@ void readGnss()
           // Write data to union
           moMessage.rtcDrift = rtcDrift;
 
-          // Sync RTC date and time
+          // Set RTC date and time
           rtc.setTime(gnss.getHour(), gnss.getMinute(), gnss.getSecond(), gnss.getMillisecond() / 10,
                       gnss.getDay(), gnss.getMonth(), gnss.getYear() - 2000);
 
-          rtcSyncFlag = true;
-          DEBUG_PRINT("RTC time synced: "); printDateTime();
+          rtcSyncFlag = true; // Set flag
+          DEBUG_PRINT("RTC time synced to: "); printDateTime();
         }
         else
         {
@@ -109,7 +106,7 @@ void readGnss()
       ISBDCallback();
     }
 
-    // Check if a GNSS fix was acquired
+    // Check if a valid GNSS fix was acquired
     if (!gnssFixFlag)
     {
       DEBUG_PRINTLN("Warning: No GNSS fix was found!");
@@ -135,7 +132,7 @@ void syncRtc()
   byte timeValidityCounter = 0;   // Reset time validity counter
 
   DEBUG_PRINTLN("Attempting to sync RTC with GNSS...");
-  
+
   // Sync RTC with GNSS
   while (!timeValidityFlag && millis() - loopStartTime < rtcSyncTimeout * 1000UL)
   {
@@ -146,19 +143,18 @@ void syncRtc()
     // Check for GNSS fix and valid time and date flags
     if ((fixType == 3) && timeValidFlag && dateValidFlag)
     {
-      timeValidityCounter += 2; // Increment GNSS fix counter
+      timeValidityCounter += 2; // Increment counter
+    }
+    else if ((fixType == 2) && timeValidFlag && dateValidFlag)
+    {
+      timeValidityCounter += 1; // Increment counter
     }
 
-    if ((fixType == 2) && timeValidFlag && dateValidFlag)
-    {
-      timeValidityCounter += 1; // Increment GNSS fix counter
-    }
-    
     // Sync RTC with GNSS if date and time are valid
     if (timeValidityCounter >= 10)
     {
       timeValidityFlag = true; // Set flag
-      
+
       // Convert to Unix Epoch time
       tmElements_t tm;
       tm.Year = gnss.getYear() - 1970;
@@ -171,7 +167,7 @@ void syncRtc()
       rtc.getTime(); // Get the RTC's date and time
 
       // Calculate drift
-      int rtcDrift = rtc.getEpoch() - gnssEpoch; 
+      int rtcDrift = rtc.getEpoch() - gnssEpoch;
 
       DEBUG_PRINT("RTC drift: "); DEBUG_PRINTLN(rtcDrift);
 
