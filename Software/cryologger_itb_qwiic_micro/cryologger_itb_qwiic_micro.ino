@@ -37,9 +37,9 @@
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
 // ------------------------------------------------------------------------------------------------
-#define DEBUG           false   // Output debug messages to Serial Monitor
-#define DEBUG_GNSS      false   // Output GNSS debug information
-#define DEBUG_IRIDIUM   false   // Output Iridium debug messages to Serial Monitor
+#define DEBUG           true   // Output debug messages to Serial Monitor
+#define DEBUG_GNSS      true   // Output GNSS debug information
+#define DEBUG_IRIDIUM   true   // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
 #define DEBUG_PRINT(x)            SERIAL_PORT.print(x)
@@ -103,7 +103,7 @@ unsigned int  transmitInterval      = 1;      // Number of messages to transmit 
 unsigned int  retransmitCounterMax  = 1;      // Number of failed data transmissions to reattempt (340 byte limit)
 unsigned int  gnssTimeout           = 300;    // Timeout for GNSS signal acquisition (s)
 int           iridiumTimeout        = 180;     // Timeout for Iridium transmission (s)
-unsigned int  rtcSyncTimeout        = 300;    // Timeout for GNSS sync RTC function (s)
+unsigned int  rtcSyncTimeout        = 60;    // Timeout for GNSS sync RTC function (s)
 unsigned long ledDelay              = 2000;   // Duration of RGB LED colour change (ms)
 
 // ------------------------------------------------------------------------------------------------
@@ -115,7 +115,7 @@ volatile int  watchdogCounter       = 0;      // Watchdog Timer interrupt counte
 bool          firstTimeFlag         = true;   // Flag to determine if the program is running for the first time
 bool          rtcSyncFlag           = false;  // Flag to determine if RTC has been synced with GNSS time
 bool          resetFlag             = 0;      // Flag to force system reset using Watchdog Timer
-byte          gnssFixCounterMax     = 5;      // GNSS max valid fix counter
+byte          gnssFixCounterMax     = 10;      // GNSS max valid fix counter
 float         voltage               = 0.0;    // Battery voltage
 uint8_t       transmitBuffer[340]   = {};     // Iridium 9603 transmission buffer (MO SBD message max length: 340 bytes)
 unsigned int  messageCounter        = 0;      // Iridium 9603 transmission counter (zero indicates a reset)
@@ -197,6 +197,7 @@ struct struct_timer
   unsigned long rtc;
   unsigned long sync;
   unsigned long sensor;
+  unsigned long imu;
   unsigned long gnss;
   unsigned long iridium;
 } timer;

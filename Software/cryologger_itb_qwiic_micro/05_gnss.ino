@@ -60,6 +60,8 @@ void readGnss()
         gnssFixCounter += 1; // Increment counter
       }
 
+      DEBUG_PRINT("gnssFixCounter: "); DEBUG_PRINTLN(gnssFixCounter);
+
       // If GNSS fix threshold has been reached record GNSS position
       if (gnssFixCounter >= gnssFixCounterMax)
       {
@@ -73,7 +75,7 @@ void readGnss()
         moMessage.pdop = gnss.getPDOP();
 
         // Attempt to sync RTC with GNSS
-        if ((fixType == 3) && timeValidFlag && dateValidFlag)
+        if ((fixType >= 2) && timeValidFlag && dateValidFlag)
         {
           // Convert to Unix Epoch time
           tmElements_t tm;
@@ -95,8 +97,8 @@ void readGnss()
           moMessage.rtcDrift = rtcDrift;
 
           // Set RTC date and time
-          rtc.setTime(gnss.getHour(), gnss.getMinute(), gnss.getSecond(), gnss.getMillisecond() / 10,
-                      gnss.getDay(), gnss.getMonth(), gnss.getYear() - 2000);
+          rtc.setTime(gnss.getSecond(), gnss.getMinute(), gnss.getHour(), 0,
+                      gnss.getDay(), gnss.getMonth(), gnss.getYear());
 
           rtcSyncFlag = true; // Set flag
           DEBUG_PRINT("RTC time synced to: "); printDateTime();
@@ -182,8 +184,8 @@ void syncRtc()
       moMessage.rtcDrift = rtcDrift;
 
       // Set RTC date and time
-      rtc.setTime(gnss.getHour(), gnss.getMinute(), gnss.getSecond(), gnss.getMillisecond() / 10,
-                  gnss.getDay(), gnss.getMonth(), gnss.getYear() - 2000);
+      rtc.setTime(gnss.getSecond(), gnss.getMinute(), gnss.getHour(), 0,
+                  gnss.getDay(), gnss.getMonth(), gnss.getYear());
 
       rtcSyncFlag = true; // Set flag
       setLedColour(green); // Change LED colour to indicate RTC was synced
@@ -194,7 +196,7 @@ void syncRtc()
   if (!rtcSyncFlag)
   {
     DEBUG_PRINTLN("Warning: RTC sync failed!");
-    setLedColour(orange); // Change LED colour to indicate RTC was synced
+    setLedColour(red); // Change LED colour to indicate RTC was synced
   }
   // Stop loop timer
   timer.sync = millis() - loopStartTime;

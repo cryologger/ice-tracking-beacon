@@ -5,7 +5,7 @@ void configureIridium()
   modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
   modem.adjustATTimeout(20); // Adjust timeout timer for serial AT commands (default = 20 s)
   modem.adjustSendReceiveTimeout(iridiumTimeout); // Adjust timeout timer for library send/receive commands (default = 300 s)
-  modem.adjustStartupTimeout(120); // Adjust timeout for Iridium modem startup (default = 240 s)
+  modem.adjustStartupTimeout(60); // Adjust timeout for Iridium modem startup (default = 240 s)
 }
 
 // Write data from structure to transmit buffer

@@ -36,6 +36,8 @@ void configureRtc()
   // Configure and attach interrupt on the INT pin
   pinMode(PIN_RTC_INT, INPUT_PULLUP);
   LowPower.attachInterruptWakeup(PIN_RTC_INT, alarmIsr, FALLING);
+
+  DEBUG_PRINTLN(rtc.stringTime8601());
 }
 
 // Read RTC
