@@ -77,7 +77,7 @@ SFE_UBLOX_GNSS    gnss;           // I2C Address: 0x42
 // ----------------------------------------------------------------------------
 // User defined global variable declarations
 // ----------------------------------------------------------------------------
-unsigned long alarmInterval         = 120;  // Sleep duration in seconds
+unsigned long alarmInterval         = 300;  // Sleep duration in seconds
 byte          alarmSeconds          = 0;
 byte          alarmMinutes          = 5;
 byte          alarmHours            = 0;
@@ -93,6 +93,7 @@ unsigned int  rtcSyncTimeout        = 30;   // Timeout for GNSS sync RTC functio
 volatile bool alarmFlag           = false;  // Flag for alarm interrupt service routine
 volatile bool watchdogFlag        = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter     = 0;      // Watchdog Timer interrupt counter
+bool          firstTimeFlag       = true;   // Flag to determine if the program is running for the first time
 bool          resetFlag           = 0;      // Flag to force system reset using Watchdog Timer
 byte          gnssFixCounterMax   = 10;     // GNSS max valid fix counter
 uint8_t       transmitBuffer[340] = {};     // Iridium 9603 transmission buffer (SBD MO message max: 340 bytes)
@@ -194,17 +195,18 @@ void setup()
 #if DEBUG
   Serial.begin(115200);
   //while (!Serial); // Wait for user to open Serial Monitor
-  blinkLed(4, 1000); // Non-blocking delay to allow user to open Serial Monitor
+  blinkLed(2, 1000); // Non-blocking delay to allow user to open Serial Monitor
 #endif
 
   DEBUG_PRINTLN();
   printLine();
   DEBUG_PRINTLN("Cryologger Iceberg Tracking Beacon v3.0");
   printLine();
+  printDateTime();
 
   // Configure devices
   configureGnss();    // Configure GNSS receiver
-  readGnss();          // Synchronize RTC with GNSS
+  syncRtc();          // Synchronize RTC with GNSS
   configureIridium(); // Configure SparkFun Qwiic Iridium 9603N
   configureWdt();     // Configure and start Watchdog Timer (WDT)
   configureSd();      // Configure microSD
@@ -224,13 +226,20 @@ void setup()
 // ----------------------------------------------------------------------------
 void loop()
 {
-  // Check if alarm flag was set
-  if (alarmFlag)
+  // Check if alarm flag is set or if program is running for the first time
+  if (alarmFlag || firstTimeFlag)
   {
     // Clear alarm flag
     alarmFlag = false;
 
     DEBUG_PRINT("Alarm trigger: "); printDateTime();
+
+    // If program is running for the first time
+    if (firstTimeFlag)
+    {
+      readRtc(); // Read RTC
+      firstTimeFlag = false; // Clear flag
+    }
 
     // Perform measurements
     readSensors();  // Read attached sensors
@@ -263,7 +272,8 @@ void loop()
 extern "C" void am_rtc_isr(void)
 {
   // Clear the RTC alarm interrupt
-  rtc.clearInterrupt();
+  //rtc.clearInterrupt();
+  am_hal_rtc_int_clear(AM_HAL_RTC_INT_ALM);
 
   // Set alarm flag
   alarmFlag = true;

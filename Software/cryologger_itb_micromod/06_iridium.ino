@@ -28,8 +28,8 @@ void writeBuffer()
 
   // Print MO-SBD union/structure
   printMoSbd();
-  //printMoSbdHex();
-  //printTransmitBuffer();
+  printMoSbdHex();
+  printTransmitBuffer();
 
   // Write zeroes to MO-SBD union/structure
   memset(&moMessage, 0, sizeof(moMessage));
@@ -39,7 +39,7 @@ void writeBuffer()
 void transmitData() {
 
   // Check if data can and should be transmitted
-  if (transmitCounter == transmitInterval)
+  if (transmitCounter == transmitInterval || firstTimeFlag)
   {
     // Start loop timer
     unsigned long loopStartTime = millis();
@@ -87,18 +87,15 @@ void transmitData() {
           DEBUG_PRINT("MT-SBD message received. Size: ");
           DEBUG_PRINT(sizeof(mtBuffer)); DEBUG_PRINTLN(" bytes.");
 
-          // Write incoming message buffer to union/structure
-          for (int i = 0; i < sizeof(mtBuffer); i++) {
+          // Print contents of mtBuffer in hexadecimal
+          char tempData[20];
+          DEBUG_PRINTLN("Byte\tHex");
+          for (int i = 0; i < sizeof(mtBuffer); ++i)
+          {
+            // Write incoming message buffer to union/structure
             mtMessage.bytes[i] = mtBuffer[i];
-
-            // Print contents of mtBuffer in hexadecimal
-            char tempData[50];
-            DEBUG_PRINTLN("Byte\tHex");
-            for (int i = 0; i < sizeof(mtBuffer); ++i)
-            {
-              sprintf(tempData, "%d\t0x%02X", i, mtBuffer[i]);
-              DEBUG_PRINTLN(tempData);
-            }
+            sprintf(tempData, "%d\t0x%02X", i, mtBuffer[i]);
+            DEBUG_PRINTLN(tempData);
           }
 
           // Print MT-SBD message as stored in union/structure
@@ -133,7 +130,7 @@ void transmitData() {
         DEBUG_PRINTLN("Warning: No modem detected! Check wiring.");
       }
     }
-    
+
     // Store message in transmit buffer if transmission or modem begin fails
     if (err != ISBD_SUCCESS)
     {
@@ -151,7 +148,7 @@ void transmitData() {
     err = modem.sleep();
     if (err != ISBD_SUCCESS)
     {
-      DEBUG_PRINT("Warning: Sleep failed error "); 
+      DEBUG_PRINT("Warning: Sleep failed error ");
       DEBUG_PRINTLN(err);
     }
 
@@ -169,6 +166,13 @@ void transmitData() {
 
     // Reset transmit counter
     transmitCounter = 0;
+
+    // Clear transmit buffer if program running for the first time
+    if (firstTimeFlag)
+    {
+      retransmitCounter = 0;
+      memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmitBuffer array
+    }
 
     // Stop the loop timer
     timer.iridium = millis() - loopStartTime;
