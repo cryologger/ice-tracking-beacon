@@ -5,7 +5,7 @@ void configureIridium()
   modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
   modem.adjustATTimeout(20); // Adjust timeout timer for serial AT commands (default = 20 s)
   modem.adjustSendReceiveTimeout(iridiumTimeout); // Adjust timeout timer for library send/receive commands (default = 300 s)
-  modem.adjustStartupTimeout(60); // Adjust timeout for Iridium modem startup (default = 240 s)
+  //modem.adjustStartupTimeout(60); // Adjust timeout for Iridium modem startup (default = 240 s)
 }
 
 // Write data from structure to transmit buffer
@@ -71,9 +71,9 @@ void transmitData()
       err = modem.sendReceiveSBDBinary(transmitBuffer, (sizeof(moMessage) * (transmitCounter + (retransmitCounter * transmitInterval))), mtBuffer, mtBufferSize);
 
       // Check if transmission was successful
-      if (err != ISBD_SUCCESS)
+      if (err == ISBD_SUCCESS)
       {
-        DEBUG_PRINTLN("MO-SBD transmission successful!");
+        DEBUG_PRINTLN("MO-SBD message transmission successful!");
         setLedColourIridium(err); // Set LED colour to appropriate return code
 
         retransmitCounter = 0; // Clear message retransmit counter
@@ -86,18 +86,15 @@ void transmitData()
           DEBUG_PRINT("MT-SBD message received. Size: ");
           DEBUG_PRINT(sizeof(mtBuffer)); DEBUG_PRINTLN(" bytes.");
 
-          // Write incoming message buffer to union/structure
-          for (int i = 0; i < sizeof(mtBuffer); i++) {
+          // Print contents of mtBuffer in hexadecimal
+          char tempData[20];
+          DEBUG_PRINTLN("Byte\tHex");
+          for (int i = 0; i < sizeof(mtBuffer); ++i)
+          {
+            // Write incoming message buffer to union/structure
             mtMessage.bytes[i] = mtBuffer[i];
-
-            // Print contents of mtBuffer in hexadecimal
-            char tempData[50];
-            DEBUG_PRINTLN("Byte\tHex");
-            for (int i = 0; i < sizeof(mtBuffer); ++i)
-            {
-              sprintf(tempData, "%d\t0x%02X", i, mtBuffer[i]);
-              DEBUG_PRINTLN(tempData);
-            }
+            sprintf(tempData, "%d\t0x%02X", i, mtBuffer[i]);
+            DEBUG_PRINTLN(tempData);
           }
 
           // Print MT-SBD message as stored in union/structure
@@ -123,7 +120,6 @@ void transmitData()
         DEBUG_PRINTLN(err);
         setLedColourIridium(err); // Set LED colour to appropriate return code
       }
-
     }
 
     // Store message in transmit buffer if transmission or modem begin fails

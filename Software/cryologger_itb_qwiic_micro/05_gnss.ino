@@ -154,13 +154,13 @@ void syncRtc()
     {
       timeValidityCounter += 2; // Increment counter
     }
-    else if ((fixType == 2) && timeValidFlag && dateValidFlag)
+    else if (fixType == 2 && timeValidFlag && dateValidFlag)
     {
       timeValidityCounter += 1; // Increment counter
     }
 
     // Sync RTC with GNSS if date and time are valid
-    if (timeValidityCounter >= 10)
+    if (fixType >= 2 && timeValidityCounter >= 10)
     {
       timeValidityFlag = true; // Set flag
 

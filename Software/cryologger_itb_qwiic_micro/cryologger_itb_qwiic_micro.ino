@@ -103,13 +103,13 @@ unsigned int  transmitInterval      = 1;      // Number of messages to transmit 
 unsigned int  retransmitCounterMax  = 1;      // Number of failed data transmissions to reattempt (340 byte limit)
 unsigned int  gnssTimeout           = 300;    // Timeout for GNSS signal acquisition (s)
 int           iridiumTimeout        = 180;     // Timeout for Iridium transmission (s)
-unsigned int  rtcSyncTimeout        = 60;    // Timeout for GNSS sync RTC function (s)
-unsigned long ledDelay              = 2000;   // Duration of RGB LED colour change (ms)
+unsigned int  rtcSyncTimeout        = 300;    // Timeout for GNSS sync RTC function (s)
+unsigned long ledDelay              = 1000;   // Duration of RGB LED colour change (ms)
 
 // ------------------------------------------------------------------------------------------------
 // Global variable declarations
 // ------------------------------------------------------------------------------------------------
-volatile bool alarmFlag             = true;  // Flag for alarm interrupt service routine
+volatile bool alarmFlag             = true;   // Flag for alarm interrupt service routine
 volatile bool watchdogFlag          = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter       = 0;      // Watchdog Timer interrupt counter
 bool          firstTimeFlag         = true;   // Flag to determine if the program is running for the first time
