@@ -29,167 +29,175 @@ void writeBuffer()
   // Print MO-SBD union/structure
   printMoSbd();
   printMoSbdHex();
-  printTransmitBuffer();
+  //printTransmitBuffer();
 
   // Write zeroes to MO-SBD union/structure
   memset(&moMessage, 0, sizeof(moMessage));
 }
 
 // Transmit data using SparkFun Qwiic Iridium 9603N
-void transmitData() {
-
-  // Check if data can and should be transmitted
-  if (transmitCounter == transmitInterval || firstTimeFlag)
+void transmitData()
+{
+  // Check if Iridium initialized successfully
+  if (online.iridium)
   {
-    // Start loop timer
-    unsigned long loopStartTime = millis();
-
-    DEBUG_PRINTLN("Enabling the supercapacitor charger...");
-    modem.enableSuperCapCharger(true); // Enable the supercapacitor charger
-
-    // Wait for supercapacitor charger PGOOD signal to go HIGH for up to 2 minutes
-    while ((!modem.checkSuperCapCharger()) && millis() - loopStartTime < 1UL * 10UL * 1000UL)
+    // Check if data can and should be transmitted
+    if (transmitCounter == transmitInterval || firstTimeFlag)
     {
-      ISBDCallback();
-    }
+      // Start loop timer
+      unsigned long loopStartTime = millis();
 
-    // Enable power to the Qwiic Iridium 9603N
-    modem.enable9603Npower(true);
+      DEBUG_PRINTLN("Enabling the supercapacitor charger...");
+      modem.enableSuperCapCharger(true); // Enable the supercapacitor charger
 
-    // Begin satellite modem operation
-    DEBUG_PRINTLN("Starting modem...");
-    int err = modem.begin();
-    if (err == ISBD_SUCCESS)
-    {
-      // Create buffer for Mobile Terminated (MT) SBD message (270 bytes max)
-      uint8_t mtBuffer[270];
-      size_t mtBufferSize = sizeof(mtBuffer);
-      memset(mtBuffer, 0x00, sizeof(mtBuffer)); // Clear mtBuffer array
+      // Wait for supercapacitor charger PGOOD signal to go HIGH for up to 2 minutes
+      while ((!modem.checkSuperCapCharger()) && millis() - loopStartTime < 1UL * 10UL * 1000UL)
+      {
+        ISBDCallback();
+      }
 
-      DEBUG_PRINTLN("Attempting to transmit message...");
+      // Enable power to the Qwiic Iridium 9603N
+      modem.enable9603Npower(true);
 
-      // Transmit and receieve data in binary format
-      err = modem.sendReceiveSBDBinary(transmitBuffer, (sizeof(moMessage) * (transmitCounter + (retransmitCounter * transmitInterval))), mtBuffer, mtBufferSize);
-
-      // Check if transmission was successful
+      // Begin satellite modem operation
+      DEBUG_PRINTLN("Starting modem...");
+      int err = modem.begin();
       if (err == ISBD_SUCCESS)
       {
-        blinkLed(10, 100);
-        DEBUG_PRINTLN("MO-SBD transmission successful!");
+        // Create buffer for Mobile Terminated (MT) SBD message (270 bytes max)
+        uint8_t mtBuffer[270];
+        size_t mtBufferSize = sizeof(mtBuffer);
+        memset(mtBuffer, 0x00, sizeof(mtBuffer)); // Clear mtBuffer array
 
-        retransmitCounter = 0; // Clear message retransmit counter
-        memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmit buffer array
+        DEBUG_PRINTLN("Attempting to transmit message...");
 
-        // Check if a Mobile Terminated (MT) message was received
-        // If no message is available, mtBufferSize = 0
-        if (mtBufferSize > 0)
+        // Transmit and receieve data in binary format
+        err = modem.sendReceiveSBDBinary(transmitBuffer, (sizeof(moMessage) * (transmitCounter + (retransmitCounter * transmitInterval))), mtBuffer, mtBufferSize);
+
+        // Check if transmission was successful
+        if (err == ISBD_SUCCESS)
         {
-          DEBUG_PRINT("MT-SBD message received. Size: ");
-          DEBUG_PRINT(sizeof(mtBuffer)); DEBUG_PRINTLN(" bytes.");
+          blinkLed(10, 100);
+          DEBUG_PRINTLN("MO-SBD transmission successful!");
 
-          // Print contents of mtBuffer in hexadecimal
-          char tempData[20];
-          DEBUG_PRINTLN("Byte\tHex");
-          for (int i = 0; i < sizeof(mtBuffer); ++i)
+          retransmitCounter = 0; // Clear message retransmit counter
+          memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmit buffer array
+
+          // Check if a Mobile Terminated (MT) message was received
+          // If no message is available, mtBufferSize = 0
+          if (mtBufferSize > 0)
           {
-            // Write incoming message buffer to union/structure
-            mtMessage.bytes[i] = mtBuffer[i];
-            sprintf(tempData, "%d\t0x%02X", i, mtBuffer[i]);
-            DEBUG_PRINTLN(tempData);
-          }
+            DEBUG_PRINT("MT-SBD message received. Size: ");
+            DEBUG_PRINT(sizeof(mtBuffer)); DEBUG_PRINTLN(" bytes.");
 
-          // Print MT-SBD message as stored in union/structure
-          printMtSbd();
+            // Print contents of mtBuffer in hexadecimal
+            char tempData[20];
+            DEBUG_PRINTLN("Byte\tHex");
+            for (int i = 0; i < sizeof(mtBuffer); ++i)
+            {
+              // Write incoming message buffer to union/structure
+              mtMessage.bytes[i] = mtBuffer[i];
+              sprintf(tempData, "%d\t0x%02X", i, mtBuffer[i]);
+              DEBUG_PRINTLN(tempData);
+            }
 
-          // Check if MT-SBD message data is valid and update global variables accordingly
-          if ((mtMessage.alarmInterval      >= 300  && mtMessage.alarmInterval      <= 1209600) &&
-              (mtMessage.transmitInterval   >= 1    && mtMessage.transmitInterval   <= 24) &&
-              (mtMessage.retransmitCounter  >= 0    && mtMessage.retransmitCounter  <= 24) &&
-              (mtMessage.resetFlag          == 0    || mtMessage.resetFlag          == 255))
-          {
-            alarmInterval         = mtMessage.alarmInterval;      // Update alarm interval
-            transmitInterval      = mtMessage.transmitInterval;   // Update transmit interval
-            retransmitCounterMax  = mtMessage.retransmitCounter;  // Update max retransmit counter
-            resetFlag             = mtMessage.resetFlag;          // Update force reset flag
+            // Print MT-SBD message as stored in union/structure
+            printMtSbd();
+
+            // Check if MT-SBD message data is valid and update global variables accordingly
+            if ((mtMessage.alarmInterval      >= 300  && mtMessage.alarmInterval      <= 1209600) &&
+                (mtMessage.transmitInterval   >= 1    && mtMessage.transmitInterval   <= 24) &&
+                (mtMessage.retransmitCounter  >= 0    && mtMessage.retransmitCounter  <= 24) &&
+                (mtMessage.resetFlag          == 0    || mtMessage.resetFlag          == 255))
+            {
+              alarmInterval         = mtMessage.alarmInterval;      // Update alarm interval
+              transmitInterval      = mtMessage.transmitInterval;   // Update transmit interval
+              retransmitCounterMax  = mtMessage.retransmitCounter;  // Update max retransmit counter
+              resetFlag             = mtMessage.resetFlag;          // Update force reset flag
+            }
+            printSettings();
           }
-          printSettings();
+        }
+        else
+        {
+          DEBUG_PRINT("Warning: Transmission failed with error code ");
+          DEBUG_PRINTLN(err);
         }
       }
       else
       {
-        DEBUG_PRINT("Warning: Transmission failed with error code ");
+        DEBUG_PRINT("Warning: Begin failed with error ");
+        DEBUG_PRINTLN(err);
+        if (err == ISBD_NO_MODEM_DETECTED)
+        {
+          DEBUG_PRINTLN("Warning: No modem detected! Check wiring.");
+        }
+      }
+
+      // Store message in transmit buffer if transmission or modem begin fails
+      if (err != ISBD_SUCCESS)
+      {
+        retransmitCounter++;
+        // Reset counter if reattempt limit is exceeded
+        if (retransmitCounter > retransmitCounterMax)
+        {
+          retransmitCounter = 0;
+          memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmitBuffer array
+        }
+      }
+
+      // Put modem to sleep
+      DEBUG_PRINTLN("Putting modem to sleep...");
+      err = modem.sleep();
+      if (err != ISBD_SUCCESS)
+      {
+        DEBUG_PRINT("Warning: Sleep failed error ");
         DEBUG_PRINTLN(err);
       }
-    }
-    else
-    {
-      DEBUG_PRINT("Warning: Begin failed with error ");
-      DEBUG_PRINTLN(err);
-      if (err == ISBD_NO_MODEM_DETECTED)
-      {
-        DEBUG_PRINTLN("Warning: No modem detected! Check wiring.");
-      }
-    }
 
-    // Store message in transmit buffer if transmission or modem begin fails
-    if (err != ISBD_SUCCESS)
-    {
-      retransmitCounter++;
-      // Reset counter if reattempt limit is exceeded
-      if (retransmitCounter > retransmitCounterMax)
+      // Disable power to Qwiic Iridium 9603N
+      DEBUG_PRINTLN("Disabling power to the Qwiic Iridium 9603N...");
+      modem.enable9603Npower(false);
+
+      // Disable the supercapacitor charger
+      DEBUG_PRINTLN("Disabling the supercapacitor charger...");
+      modem.enableSuperCapCharger(false); // Disable the supercapacitor charger
+
+      // Enable the ATtiny841 low power mode
+      DEBUG_PRINTLN("Enabling ATtiny841 low power mode...");
+      modem.enable841lowPower(true);
+
+      // Reset transmit counter
+      transmitCounter = 0;
+
+      // Clear transmit buffer if program running for the first time
+      if (firstTimeFlag)
       {
         retransmitCounter = 0;
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmitBuffer array
       }
+
+      // Stop the loop timer
+      timer.iridium = millis() - loopStartTime;
+      moMessage.transmitDuration = timer.iridium / 1000;
+
+      DEBUG_PRINT("transmitDuration: "); DEBUG_PRINTLN(moMessage.transmitDuration);
+      DEBUG_PRINT("retransmitCounter: "); DEBUG_PRINTLN(retransmitCounter);
+
+      printSettings();
+
+      // Check if reset flag was transmitted
+      if (resetFlag)
+      {
+        DEBUG_PRINTLN("Forced system reset triggered...");
+        digitalWrite(LED_BUILTIN, HIGH); // Turn on LED
+        while (true); // Wait for Watchdog Timer to reset system
+      }
     }
-
-    // Put modem to sleep
-    DEBUG_PRINTLN("Putting modem to sleep...");
-    err = modem.sleep();
-    if (err != ISBD_SUCCESS)
-    {
-      DEBUG_PRINT("Warning: Sleep failed error ");
-      DEBUG_PRINTLN(err);
-    }
-
-    // Disable power to Qwiic Iridium 9603N
-    DEBUG_PRINTLN("Disabling power to the Qwiic Iridium 9603N...");
-    modem.enable9603Npower(false);
-
-    // Disable the supercapacitor charger
-    DEBUG_PRINTLN("Disabling the supercapacitor charger...");
-    modem.enableSuperCapCharger(false); // Disable the supercapacitor charger
-
-    // Enable the ATtiny841 low power mode
-    DEBUG_PRINTLN("Enabling ATtiny841 low power mode...");
-    modem.enable841lowPower(true);
-
-    // Reset transmit counter
-    transmitCounter = 0;
-
-    // Clear transmit buffer if program running for the first time
-    if (firstTimeFlag)
-    {
-      retransmitCounter = 0;
-      memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmitBuffer array
-    }
-
-    // Stop the loop timer
-    timer.iridium = millis() - loopStartTime;
-    moMessage.transmitDuration = timer.iridium / 1000;
-
-    DEBUG_PRINT("transmitDuration: "); DEBUG_PRINTLN(moMessage.transmitDuration);
-    DEBUG_PRINT("retransmitCounter: "); DEBUG_PRINTLN(retransmitCounter);
-
-    printSettings();
-
-    // Check if reset flag was transmitted
-    if (resetFlag)
-    {
-      DEBUG_PRINTLN("Forced system reset triggered...");
-      digitalWrite(LED_BUILTIN, HIGH); // Turn on LED
-      while (true); // Wait for Watchdog Timer to reset system
-    }
+  }
+  else
+  {
+    DEBUG_PRINTLN("Warning: Iridium not online!");
   }
 }
 

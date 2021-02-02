@@ -1,8 +1,9 @@
-void configureSd() {
-
-  if (sd.begin(SdSpiConfig(PIN_SD_CS, DEDICATED_SPI))) {
+// Configure microSD
+void configureSd()
+{
+  if (sd.begin(SdSpiConfig(PIN_SD_CS, DEDICATED_SPI)))
+  {
     online.microSd = true;
-    blinkLed(3, 250);
   }
   else {
     DEBUG_PRINTLN("Warning: microSD not detected! Please check wiring.");
@@ -22,11 +23,13 @@ void createLogFile()
   // Get the RTC's current date and time
   rtc.getTime();
 
-  // Create log file name
+  // Create timestamped log file name
   sprintf(fileName, "20%02d%02d%02d_%02d%02d%02d.csv",
           rtc.year, rtc.month, rtc.dayOfMonth,
           rtc.hour, rtc.minute, rtc.seconds);
 
+
+  // Open log file for writing
   // O_CREAT - Create the file if it does not exist
   // O_APPEND - Seek to the end of the file prior to each write
   // O_WRITE - Open the file for writing
@@ -114,6 +117,7 @@ void logData()
   {
     DEBUG_PRINTLN("Warning: File close error!");
   }
+  
   // Stop the loop timer
   timer.microSd = millis() - loopStartTime;
 
@@ -126,6 +130,7 @@ void updateFileCreate()
 {
   // Get the RTC's current date and time
   rtc.getTime();
+  
   // Update the file create timestamp
   if (!file.timestamp(T_CREATE, (rtc.year + 2000), rtc.month, rtc.dayOfMonth, rtc.hour, rtc.minute, rtc.seconds))
   {
@@ -138,12 +143,12 @@ void updateFileAccess()
 {
   // Get the RTC's current date and time
   rtc.getTime();
-  // Update the file access timestamp
+  
+  // Update the file access and write timestamps
   if (!file.timestamp(T_ACCESS, (rtc.year + 2000), rtc.month, rtc.dayOfMonth, rtc.hour, rtc.minute, rtc.seconds))
   {
     DEBUG_PRINTLN("Warning: Unable to write file access timestamp");
   }
-  // Update the file write timestamp
   if (!file.timestamp(T_WRITE, (rtc.year + 2000), rtc.month, rtc.dayOfMonth, rtc.hour, rtc.minute, rtc.seconds))
   {
     DEBUG_PRINTLN("Warning: Unable to write file write timestamp");

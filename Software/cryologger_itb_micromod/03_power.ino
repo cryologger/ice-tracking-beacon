@@ -37,6 +37,11 @@ void readBattery()
 // Enter deep sleep
 void goToSleep()
 {
+  // If program is running for the first time
+  if (firstTimeFlag)
+  {
+    firstTimeFlag = false; // Clear flag
+  }
 #if DEBUG
   Serial.flush();       // Wait for transmission of serial data to complete
   Serial.end();         // Disable Serial

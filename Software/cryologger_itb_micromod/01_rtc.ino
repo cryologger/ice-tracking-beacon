@@ -37,7 +37,7 @@ void readRtc()
   // Start the loop timer
   unsigned long loopStartTime = micros();
 
-  // Get the RTC's date and time
+  // Get the RTC's current date and time
   rtc.getTime();
 
   // Get RTC's UNIX Epoch time
@@ -46,7 +46,7 @@ void readRtc()
   // Write data to union
   moMessage.unixtime = unixtime;
 
-  //DEBUG_PRINT("Epoch time: "); DEBUG_PRINTLN(unixtime);
+  //DEBUG_PRINT("Unix Epoch time: "); DEBUG_PRINTLN(unixtime);
 
   // Stop the loop timer
   timer.rtc = micros() - loopStartTime;
@@ -66,14 +66,14 @@ void setRtcAlarm()
   if (alarmTime < rtc.getEpoch() || firstTimeFlag)
   {
     // Set the initial RTC rolling alarm
-    //rtc.setAlarm((rtc.hour + alarmHours) % 24, (rtc.minute + alarmMinutes) % 60, 0, 0, rtc.dayOfMonth, rtc.month);
+    rtc.setAlarm((rtc.hour + alarmHours) % 24, (rtc.minute + alarmMinutes) % 60, 0, 0, rtc.dayOfMonth, rtc.month);
     //(rtc.seconds + alarmSeconds) % 60
 
     // Set the initial RTC alarm to occur on hour rollover
-    rtc.setAlarm(rtc.hour, 0, 0, 0, rtc.dayOfMonth, rtc.month); // (hour, minutes, seconds, hundredths, day, month)
+    //rtc.setAlarm(rtc.hour, 0, 0, 0, rtc.dayOfMonth, rtc.month); // (hour, minutes, seconds, hundredths, day, month)
 
     // Set the RTC alarm mode
-    rtc.setAlarmMode(5); // Alarm match on hundredths, seconds
+    rtc.setAlarmMode(4); // Alarm match on hundredths, seconds, minutes
   }
   else
   {
@@ -82,7 +82,6 @@ void setRtcAlarm()
 
     // Set the RTC alarm mode
     rtc.setAlarmMode(4); // Alarm match on hundredths, seconds and minutes, hours
-
   }
 
   // Print the next RTC alarm date and time

@@ -33,7 +33,7 @@
 // Debugging macros
 // -----------------------------------------------------------------------------
 #define DEBUG           true   // Output debug messages to Serial Monitor
-#define DEBUG_GNSS      true   // Output GNSS debug information
+#define DEBUG_GNSS      true   // Output GNSS information to Serial Monitor
 #define DEBUG_IRIDIUM   true   // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
@@ -79,7 +79,7 @@ SFE_UBLOX_GNSS    gnss;           // I2C Address: 0x42
 // ----------------------------------------------------------------------------
 unsigned long alarmInterval         = 300;  // Sleep duration in seconds
 byte          alarmSeconds          = 0;
-byte          alarmMinutes          = 5;
+byte          alarmMinutes          = 10;
 byte          alarmHours            = 0;
 unsigned int  transmitInterval      = 4;    // Number of messages to transmit in each Iridium transmission (340 byte limit)
 unsigned int  retransmitCounterMax  = 1;    // Number of failed data transmissions to reattempt (340 byte limit)
@@ -95,7 +95,10 @@ volatile bool watchdogFlag        = false;  // Flag for Watchdog Timer interrupt
 volatile int  watchdogCounter     = 0;      // Watchdog Timer interrupt counter
 bool          firstTimeFlag       = true;   // Flag to determine if the program is running for the first time
 bool          resetFlag           = 0;      // Flag to force system reset using Watchdog Timer
-byte          gnssFixCounterMax   = 10;     // GNSS max valid fix counter
+bool          gnssFixFlag         = false;  // Flag to indicate if GNSS valid fix has been acquired
+bool          rtcSyncFlag         = false;  // Flag to indicate if the RTC was syned with the GNSS
+byte          gnssFixCounter      = 0;      // Counter for valid GNSS fixes
+byte          gnssFixCounterMax   = 20;     // Counter limit for threshold of valid GNSS fixes
 uint8_t       transmitBuffer[340] = {};     // Iridium 9603 transmission buffer (SBD MO message max: 340 bytes)
 char          fileName[30]        = "";     // Keep a record of this file name so that it can be re-opened upon wakeup from sleep
 unsigned int  sdPowerDelay        = 250;    // Delay before disabling power to microSD (milliseconds)
@@ -107,7 +110,6 @@ unsigned long previousMillis      = 0;      // Global millis() timer
 float         voltage             = 0.0;    // Battery voltage
 unsigned long unixtime            = 0;
 time_t        alarmTime           = 0;
-long          rtcDriftLong        = 0;
 
 // ----------------------------------------------------------------------------
 // Data transmission unions/structures
@@ -205,8 +207,8 @@ void setup()
   printDateTime();
 
   // Configure devices
-  configureGnss();    // Configure GNSS receiver
-  syncRtc();          // Synchronize RTC with GNSS
+  configureGnss();    // Configure GNSS receiver        
+  readGnss();         // Acquire fix and synchronize RTC with GNSS
   configureIridium(); // Configure SparkFun Qwiic Iridium 9603N
   configureWdt();     // Configure and start Watchdog Timer (WDT)
   configureSd();      // Configure microSD
@@ -238,7 +240,6 @@ void loop()
     if (firstTimeFlag)
     {
       readRtc(); // Read RTC
-      firstTimeFlag = false; // Clear flag
     }
 
     // Perform measurements
@@ -279,7 +280,7 @@ extern "C" void am_rtc_isr(void)
   alarmFlag = true;
 }
 
-// Interrupt handler for the watchdog
+// Interrupt handler for the watchdog timer
 extern "C" void am_watchdog_isr(void)
 {
   // Clear the watchdog interrupt
