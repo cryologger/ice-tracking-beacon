@@ -26,11 +26,14 @@ https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/master/Arch
 | Component | Product | Cost (USD) |
 | --- | --- | :---: | 
 | Satellite transceiver | SparkFun Qwiic Iridium 9603N | $249.95 |
+| Satellite antenna | Maxtena M1621HCT-P-SMA | $50.00 |
 | Processor | SparkFun MicroMod Artemis Processor | $14.95 |
 | Carrier Board | SparkFun MicroMod Data Logging Carrier Board | $19.95 |
 | GNSS | SparkFun GPS Breakout - Chip Antenna, SAM-M8Q (Qwiic) | $39.95 |
-| IMU | SparkFun 9DoF IMU Breakout - ICM-20948 (Qwiic) | $16.95 |
+| IMU | SparkFun VR IMU Breakout - BNO080 (Qwiic) | $34.95 |
 | Voltage Regulator | SparkFun Buck-Boost Converter | $9.95 |
+| Enclosure |  | ~$50.00 |
+| Battery | Tadiran | ~$100.00 |
 
 #### Measurements
 | Variable | Unit | Comments |
