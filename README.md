@@ -1,5 +1,5 @@
 # Cryologger - Iceberg Tracking Beacon (ITB)
-![Image](https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v2.0/Images/2019_300434063392070.JPG)
+![Image](https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Archive/v2.0/Images/2019_300434063392070.JPG)
 
 ## Background
 Icebergs and ice islands represent significant hazards to marine navigation and offshore infrastructure at a time when demand for access to Canada’s Arctic waters is increasing.
@@ -16,9 +16,9 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 
 To access the project archives for Cryologger v1.0, deployed in 2018, and v2.0, deployed in 2019, please see the following links:
 #### v1.0
-https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/master/Archive/v1.0
+https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/main/Archive/v1.0
 #### v2.0
-https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/master/Archive/v2.0
+https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/main/Archive/v2.0
 
 
 #### Materials (v3.0 prototype)
