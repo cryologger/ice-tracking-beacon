@@ -50,8 +50,8 @@ void createLogFile()
   // Write header to file
   file.println("unixtime,temperature,humidity,pressure,latitude,longitude,"
                "satellites,pdop,drift,voltage,transmitDuration,messageCounter,"
-               "rtcTimer,sdTimer,sensorTimer,gnssTimer,iridiumTimer,"
-               "bme280, microsd,iridium,gnss");
+               "adcTimer,voltageTimer,rtcTimer,sdTimer,sensorTimer,gnssTimer,iridiumTimer,"
+               "adc,bme280,microsd,iridium,gnss");
 
   // Sync the log file
   file.sync();
@@ -80,14 +80,17 @@ void logData()
     file.print(moMessage.satellites);           file.print(",");
     file.print(moMessage.pdop);                 file.print(",");
     file.print(moMessage.rtcDrift);             file.print(",");
-    file.print(moMessage.voltage, 2);           file.print(",");
+    file.print(moMessage.voltage);              file.print(",");
     file.print(moMessage.transmitDuration);     file.print(",");
     file.print(messageCounter);                 file.print(",");
+    file.print(timer.adc);                      file.print(",");
+    file.print(timer.voltage);                  file.print(",");
     file.print(timer.rtc);                      file.print(",");
     file.print(timer.microSd);                  file.print(",");
     file.print(timer.sensor);                   file.print(",");
     file.print(timer.gnss);                     file.print(",");
     file.print(timer.iridium);                  file.print(",");
+    file.print(online.adc);                     file.print(",");
     file.print(online.bme280);                  file.print(",");
     file.print(online.microSd);                 file.print(",");
     file.print(online.gnss);                    file.print(",");

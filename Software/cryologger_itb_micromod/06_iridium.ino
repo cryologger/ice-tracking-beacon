@@ -38,14 +38,15 @@ void writeBuffer()
 // Transmit data using SparkFun Qwiic Iridium 9603N
 void transmitData()
 {
+  // Start loop timer
+  unsigned long loopStartTime = millis();
+
   // Check if Iridium initialized successfully
   if (online.iridium)
   {
     // Check if data can and should be transmitted
     if (transmitCounter == transmitInterval || firstTimeFlag)
     {
-      // Start loop timer
-      unsigned long loopStartTime = millis();
 
       DEBUG_PRINTLN("Enabling the supercapacitor charger...");
       modem.enableSuperCapCharger(true); // Enable the supercapacitor charger
@@ -177,9 +178,8 @@ void transmitData()
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmitBuffer array
       }
 
-      // Stop the loop timer
-      timer.iridium = millis() - loopStartTime;
-      moMessage.transmitDuration = timer.iridium / 1000;
+      // Calculate transmit duration
+      moMessage.transmitDuration = (millis() - loopStartTime) / 1000;
 
       DEBUG_PRINT("transmitDuration: "); DEBUG_PRINTLN(moMessage.transmitDuration);
       DEBUG_PRINT("retransmitCounter: "); DEBUG_PRINTLN(retransmitCounter);
@@ -199,6 +199,9 @@ void transmitData()
   {
     DEBUG_PRINTLN("Warning: Iridium not online!");
   }
+
+  // Stop the loop timer
+  timer.iridium = millis() - loopStartTime;
 }
 
 // Non-blocking RockBLOCK callback function can be called during transmit or GNSS signal acquisition

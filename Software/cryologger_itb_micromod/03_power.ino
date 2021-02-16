@@ -1,38 +1,76 @@
-// Read battery voltage from voltage divider
 void readBattery()
 {
-  /*
-    // Start loop timer
-    unsigned long loopStartTime = millis();
+  // Start loop timer
+  unsigned long loopStartTime = millis();
 
-    int reading = 0;
+  if (online.adc)
+  {
+    unsigned int reading = 0;
     byte samples = 30;
+    float multiplier = adc.getMultiplier(); // Multiplier to convert readings to voltages (mV)
 
+    // Take readings
     for (byte i = 0; i < samples; ++i)
     {
-    reading += analogRead(PIN_VBAT); // Read VIN across a 1/10 MΩ resistor divider
-    delay(1);
+      reading += adc.getSingleEnded(2); // Read VIN across a 1/10 resistor divider on A2
+      delay(1);
     }
 
-    voltage = (float)reading / samples * 3.3 * ((R2 + R1) / R2) / 4096.0; // Convert 1/10 VIN to VIN (12-bit resolution)
+    // Convert to voltage
+    float voltage = reading / samples * multiplier * ((R2 + R1) / R2); // Voltage divider 1/10
 
     // Write minimum battery voltage value to union
     if (moMessage.voltage == 0)
     {
-    moMessage.voltage = voltage * 1000;
+      moMessage.voltage = voltage;
     }
     else if ((voltage * 1000) < moMessage.voltage)
     {
-    moMessage.voltage = voltage * 1000;
+      moMessage.voltage = voltage;
     }
-
-    //DEBUG_PRINT("voltage: "); DEBUG_PRINTLN(voltage);
-
-    // Stop loop timer
-    unsigned long loopEndTime = millis() - loopStartTime;
-    //DEBUG_PRINT("readBattery() function execution: "); DEBUG_PRINT(loopEndTime); DEBUG_PRINTLN(" ms");
-  */
+  }
+  else 
+  {
+    
+  }
+  // Stop the loop timer
+  timer.adc = millis() - loopStartTime;
 }
+/*
+  // Read battery voltage from voltage divider
+  void readBattery()
+  {
+  // Start loop timer
+  unsigned long loopStartTime = micros();
+
+  int reading = 0;
+  byte samples = 30;
+
+  for (byte i = 0; i < samples; ++i)
+  {
+    reading += analogRead(PIN_VBAT); // Read VIN across a 1/10 MΩ resistor divider
+    delay(1);
+  }
+
+  float voltage = (float)reading / samples * 3.3 * ((R2 + R1) / R2) / 16384.0; // Voltage divider 1/10 (14-bit resolution)
+  voltage += 0.075; // Add back the voltage drop across D3
+
+  // Write minimum battery voltage value to union
+  if (moMessage.voltage == 0)
+  {
+    moMessage.voltage = voltage * 1000;
+  }
+  else if ((voltage * 1000) < moMessage.voltage)
+  {
+    moMessage.voltage = voltage * 1000;
+  }
+
+  //DEBUG_PRINT("voltage: "); DEBUG_PRINTLN(voltage);
+
+  // Stop the loop timer
+  timer.voltage = micros() - loopStartTime;
+  }
+*/
 
 // Enter deep sleep
 void goToSleep()
@@ -49,6 +87,7 @@ void goToSleep()
   Wire.end();           // Disable I2C
   SPI.end();            // Disable SPI
   power_adc_disable();  // Disable power to ADC
+  digitalWrite(LED_BUILTIN, LOW); // Turn off LED
 
   // Force peripherals off
   am_hal_pwrctrl_periph_disable(AM_HAL_PWRCTRL_PERIPH_IOM0);

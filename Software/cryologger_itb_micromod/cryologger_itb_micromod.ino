@@ -18,10 +18,12 @@
 // ----------------------------------------------------------------------------
 // Libraries
 // ----------------------------------------------------------------------------
+
 #include <ICM_20948.h>                            // https://github.com/sparkfun/SparkFun_ICM-20948_ArduinoLibrary
 #include <IridiumSBD.h>                           // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
 #include <RTC.h>
 #include <SparkFunBME280.h>                       // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
+#include <SparkFun_ADS1015_Arduino_Library.h>     // https://github.com/sparkfun/SparkFun_ADS1015_Arduino_Library
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_Ublox_Arduino_Library
 #include <SdFat.h>                                // https://github.com/greiman/SdFat
 #include <SPI.h>
@@ -34,7 +36,7 @@
 // -----------------------------------------------------------------------------
 #define DEBUG           true   // Output debug messages to Serial Monitor
 #define DEBUG_GNSS      true   // Output GNSS information to Serial Monitor
-#define DEBUG_IRIDIUM   true   // Output Iridium debug messages to Serial Monitor
+#define DEBUG_IRIDIUM   false   // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
 #define DEBUG_PRINT(x)            Serial.print(x)
@@ -66,30 +68,32 @@
 // ----------------------------------------------------------------------------
 // Object instantiations
 // ----------------------------------------------------------------------------
+ADS1015           adc;            // I2C address: 0x48
 APM3_RTC          rtc;
 APM3_WDT          wdt;
-BME280            bme280;         // I2C Address: 0x77
-IridiumSBD        modem(Wire);    // I2C Address: 0x63
+BME280            bme280;         // I2C address: 0x77
+IridiumSBD        modem(Wire);    // I2C address: 0x63
 SdFs              sd;             // File system object
 FsFile            file;           // Log file
-SFE_UBLOX_GNSS    gnss;           // I2C Address: 0x42
+SFE_UBLOX_GNSS    gnss;           // I2C address: 0x42
 
 // ----------------------------------------------------------------------------
 // User defined global variable declarations
 // ----------------------------------------------------------------------------
-unsigned long alarmInterval         = 300;  // Sleep duration in seconds
+unsigned long alarmInterval         = 3600;  // Sleep duration in seconds
 byte          alarmSeconds          = 0;
-byte          alarmMinutes          = 10;
+byte          alarmMinutes          = 5;
 byte          alarmHours            = 0;
-unsigned int  transmitInterval      = 4;    // Number of messages to transmit in each Iridium transmission (340 byte limit)
+unsigned int  transmitInterval      = 1;    // Number of messages to transmit in each Iridium transmission (340 byte limit)
 unsigned int  retransmitCounterMax  = 1;    // Number of failed data transmissions to reattempt (340 byte limit)
-unsigned int  gnssTimeout           = 30;   // Timeout for GNSS signal acquisition (s)
-int           iridiumTimeout        = 30;   // Timeout for Iridium transmission (s)
-unsigned int  rtcSyncTimeout        = 30;   // Timeout for GNSS sync RTC function (s)
+unsigned int  gnssTimeout           = 300;   // Timeout for GNSS signal acquisition (s)
+int           iridiumTimeout        = 300;   // Timeout for Iridium transmission (s)
 
 // ----------------------------------------------------------------------------
 // Global variable declarations
 // ----------------------------------------------------------------------------
+const float   R1                  = 99800.0; // Voltage divider resistor 1
+const float   R2                  = 9914.0; // Voltage divider resistor 2
 volatile bool alarmFlag           = false;  // Flag for alarm interrupt service routine
 volatile bool watchdogFlag        = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter     = 0;      // Watchdog Timer interrupt counter
@@ -98,7 +102,7 @@ bool          resetFlag           = 0;      // Flag to force system reset using 
 bool          gnssFixFlag         = false;  // Flag to indicate if GNSS valid fix has been acquired
 bool          rtcSyncFlag         = false;  // Flag to indicate if the RTC was syned with the GNSS
 byte          gnssFixCounter      = 0;      // Counter for valid GNSS fixes
-byte          gnssFixCounterMax   = 20;     // Counter limit for threshold of valid GNSS fixes
+byte          gnssFixCounterMax   = 30;     // Counter limit for threshold of valid GNSS fixes
 uint8_t       transmitBuffer[340] = {};     // Iridium 9603 transmission buffer (SBD MO message max: 340 bytes)
 char          fileName[30]        = "";     // Keep a record of this file name so that it can be re-opened upon wakeup from sleep
 unsigned int  sdPowerDelay        = 250;    // Delay before disabling power to microSD (milliseconds)
@@ -155,17 +159,19 @@ SBD_MT_MESSAGE mtMessage;
 // Union to store device online/offline states
 struct struct_online
 {
-  bool bme280 = false;
-  bool microSd = false;
-  bool iridium = false;
-  bool gnss = false;
+  bool adc      = false;
+  bool bme280   = false;
+  bool microSd  = false;
+  bool iridium  = false;
+  bool gnss     = false;
 } online;
 
 // Union to store loop timers
 struct struct_timer
 {
+  unsigned long adc;
+  unsigned long voltage;
   unsigned long rtc;
-  unsigned long sync;
   unsigned long microSd;
   unsigned long sensor;
   unsigned long gnss;
@@ -207,7 +213,7 @@ void setup()
   printDateTime();
 
   // Configure devices
-  configureGnss();    // Configure GNSS receiver        
+  configureGnss();    // Configure GNSS receiver
   readGnss();         // Acquire fix and synchronize RTC with GNSS
   configureIridium(); // Configure SparkFun Qwiic Iridium 9603N
   configureWdt();     // Configure and start Watchdog Timer (WDT)

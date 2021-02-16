@@ -15,6 +15,7 @@ void configureGnss()
     online.gnss = false;
   }
 }
+//createFileBuffer: Warning. FileBufferSize is zero. Data logging is not possible.
 
 // Read the GNSS receiver
 void readGnss()
@@ -37,11 +38,18 @@ void readGnss()
       gnss.checkUblox(); // Check for the arrival of new data and process it
       gnss.checkCallbacks(); // Check if any callbacks are waiting to be processed
     }
+    if (!gnssFixFlag)
+    {
+      DEBUG_PRINTLN("Warning: Unable to acquire GNSS fix!");
+    }
   }
   else
   {
     DEBUG_PRINTLN("Warning: u-blox GNSS offline!");
   }
+
+  // Turn off LED
+  digitalWrite(LED_BUILTIN, LOW);
 
   // Stop the loop timer
   timer.gnss = millis() - loopStartTime;
@@ -52,6 +60,9 @@ void getGnssFix(UBX_NAV_PVT_data_t ubx)
 {
   // Reset the Watchdog Timer
   petDog();
+
+  // Read battery voltage
+  readBattery();
 
   // Blink LED
   digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
@@ -124,7 +135,7 @@ void getGnssFix(UBX_NAV_PVT_data_t ubx)
     }
     else
     {
-      DEBUG_PRINTLN("Warning: RTC not synced due to invalid GNSS fix!");
+      DEBUG_PRINTLN("Warning: RTC sync not performed due to invalid GNSS fix!");
     }
   }
 }
