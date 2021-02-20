@@ -1,20 +1,21 @@
-// Configure SparkFun GPS Breakout SAM-M8Q
 void configureGnss()
 {
   if (gnss.begin())
   {
-    gnss.setI2COutput(COM_TYPE_UBX);  // Set I2C port to output UBX only
-    gnss.saveConfiguration();         // Save current settings to Flash and BBR
+    gnss.setI2COutput(COM_TYPE_UBX);                  // Set I2C port to output UBX only
+    gnss.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);  // Save communications port settings to flash and BBR
+    gnss.setNavigationFrequency(2);                   // Produce two solutions per second
+    //gnss.enableDebugging();                         // Uncomment this line to enable debug messages on Serial
+    gnss.setAutoPVTcallback(&getGnssFix);             // Enable automatic NAV PVT messages with callback to printPVTdata
     online.gnss = true;
   }
   else
   {
     DEBUG_PRINTLN("Warning: u-blox GNSS not detected at default I2C address. Please check wiring.");
     online.gnss = false;
-    setLedColour(red); // Change LED colour to indicate
-    //while (1);
   }
 }
+//createFileBuffer: Warning. FileBufferSize is zero. Data logging is not possible.
 
 // Read the GNSS receiver
 void readGnss()
@@ -22,101 +23,24 @@ void readGnss()
   // Start loop timer
   unsigned long loopStartTime = millis();
 
+  rtcSyncFlag = false; // Clear flag
+  gnssFixFlag = false; // Clear flag
+  gnssFixCounter = 0; // Reset counter
+
   // Check if GNSS initialized successfully
   if (online.gnss)
   {
-    bool gnssFixFlag = false; // Reset GNSS fix flag
-    byte gnssFixCounter = 0; // Reset GNSS fix counter
-    bool rtcSyncFlag = false; // Clear RTC sync flag
-
-    setLedColour(cyan); // Change LED colour to indicate signal acquisition
-
     DEBUG_PRINTLN("Acquiring GNSS fix...");
 
     // Attempt to acquire a valid GNSS position fix
     while (!gnssFixFlag && millis() - loopStartTime < gnssTimeout * 1000UL)
     {
-      byte fixType = gnss.getFixType();
-      bool timeValidFlag = gnss.getTimeValid();
-      bool dateValidFlag = gnss.getDateValid();
-
-#if DEBUG_GNSS
-      char gnssBuffer[75];
-      sprintf(gnssBuffer, "%04u-%02d-%02d %02d:%02d:%02d,%ld,%ld,%d,%d,%d,%d,%d",
-              gnss.getYear(), gnss.getMonth(), gnss.getDay(),
-              gnss.getHour(), gnss.getMinute(), gnss.getSecond(),
-              gnss.getLatitude(), gnss.getLongitude(), gnss.getSIV(),
-              gnss.getPDOP(), fixType, timeValidFlag, dateValidFlag);
-      DEBUG_PRINTLN(gnssBuffer);
-#endif
-
-      // Check if GNSS fix is valid
-      if (fixType == 3)
-      {
-        gnssFixCounter += 2; // Increment fix counter
-      }
-      else if (fixType == 2)
-      {
-        gnssFixCounter += 1; // Increment counter
-      }
-
-      DEBUG_PRINT("gnssFixCounter: "); DEBUG_PRINTLN(gnssFixCounter);
-
-      // If GNSS fix threshold has been reached record GNSS position
-      if (gnssFixCounter >= gnssFixCounterMax)
-      {
-        DEBUG_PRINTLN("A GNSS fix was found!");
-        gnssFixFlag = true; // Set fix flag
-
-        // Write data to union
-        moMessage.latitude = gnss.getLatitude();
-        moMessage.longitude = gnss.getLongitude();
-        moMessage.satellites = gnss.getSIV();
-        moMessage.pdop = gnss.getPDOP();
-
-        // Attempt to sync RTC with GNSS
-        if ((fixType >= 2) && timeValidFlag && dateValidFlag)
-        {
-          // Convert to Unix Epoch time
-          tmElements_t tm;
-          tm.Year = gnss.getYear() - 1970;
-          tm.Month = gnss.getMonth();
-          tm.Day = gnss.getDay();
-          tm.Hour = gnss.getHour();
-          tm.Minute = gnss.getMinute();
-          tm.Second = gnss.getSecond();
-          time_t gnssEpoch = makeTime(tm);
-          rtc.updateTime(); // Update time variables from RTC
-
-          // Calculate drift
-          int rtcDrift = rtc.getEpoch() - gnssEpoch;
-
-          DEBUG_PRINT("RTC drift: "); DEBUG_PRINTLN(rtcDrift);
-
-          // Write data to union
-          moMessage.rtcDrift = rtcDrift;
-
-          // Set RTC date and time
-          rtc.setTime(gnss.getSecond(), gnss.getMinute(), gnss.getHour(), 0,
-                      gnss.getDay(), gnss.getMonth(), gnss.getYear());
-
-          rtcSyncFlag = true; // Set flag
-          DEBUG_PRINT("RTC time synced to: "); printDateTime();
-          setLedColour(green); // Change LED colour to indicate GNSS fix was found
-        }
-        else
-        {
-          DEBUG_PRINTLN("Warning: RTC not synced due to invalid GNSS fix!");
-        }
-      }
-      ISBDCallback();
+      gnss.checkUblox(); // Check for the arrival of new data and process it
+      gnss.checkCallbacks(); // Check if any callbacks are waiting to be processed
     }
-
-    // Check if a valid GNSS fix was acquired
     if (!gnssFixFlag)
     {
-      DEBUG_PRINTLN("Warning: No GNSS fix was found!");
-      setLedColour(red); // Change LED colour to indicate no GNSS fix found
+      DEBUG_PRINTLN("Warning: Unable to acquire GNSS fix!");
     }
   }
   else
@@ -124,54 +48,73 @@ void readGnss()
     DEBUG_PRINTLN("Warning: u-blox GNSS offline!");
   }
 
+  // Turn off LED
+  digitalWrite(LED_BUILTIN, LOW);
+
   // Stop the loop timer
   timer.gnss = millis() - loopStartTime;
 }
 
-// Synchornize the RTC with the GNSS
-void syncRtc()
+// Callback function to process UBX-NAV-PVT data
+void getGnssFix(UBX_NAV_PVT_data_t ubx)
 {
-  // Start loop timer
-  unsigned long loopStartTime = millis();
+  // Reset the Watchdog Timer
+  petDog();
 
-  bool rtcSyncFlag = false;       // Clear RTC sync flag
-  bool timeValidityFlag = false;  // Clear time and date validity flag
-  byte timeValidityCounter = 0;   // Reset time validity counter
+  // Read battery voltage
+  readBattery();
 
-  DEBUG_PRINTLN("Attempting to sync RTC with GNSS...");
+  // Blink LED
+  digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
 
-  setLedColour(pink); // Change LED colour to indicate RTC sync
+  bool dateValidFlag = ubx.valid.bits.validDate;
+  bool timeValidFlag = ubx.valid.bits.validTime;
+  byte fixType = ubx.fixType;
 
-  // Sync RTC with GNSS
-  while (!timeValidityFlag && millis() - loopStartTime < rtcSyncTimeout * 1000UL)
+#if DEBUG_GNSS
+  char gnssBuffer[100];
+  sprintf(gnssBuffer, "%04u-%02d-%02d %02d:%02d:%02d.%03d,%ld,%ld,%d,%d,%d,%d,%d",
+          ubx.year, ubx.month, ubx.day,
+          ubx.hour, ubx.min, ubx.sec, ubx.iTOW % 1000,
+          ubx.lat, ubx.lon, ubx.numSV,
+          ubx.pDOP, ubx.fixType,
+          ubx.valid.bits.validDate, ubx.valid.bits.validTime);
+  DEBUG_PRINTLN(gnssBuffer);
+#endif
+
+  // Check if GNSS fix is valid
+  if (fixType == 3)
   {
-    byte fixType = gnss.getFixType();
-    bool timeValidFlag = gnss.getTimeValid();
-    bool dateValidFlag = gnss.getDateValid();
+    gnssFixCounter += 2; // Increment counter
+  }
+  else if (fixType == 2)
+  {
+    gnssFixCounter += 1; // Increment counter
+  }
 
-    // Check for GNSS fix and valid time and date flags
-    if ((fixType == 3) && timeValidFlag && dateValidFlag)
-    {
-      timeValidityCounter += 2; // Increment counter
-    }
-    else if (fixType == 2 && timeValidFlag && dateValidFlag)
-    {
-      timeValidityCounter += 1; // Increment counter
-    }
+  // Check if GNSS fix threshold has been reached
+  if (gnssFixCounter >= gnssFixCounterMax)
+  {
+    DEBUG_PRINTLN("A GNSS fix was found!");
+    gnssFixFlag = true; // Set fix flag
 
-    // Sync RTC with GNSS if date and time are valid
-    if (fixType >= 2 && timeValidityCounter >= 10)
-    {
-      timeValidityFlag = true; // Set flag
+    // Write data to union
+    moMessage.latitude = ubx.lat;
+    moMessage.longitude = ubx.lon;
+    moMessage.satellites = ubx.numSV;
+    moMessage.pdop = ubx.pDOP;
 
-      // Convert to Unix Epoch time
+    // Attempt to sync RTC with GNSS
+    if (fixType >= 2 && timeValidFlag && dateValidFlag)
+    {
+      // Convert GNSS date and time to Unix Epoch time
       tmElements_t tm;
-      tm.Year = gnss.getYear() - 1970;
-      tm.Month = gnss.getMonth();
-      tm.Day = gnss.getDay();
-      tm.Hour = gnss.getHour();
-      tm.Minute = gnss.getMinute();
-      tm.Second = gnss.getSecond();
+      tm.Year = ubx.year - 1970;
+      tm.Month = ubx.month;
+      tm.Day = ubx.day;
+      tm.Hour = ubx.hour;
+      tm.Minute = ubx.min;
+      tm.Second = ubx.sec;
       time_t gnssEpoch = makeTime(tm);
       rtc.updateTime(); // Update time variables from RTC
 
@@ -184,20 +127,16 @@ void syncRtc()
       moMessage.rtcDrift = rtcDrift;
 
       // Set RTC date and time
-      rtc.setTime(gnss.getSecond(), gnss.getMinute(), gnss.getHour(), 0,
-                  gnss.getDay(), gnss.getMonth(), gnss.getYear());
+      rtc.setTime(ubx.sec, ubx.min, ubx.hour, 0,
+                  ubx.day, ubx.month, ubx.year);
 
+                  
       rtcSyncFlag = true; // Set flag
-      setLedColour(green); // Change LED colour to indicate RTC was synced
       DEBUG_PRINT("RTC time synced to: "); printDateTime();
     }
-    ISBDCallback();
+    else
+    {
+      DEBUG_PRINTLN("Warning: RTC sync not performed due to invalid GNSS fix!");
+    }
   }
-  if (!rtcSyncFlag)
-  {
-    DEBUG_PRINTLN("Warning: RTC sync failed!");
-    setLedColour(red); // Change LED colour to indicate RTC was synced
-  }
-  // Stop loop timer
-  timer.sync = millis() - loopStartTime;
 }

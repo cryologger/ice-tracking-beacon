@@ -1,3 +1,4 @@
+/*
 // Configure RockBLOCK 9603
 void configureIridium()
 {
@@ -266,3 +267,4 @@ void userFunction4()
 {
 
 }
+*/

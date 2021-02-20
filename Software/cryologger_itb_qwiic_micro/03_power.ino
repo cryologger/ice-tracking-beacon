@@ -1,3 +1,14 @@
+void configurePowerSwitch() {
+  // Configure Qwiic Power Switch
+  if (!mySwitch.begin()) //Connect to the power switch using Wire port
+  {
+    DEBUG_PRINTLN("Qwiic Power Switch not detected at default I2C address. Please check wiring.");
+    setLedColour(red);
+  }
+}
+
+
+
 // Read battery voltage from voltage divider
 void readBattery() {
 
@@ -50,6 +61,7 @@ void enableSerial()
 #endif
 }
 
+
 // Enable power to MOSFET
 void enablePower() {
   digitalWrite(PIN_MOSFET, LOW);
@@ -66,6 +78,23 @@ void disablePower()
   digitalWrite(PIN_MOSFET, HIGH);
 }
 
+
+// Enable power to Qwiic Power Switch
+void enablePowerSwitch() {
+  mySwitch.powerOn();
+  // Non-blocking delay
+  unsigned long currentMillis = millis();
+  while (millis() - currentMillis < powerDelay) {
+    // Wait...
+  }
+}
+
+// Disable power to MOSFET
+void disablePowerSwitch()
+{
+  mySwitch.powerOff();
+}
+
 // Enter deep sleep
 void goToSleep()
 {
@@ -77,8 +106,8 @@ void goToSleep()
 
   setLedColour(off); // Turn off LED
   digitalWrite(LED_BUILTIN, LOW);
-  disablePower();
-
+  //disablePower();
+  disablePowerSwitch();
   // Enter deep sleep
   LowPower.deepSleep();
 
@@ -90,7 +119,8 @@ void wakeUp() {
 
   // Re-configure all devices
   enableSerial();       // Re-enable serial port
-  enablePower();        // Enable power to MOSFET controlled components
+  //enablePower();        // Enable power to MOSFET controlled components
+  enablePowerSwitch();
   configureLed();       // Configure WS2812B RGB LED
   configureGnss();      // Configure GNSS receiver
   configureImu();       // Configure interial measurement unit

@@ -29,6 +29,7 @@
 #include <IridiumSBD.h>                           // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
 #include <SAMD_AnalogCorrection.h>                // https://github.com/arduino/ArduinoCore-samd/tree/master/libraries/SAMD_AnalogCorrection
 #include <SparkFunBME280.h>                       // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
+#include <SparkFun_Qwiic_Power_Switch_Arduino_Library.h>
 #include <SparkFun_RV8803.h>                      // https://github.com/sparkfun/SparkFun_RV-8803_Arduino_Library
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_u-blox_GNSS_Arduino_Library
 #include <TimeLib.h>                              // https://github.com/PaulStoffregen/Time
@@ -82,40 +83,39 @@
 Adafruit_NeoPixel led(1, PIN_LED, NEO_GRB + NEO_KHZ800);
 BME280            bme280;         // I2C Address: 0x77
 ICM_20948_I2C     imu;            // I2C Address: 0x69
-IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP); // D16 (TX): Pin 1 (yellow) D17 (RX): Pin 6 (orange)
+//IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP); // D16 (TX): Pin 1 (yellow) D17 (RX): Pin 6 (orange)
+IridiumSBD        modem(Wire);    // I2C address: 0x63
+QWIIC_POWER       mySwitch;
 RV8803            rtc;            // I2C Address: 0x32
 SFE_UBLOX_GNSS    gnss;           // I2C Address: 0x42
-
-// Global constants
-const float R1 = 9973000.0;   // Voltage divider resistor 1
-const float R2 = 998700.0;    // Voltage divider resistor 2
-//const float R1 = 1000000.0;   // Voltage divider resistor 1
-//const float R2 = 1000000.0;    // Voltage divider resistor 2
 
 // ------------------------------------------------------------------------------------------------
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
-unsigned long alarmInterval         = 3600;  // Sleep duration in seconds
-byte          alarmMinutes          = 2;      // RTC rolling alarm mintues
+unsigned long alarmInterval         = 300;  // Sleep duration in seconds
+byte          alarmMinutes          = 5;      // RTC rolling alarm mintues
 byte          alarmHours            = 0;      // RTC rolling alarm hours
 byte          alarmDate             = 0;      // RTC rolling alarm days
 unsigned int  transmitInterval      = 1;      // Number of messages to transmit in each Iridium transmission (340 byte limit)
 unsigned int  retransmitCounterMax  = 1;      // Number of failed data transmissions to reattempt (340 byte limit)
-unsigned int  gnssTimeout           = 300;    // Timeout for GNSS signal acquisition (s)
-int           iridiumTimeout        = 180;     // Timeout for Iridium transmission (s)
-unsigned int  rtcSyncTimeout        = 300;    // Timeout for GNSS sync RTC function (s)
-unsigned long ledDelay              = 1000;   // Duration of RGB LED colour change (ms)
+unsigned int  gnssTimeout           = 10;    // Timeout for GNSS signal acquisition (s)
+int           iridiumTimeout        = 3 0;     // Timeout for Iridium transmission (s)
+unsigned long ledDelay              = 4000;   // Duration of RGB LED colour change (ms)
 
 // ------------------------------------------------------------------------------------------------
 // Global variable declarations
 // ------------------------------------------------------------------------------------------------
+const float   R1                    = 9973000.0;   // Voltage divider resistor 1
+const float   R2                    = 998700.0;    // Voltage divider resistor 2
 volatile bool alarmFlag             = true;   // Flag for alarm interrupt service routine
 volatile bool watchdogFlag          = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter       = 0;      // Watchdog Timer interrupt counter
 bool          firstTimeFlag         = true;   // Flag to determine if the program is running for the first time
-bool          rtcSyncFlag           = false;  // Flag to determine if RTC has been synced with GNSS time
 bool          resetFlag             = 0;      // Flag to force system reset using Watchdog Timer
-byte          gnssFixCounterMax     = 10;      // GNSS max valid fix counter
+bool          gnssFixFlag           = false;  // Flag to indicate if GNSS valid fix has been acquired
+bool          rtcSyncFlag           = false;  // Flag to indicate if the RTC was syned with the GNSS
+byte          gnssFixCounter        = 0;      // Counter for valid GNSS fixes
+byte          gnssFixCounterMax     = 30;     // Counter limit for threshold of valid GNSS fixes
 float         voltage               = 0.0;    // Battery voltage
 uint8_t       transmitBuffer[340]   = {};     // Iridium 9603 transmission buffer (MO SBD message max length: 340 bytes)
 unsigned int  messageCounter        = 0;      // Iridium 9603 transmission counter (zero indicates a reset)
@@ -239,13 +239,13 @@ void setup()
   printLine();
 
   // Configure devices
+  configurePowerSwitch();
   configureWatchdog();    // Configure Watchdog Timer (WDT)
   configureRtc();         // Configure real-time clock (RTC)
   configureGnss();        // Configure GNSS receiver
   configureImu();         // Configure interial measurement unit (IMU)
   configureSensors();     // Configure attached sensors
   configureIridium();     // Configure Iridium 9603 transceiver
-  syncRtc();              // Synchronize RTC with GNSS
 
   DEBUG_PRINT("Datetime: "); printDateTime();
   DEBUG_PRINT("Initial alarm: "); printAlarm();
