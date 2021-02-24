@@ -20,8 +20,8 @@ https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/main/Archiv
 #### v2.0
 https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/main/Archive/v2.0
 
-
-#### Materials (v3.0 prototype)
+### v3.0 Prototype
+#### Materials 
 
 | Component | Product | Cost (USD) |
 | --- | --- | :---: | 
