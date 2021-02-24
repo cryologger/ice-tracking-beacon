@@ -21,6 +21,8 @@ https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/main/Archiv
 https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/main/Archive/v2.0
 
 ### v3.0 Prototype
+* v3.0 of the Cryologger is currently under development and will be built almost entirely using SparkFun products. Cold-weather tests are currently being conducted (February, 2021) and initial results are promising.
+
 #### Materials 
 
 | Component | Product | Cost (USD) |
