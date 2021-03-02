@@ -23,7 +23,7 @@
 // ------------------------------------------------------------------------------------------------
 // Libraries
 // ------------------------------------------------------------------------------------------------
-#include <Adafruit_NeoPixel.h>                    // https://github.com/adafruit/Adafruit_NeoPixel
+#include <FastLED.h>                              // https://github.com/adafruit/Adafruit_NeoPixel
 #include <ArduinoLowPower.h>                      // https://github.com/arduino-libraries/ArduinoLowPower
 #include <ICM_20948.h>                            // https://github.com/sparkfun/SparkFun_ICM-20948_ArduinoLibrary
 #include <IridiumSBD.h>                           // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
@@ -80,7 +80,7 @@
 // ------------------------------------------------------------------------------------------------
 // Object instantiations
 // ------------------------------------------------------------------------------------------------
-Adafruit_NeoPixel led(1, PIN_LED, NEO_GRB + NEO_KHZ800);
+CRGB              led[1];
 BME280            bme280;         // I2C Address: 0x77
 ICM_20948_I2C     imu;            // I2C Address: 0x69
 //IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP); // D16 (TX): Pin 1 (yellow) D17 (RX): Pin 6 (orange)
@@ -99,8 +99,8 @@ byte          alarmDate             = 0;      // RTC rolling alarm days
 unsigned int  transmitInterval      = 1;      // Number of messages to transmit in each Iridium transmission (340 byte limit)
 unsigned int  retransmitCounterMax  = 1;      // Number of failed data transmissions to reattempt (340 byte limit)
 unsigned int  gnssTimeout           = 10;    // Timeout for GNSS signal acquisition (s)
-int           iridiumTimeout        = 3 0;     // Timeout for Iridium transmission (s)
-unsigned long ledDelay              = 4000;   // Duration of RGB LED colour change (ms)
+int           iridiumTimeout        = 30;     // Timeout for Iridium transmission (s)
+unsigned long ledDelay              = 2000;   // Duration of RGB LED colour change (ms)
 
 // ------------------------------------------------------------------------------------------------
 // Global variable declarations
@@ -124,22 +124,6 @@ byte          transmitCounter       = 0;      // Iridium 9603 transmission inter
 unsigned long previousMillis        = 0;      // Global millis() timer
 unsigned long powerDelay            = 2500;   // Delay after power to MOSFET is enabled
 time_t        alarmTime, unixtime   = 0;      // Global RTC time variables
-
-// ------------------------------------------------------------------------------------------------
-// WS2812B RGB LED colour definitons
-// ------------------------------------------------------------------------------------------------
-uint32_t white    = led.Color(32, 32, 32);
-uint32_t red      = led.Color(32, 0, 0);
-uint32_t green    = led.Color(0, 32, 0);
-uint32_t blue     = led.Color(0, 0, 32);
-uint32_t cyan     = led.Color(0, 32, 32);
-uint32_t magenta  = led.Color(32, 0, 32);
-uint32_t yellow   = led.Color(32, 32, 0);
-uint32_t purple   = led.Color(16, 0, 32);
-uint32_t orange   = led.Color(32, 16, 0);
-uint32_t pink     = led.Color(32, 0, 16);
-uint32_t lime     = led.Color(16, 32, 0);
-uint32_t off      = led.Color(0, 0, 0);
 
 // ------------------------------------------------------------------------------------------------
 // Data transmission unions/structures
@@ -215,6 +199,7 @@ void setup()
   digitalWrite(PIN_MOSFET, HIGH);     // Disable MOSFET
   digitalWrite(PIN_IRIDIUM_EN, LOW);  // Disable power to Iridium 9603
 
+ 
   // Set analog resolution to 12-bits
   analogReadResolution(12);
 
@@ -250,7 +235,7 @@ void setup()
   DEBUG_PRINT("Datetime: "); printDateTime();
   DEBUG_PRINT("Initial alarm: "); printAlarm();
 
-  setLedColour(white); // Change LED colour to indicate completion of setup
+  setLedColour(CRGB::White); // Change LED colour to indicate completion of setup
 }
 
 // ------------------------------------------------------------------------------------------------

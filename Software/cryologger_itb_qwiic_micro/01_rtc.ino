@@ -12,7 +12,7 @@ void configureRtc()
   // Update time variables from RTC
   if (!rtc.updateTime()) {
     DEBUG_PRINT("Warning: RTC failed to update!");
-    setLedColour(orange); // Change LED colour to indicate failure
+    setLedColour(CRGB::Orange); // Change LED colour to indicate failure
   }
 
   // Disable all RTC interrupts
@@ -49,7 +49,7 @@ void readRtc()
   // Update time variables from RTC
   if (!rtc.updateTime()) {
     DEBUG_PRINT("Warning: RTC failed to update!");
-    setLedColour(orange);
+    setLedColour(CRGB::Orange);
   }
 
   // Get UNIX Epoch time
@@ -73,7 +73,7 @@ void setRtcAlarm()
   // Update time variables from RTC
   if (!rtc.updateTime()) {
     DEBUG_PRINT("Warning: RTC failed to update!");
-    setLedColour(orange);
+    setLedColour(CRGB::Orange);
   }
 
   // Check if the alarm was set in the past

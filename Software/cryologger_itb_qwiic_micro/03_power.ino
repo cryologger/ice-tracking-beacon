@@ -3,7 +3,7 @@ void configurePowerSwitch() {
   if (!mySwitch.begin()) //Connect to the power switch using Wire port
   {
     DEBUG_PRINTLN("Qwiic Power Switch not detected at default I2C address. Please check wiring.");
-    setLedColour(red);
+    setLedColour(CRGB::Red);
   }
 }
 
@@ -104,7 +104,7 @@ void goToSleep()
     firstTimeFlag = false;
   }
 
-  setLedColour(off); // Turn off LED
+  setLedColour(CRGB::Black); // Turn off LED
   digitalWrite(LED_BUILTIN, LOW);
   //disablePower();
   disablePowerSwitch();

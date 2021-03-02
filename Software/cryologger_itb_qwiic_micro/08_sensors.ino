@@ -23,7 +23,7 @@ void readSensors()
   // Check if sensor(s) online
   if (online.bme280) {
 
-    setLedColour(yellow); // Change LED colour
+    setLedColour(CRGB::Yellow); // Change LED colour
 
     // Wake sensor and return to sleep once measurement is made
     bme280.setMode(MODE_FORCED);
@@ -39,7 +39,7 @@ void readSensors()
     moMessage.pressure = pressure / 10;
 
     // Change LED colour
-    setLedColour(green);
+    setLedColour(CRGB::Green);
 
     // Stop the loop timer
     timer.sensor = millis() - loopStartTime;
@@ -47,6 +47,6 @@ void readSensors()
   else
   {
     DEBUG_PRINTLN("Warning: SparkFun BME280 offline!");
-    setLedColour(red); // Change LED colour
+    setLedColour(CRGB::Red); // Change LED colour
   }
 }

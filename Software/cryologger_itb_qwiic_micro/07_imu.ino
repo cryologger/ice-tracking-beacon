@@ -18,7 +18,7 @@ void readImu()
 {
   unsigned long loopStartTime = millis(); // Start loop timer
 
-  setLedColour(magenta);
+  setLedColour(CRGB::Magenta);
 
   if (online.imu)
   {
@@ -51,7 +51,7 @@ void readImu()
     DEBUG_PRINT(" ]");
     DEBUG_PRINTLN();
 #endif
-    setLedColour(green);
+    setLedColour(CRGB::Green);
 
     // Put the sensor to sleep
     imu.sleep(true);

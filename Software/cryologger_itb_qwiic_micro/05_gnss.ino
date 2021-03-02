@@ -31,6 +31,8 @@ void readGnss()
   if (online.gnss)
   {
     DEBUG_PRINTLN("Acquiring GNSS fix...");
+    
+    setLedColour(CRGB::Cyan); // Change LED colour
 
     // Attempt to acquire a valid GNSS position fix
     while (!gnssFixFlag && millis() - loopStartTime < gnssTimeout * 1000UL)

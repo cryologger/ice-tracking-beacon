@@ -13,7 +13,7 @@ void configureIridium()
   {
     DEBUG_PRINTLN("Warning: Qwiic Iridium 9603N not detected at default I2C address. Please check wiring.");
     online.iridium = false;
-    setLedColour(red); // Set LED colour
+    setLedColour(CRGB::Red); // Set LED colour
   }
 }
 
@@ -45,6 +45,9 @@ void transmitData()
   // Check if Iridium initialized successfully
   if (online.iridium)
   {
+    // Change LED colour
+    setLedColour(CRGB::Purple);
+
     // Check if data can and should be transmitted
     if (transmitCounter == transmitInterval || firstTimeFlag)
     {
@@ -239,33 +242,33 @@ void ISBDDiagsCallback(IridiumSBD *device, char c) {
 void setLedColourIridium(byte err)
 {
   if (err == 0) // ISBD_SUCCESS
-    setLedColour(green);
+    setLedColour(CRGB::Green);
   else if (err == 1) // ISBD_ALREADY_AWAKE
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 2) // ISBD_SERIAL_FAILURE
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 3) // ISBD_PROTOCOL_ERROR
-    setLedColour(blue);
+    setLedColour(CRGB::Blue);
   else if (err == 4) // ISBD_CANCELLED
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 5) // ISBD_NO_MODEM_DETECTED
-    setLedColour(red);
+    setLedColour(CRGB::Red);
   else if (err == 6) // ISBD_SBDIX_FATAL_ERROR
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 7) // ISBD_SENDRECEIVE_TIMEOUT
-    setLedColour(orange);
+    setLedColour(CRGB::Orange);
   else if (err == 8) // ISBD_RX_OVERFLOW
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 9) // ISBD_REENTRANT
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 10) // ISBD_IS_ASLEEP
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 11) // ISBD_NO_SLEEP_PIN
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 12) // ISBD_NO_NETWORK
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 13) // ISBD_MSG_TOO_LONG
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
 }
 
 // Call user function 1
