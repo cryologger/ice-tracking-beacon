@@ -36,11 +36,11 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 
 ### Assembly
 
-<p align="center"><img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v2.0/Images/assembly_1.JPG" width="720"></p>
+<p align="center"><img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Archive/v2.0/Images/assembly_1.JPG" width="720"></p>
 <p align="center"><b>Figure 1.</b> Assembly of Cryologger beacons prior to deployment.</p>
-<p align="center"><img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v2.0/Images/assembly_2.JPG" width="720"></p>
+<p align="center"><img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Archive/v2.0/Images/assembly_2.JPG" width="720"></p>
 <p align="center"><b>Figure 2.</b> Affixing of wooden spike beds to Cryologger enclosures.</p>
-<p align="center"><img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v2.0/Images/assembly_3.JPG" width="720"></p>
+<p align="center"><img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Archive/v2.0/Images/assembly_3.JPG" width="720"></p>
 <p align="center"><b>Figure 3.</b> Testing of Iridium transceivers from atop the CCGS Amundsen.</p>
 
 ### Measurements
@@ -71,14 +71,14 @@ Data is made freely available and can be viewed in near-real time at https://cry
 
 A total of 8 Cryologger drift tracking beacons were deployed from the CCGS Amundsen's helicopter on icebergs and ice islands along the coasts of Ellesmere Island, Baffin Island and Greenland during the ArcticNet leg of the 2019 Amundsen Expedition. An additional 2 tracking beacons were also deployed by helicopter on icebergs near the Milne Ice Shelf, Ellesmere Island in the summer of 2019.
 
-<p align="center"><img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v2.0/Images/2019_deployments.png" width="720"></p>
+<p align="center"><img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Archive/v2.0/Images/2019_deployments.png" width="720"></p>
 <p align="center"><b>Figure 3.</b> 2019 Cryologger deployment locations.<p>
 
 The overall suitability of potential targets was determined by assessing the iceberg’s size, shape and location. At the time of deployment, a compass heading of the tracking beacon was recorded and a 360° aerial photo survey of the iceberg was performed if possible. Following deployment, communications with each beacon were successfully established in order to remotely modify their operational parameters for optimal battery efficiency.
 
 <p align="center">
-  <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v2.0/Images/2019_300434063494100_A.JPG" width="420">
-  <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v2.0/Images/2019_300434063494100_B.JPG" width="420">
+  <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Archive/v2.0/Images/2019_300434063494100_A.JPG" width="420">
+  <img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Archive/v2.0/Images/2019_300434063494100_B.JPG" width="420">
 </p>
 <p align="center"><b>Figure 3.</b> Deployment of a Cryologger beacon on an iceberg approximately 700 m in length.<p>
 
