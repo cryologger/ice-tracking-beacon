@@ -1,5 +1,5 @@
 # Cryologger - Iceberg Tracking Beacon (ITB) v1.0
-![Image](https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/master/Archive/v1.0/Images/2018_300434063418130_A.JPG)
+![Image](https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Archive/v1.0/Images/2018_300434063418130_A.JPG)
 
 ## Background
 Icebergs and ice islands represent significant hazards to marine navigation and offshore infrastructure at a time when demand for access to Canada’s Arctic waters is increasing.
