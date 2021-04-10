@@ -29,10 +29,8 @@
 #include <IridiumSBD.h>                           // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
 #include <SAMD_AnalogCorrection.h>                // https://github.com/arduino/ArduinoCore-samd/tree/master/libraries/SAMD_AnalogCorrection
 #include <SparkFunBME280.h>                       // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
-#include <SparkFun_Qwiic_Power_Switch_Arduino_Library.h>
 #include <SparkFun_RV8803.h>                      // https://github.com/sparkfun/SparkFun_RV-8803_Arduino_Library
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_u-blox_GNSS_Arduino_Library
-#include <TimeLib.h>                              // https://github.com/PaulStoffregen/Time
 #include <Wire.h>                                 // https://www.arduino.cc/en/Reference/Wire
 
 // ------------------------------------------------------------------------------------------------
@@ -64,7 +62,7 @@
 // ------------------------------------------------------------------------------------------------
 // Port definitions
 // ------------------------------------------------------------------------------------------------
-#define SERIAL_PORT     SerialUSB   // Required by SparkFun Qwiic Micro
+#define SERIAL_PORT     SerialUSB
 #define IRIDIUM_PORT    Serial
 
 // ------------------------------------------------------------------------------------------------
@@ -83,22 +81,20 @@
 CRGB              led[1];
 BME280            bme280;         // I2C Address: 0x77
 ICM_20948_I2C     imu;            // I2C Address: 0x69
-//IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP); // D16 (TX): Pin 1 (yellow) D17 (RX): Pin 6 (orange)
-IridiumSBD        modem(Wire);    // I2C address: 0x63
-QWIIC_POWER       mySwitch;
+IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP); // D16 (TX): Pin 1 (yellow) D17 (RX): Pin 6 (orange)
 RV8803            rtc;            // I2C Address: 0x32
 SFE_UBLOX_GNSS    gnss;           // I2C Address: 0x42
 
 // ------------------------------------------------------------------------------------------------
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
-unsigned long alarmInterval         = 300;  // Sleep duration in seconds
-byte          alarmMinutes          = 5;      // RTC rolling alarm mintues
-byte          alarmHours            = 0;      // RTC rolling alarm hours
-byte          alarmDate             = 0;      // RTC rolling alarm days
+unsigned long alarmInterval         = 300;    // Sleep duration in seconds
+byte          alarmMinutes          = 1;      // Rolling alarm mintues
+byte          alarmHours            = 0;      // Rolling alarm hours
+byte          alarmDate             = 0;      // Rolling alarm days
 unsigned int  transmitInterval      = 1;      // Number of messages to transmit in each Iridium transmission (340 byte limit)
 unsigned int  retransmitCounterMax  = 1;      // Number of failed data transmissions to reattempt (340 byte limit)
-unsigned int  gnssTimeout           = 10;    // Timeout for GNSS signal acquisition (s)
+unsigned int  gnssTimeout           = 1;     // Timeout for GNSS signal acquisition
 int           iridiumTimeout        = 30;     // Timeout for Iridium transmission (s)
 unsigned long ledDelay              = 2000;   // Duration of RGB LED colour change (ms)
 
@@ -110,7 +106,7 @@ const float   R2                    = 998700.0;    // Voltage divider resistor 2
 volatile bool alarmFlag             = true;   // Flag for alarm interrupt service routine
 volatile bool watchdogFlag          = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter       = 0;      // Watchdog Timer interrupt counter
-bool          firstTimeFlag         = true;   // Flag to determine if the program is running for the first time
+bool          firstTimeFlag         = false;   // Flag to determine if the program is running for the first time
 bool          resetFlag             = 0;      // Flag to force system reset using Watchdog Timer
 bool          gnssFixFlag           = false;  // Flag to indicate if GNSS valid fix has been acquired
 bool          rtcSyncFlag           = false;  // Flag to indicate if the RTC was syned with the GNSS
@@ -169,6 +165,7 @@ SBD_MT_MESSAGE mtMessage;
 // Structure to store device online/offline states
 struct struct_online
 {
+  bool rtc = false;
   bool imu = false;
   bool gnss = false;
   bool iridium = false;
@@ -179,8 +176,8 @@ struct struct_online
 struct struct_timer
 {
   unsigned long rtc;
-  unsigned long sync;
-  unsigned long sensor;
+  unsigned long syncRtc;
+  unsigned long sensors;
   unsigned long imu;
   unsigned long gnss;
   unsigned long iridium;
@@ -199,7 +196,7 @@ void setup()
   digitalWrite(PIN_MOSFET, HIGH);     // Disable MOSFET
   digitalWrite(PIN_IRIDIUM_EN, LOW);  // Disable power to Iridium 9603
 
- 
+
   // Set analog resolution to 12-bits
   analogReadResolution(12);
 
@@ -207,7 +204,7 @@ void setup()
   analogReadCorrection(17, 2057);
 
   Wire.begin(); // Initialize I2C
-  Wire.setClock(100000); // Set I2C clock speed to 400 kHz
+  Wire.setClock(400000); // Set I2C clock speed to 400 kHz
 
 #if DEBUG
   SERIAL_PORT.begin(115200); // Begin serial at 115200 baud
@@ -224,16 +221,16 @@ void setup()
   printLine();
 
   // Configure devices
-  configurePowerSwitch();
   configureWatchdog();    // Configure Watchdog Timer (WDT)
   configureRtc();         // Configure real-time clock (RTC)
   configureGnss();        // Configure GNSS receiver
+  syncRtc();
   configureImu();         // Configure interial measurement unit (IMU)
   configureSensors();     // Configure attached sensors
   configureIridium();     // Configure Iridium 9603 transceiver
 
-  DEBUG_PRINT("Datetime: "); printDateTime();
-  DEBUG_PRINT("Initial alarm: "); printAlarm();
+  DEBUG_PRINT("Info: "); printDateTime();
+  DEBUG_PRINT("Info: Initial alarm "); printAlarm();
 
   setLedColour(CRGB::White); // Change LED colour to indicate completion of setup
 }
@@ -252,26 +249,26 @@ void loop()
     // Check if RTC alarm flag was set
     if (rtc.getInterruptFlag(FLAG_ALARM) || firstTimeFlag)
     {
-      if (!firstTimeFlag) {
-        // Wake up
+      DEBUG_PRINT("Info: Alarm interrupt triggered ");
+      printDateTime(); // Print RTC's current date and time
+     
+      if (!firstTimeFlag)
+      {
         wakeUp();
       }
 
-      DEBUG_PRINT("Alarm interrupt trigger: ");
-      printDateTime(); // Print RTC's current date and time
-
       // Perform measurements
-      petDog();             // Reset the Watchdog Timer
-      readBattery();        // Read the battery voltage
-      readSensors();        // Read attached sensors
-      readImu();            // Read the IMU
-      readGnss();           // Read the GNSS
-      writeBuffer();        // Write the data to transmit buffer
-      transmitData();       // Transmit data
-      printTimers();        // Print function execution timers
-      setRtcAlarm();        // Set the RTC alarm
+      petDog();         // Reset the Watchdog Timer
+      readBattery();    // Read the battery voltage
+      readSensors();    // Read attached sensors
+      readImu();        // Read the IMU
+      readGnss();       // Read the GNSS
+      writeBuffer();    // Write the data to transmit buffer
+      transmitData();   // Transmit data
+      printTimers();    // Print function execution timers
+      setRtcAlarm();    // Set the RTC alarm
 
-      DEBUG_PRINTLN("Entering deep sleep...");
+      DEBUG_PRINTLN("Info: Entering deep sleep...");
       DEBUG_PRINTLN();
 
       // Disable serial

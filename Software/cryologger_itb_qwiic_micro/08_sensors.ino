@@ -21,14 +21,17 @@ void readSensors()
   unsigned long loopStartTime = millis();
 
   // Check if sensor(s) online
-  if (online.bme280) {
-
+  if (online.bme280) 
+  {
     setLedColour(CRGB::Yellow); // Change LED colour
 
     // Wake sensor and return to sleep once measurement is made
     bme280.setMode(MODE_FORCED);
+    
     // Delay required to allow sensor to perform the measurement
     while (bme280.isMeasuring() && millis() - loopStartTime < 1000);
+
+    // Record measurements
     float temperature = bme280.readTempC();
     float humidity = bme280.readFloatHumidity();
     float pressure = bme280.readFloatPressure();
@@ -42,7 +45,7 @@ void readSensors()
     setLedColour(CRGB::Green);
 
     // Stop the loop timer
-    timer.sensor = millis() - loopStartTime;
+    timer.sensors = millis() - loopStartTime;
   }
   else
   {

@@ -2,18 +2,20 @@
 void configureRtc()
 {
   // Initialize RTC
-  if (!rtc.begin()) {
+  if (!rtc.begin()) 
+  {
     DEBUG_PRINTLN("Warning: RTC initialization failed!");
   }
+  else
+  {
+    online.rtc; // Set flag
+  }
 
-  // Ensure RTC uses 24-hour time format
+  // Enable 24-hour time format
   rtc.set24Hour();
 
   // Update time variables from RTC
-  if (!rtc.updateTime()) {
-    DEBUG_PRINT("Warning: RTC failed to update!");
-    setLedColour(CRGB::Orange); // Change LED colour to indicate failure
-  }
+  rtc.updateTime();
 
   // Disable all RTC interrupts
   rtc.disableAllInterrupts();
@@ -36,8 +38,6 @@ void configureRtc()
   // Configure and attach interrupt on the INT pin
   pinMode(PIN_RTC_INT, INPUT_PULLUP);
   LowPower.attachInterruptWakeup(PIN_RTC_INT, alarmIsr, FALLING);
-
-  DEBUG_PRINTLN(rtc.stringTime8601());
 }
 
 // Read RTC
@@ -47,7 +47,8 @@ void readRtc()
   unsigned long loopStartTime = micros();
 
   // Update time variables from RTC
-  if (!rtc.updateTime()) {
+  if (!rtc.updateTime()) 
+  {
     DEBUG_PRINT("Warning: RTC failed to update!");
     setLedColour(CRGB::Orange);
   }
@@ -71,7 +72,8 @@ void setRtcAlarm()
   alarmTime = unixtime + alarmInterval;
 
   // Update time variables from RTC
-  if (!rtc.updateTime()) {
+  if (!rtc.updateTime()) 
+  {
     DEBUG_PRINT("Warning: RTC failed to update!");
     setLedColour(CRGB::Orange);
   }
@@ -89,7 +91,7 @@ void setRtcAlarm()
     // Set alarm to occur on next hour rollover
     rtc.setAlarmMinutes(0);
   }
-  else // Set alarm as normal
+  else
   {
     // Check if the program is running for the first time
     if (firstTimeFlag)
@@ -103,22 +105,23 @@ void setRtcAlarm()
       rtc.setAlarmMinutes(0);
       //rtc.setAlarmMinutes((rtc.getMinutes() + alarmMinutes) % 60);
     }
-    else {
+    else 
+    {
       // Select alarm interrupt registers to compare with the current time registers
       rtc.setItemsToMatchForAlarm(1, 1, 0, 1); // minutes, hours, weekday, date
 
       // Set RTC alarm
-      rtc.setAlarmMinutes(minute(alarmTime));
-      rtc.setAlarmHours(hour(alarmTime));
-      rtc.setAlarmDate(day(alarmTime));
+      //rtc.setAlarmMinutes(minute(alarmTime));
+      //rtc.setAlarmHours(hour(alarmTime));
+      //rtc.setAlarmDate(day(alarmTime));
     }
   }
 
   // Set RTC rolling alarm
-  //rtc.setAlarmMinutes((rtc.getMinutes() + alarmMinutes) % 60);
-  //rtc.setAlarmHours((rtc.getHours() + alarmHours) % 24);
-  //rtc.setAlarmWeekday(0);
-  //rtc.setAlarmDate((rtc.getDate() + alarmDate) % 31);
+  rtc.setAlarmMinutes((rtc.getMinutes() + alarmMinutes) % 60);
+  rtc.setAlarmHours((rtc.getHours() + alarmHours) % 24);
+  rtc.setAlarmWeekday(0);
+  rtc.setAlarmDate((rtc.getDate() + alarmDate) % 31);
 
   // Clear RTC alarm interrupt flag
   rtc.clearInterruptFlag(FLAG_ALARM);

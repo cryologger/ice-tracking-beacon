@@ -2,7 +2,7 @@
 void configureLed()
 {
   FastLED.addLeds<WS2812B, PIN_LED, GRB>(led, 1);
-  FastLED.setBrightness(16); 
+  FastLED.setBrightness(16);
 }
 
 // Set WS2812B RGB LED color
@@ -13,8 +13,5 @@ void setLedColour(CRGB colour)
   FastLED.show();
 
   // Non-blocking delay
-  unsigned long currentMillis = millis();
-  while (millis() - currentMillis < ledDelay) {
-    // Delay
-  }
+  myDelay(2000);
 }

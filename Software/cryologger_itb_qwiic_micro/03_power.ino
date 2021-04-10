@@ -1,14 +1,3 @@
-void configurePowerSwitch() {
-  // Configure Qwiic Power Switch
-  if (!mySwitch.begin()) //Connect to the power switch using Wire port
-  {
-    DEBUG_PRINTLN("Qwiic Power Switch not detected at default I2C address. Please check wiring.");
-    setLedColour(CRGB::Red);
-  }
-}
-
-
-
 // Read battery voltage from voltage divider
 void readBattery() {
 
@@ -61,38 +50,17 @@ void enableSerial()
 #endif
 }
 
-
 // Enable power to MOSFET
-void enablePower() {
+void enablePower()
+{
   digitalWrite(PIN_MOSFET, LOW);
-  // Non-blocking delay
-  unsigned long currentMillis = millis();
-  while (millis() - currentMillis < powerDelay) {
-    // Wait...
-  }
+  myDelay(2000);  // Non-blocking delay
 }
 
 // Disable power to MOSFET
 void disablePower()
 {
   digitalWrite(PIN_MOSFET, HIGH);
-}
-
-
-// Enable power to Qwiic Power Switch
-void enablePowerSwitch() {
-  mySwitch.powerOn();
-  // Non-blocking delay
-  unsigned long currentMillis = millis();
-  while (millis() - currentMillis < powerDelay) {
-    // Wait...
-  }
-}
-
-// Disable power to MOSFET
-void disablePowerSwitch()
-{
-  mySwitch.powerOff();
 }
 
 // Enter deep sleep
@@ -104,10 +72,13 @@ void goToSleep()
     firstTimeFlag = false;
   }
 
-  setLedColour(CRGB::Black); // Turn off LED
+  // Turn off LEDs
+  setLedColour(CRGB::Black);
   digitalWrite(LED_BUILTIN, LOW);
+
+  // Disable power
   //disablePower();
-  disablePowerSwitch();
+
   // Enter deep sleep
   LowPower.deepSleep();
 
@@ -115,12 +86,14 @@ void goToSleep()
 }
 
 // Wake from deep sleep
-void wakeUp() {
+void wakeUp()
+{
+  // Re-configure devices
 
-  // Re-configure all devices
+#if DEBUG
   enableSerial();       // Re-enable serial port
+#endif
   //enablePower();        // Enable power to MOSFET controlled components
-  enablePowerSwitch();
   configureLed();       // Configure WS2812B RGB LED
   configureGnss();      // Configure GNSS receiver
   configureImu();       // Configure interial measurement unit
@@ -144,4 +117,19 @@ void blinkLed(byte ledFlashes, unsigned int ledDelay)
   }
   // Ensure LED is off at end of blink cycle
   digitalWrite(LED_BUILTIN, LOW);
+}
+
+// Non-blocking delay (ms: duration)
+// https://arduino.stackexchange.com/questions/12587/how-can-i-handle-the-millis-rollover
+void myDelay(unsigned long ms)
+{
+  unsigned long start = millis();         // Start: timestamp
+  for (;;)
+  {
+    petDog();                             // Reset watchdog timer
+    unsigned long now = millis();         // Now: timestamp
+    unsigned long elapsed = now - start;  // Elapsed: duration
+    if (elapsed >= ms)                    // Comparing durations: OK
+      return;
+  }
 }
