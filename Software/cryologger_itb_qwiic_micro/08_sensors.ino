@@ -23,6 +23,7 @@ void readSensors()
   // Check if sensor(s) online
   if (online.bme280) 
   {
+    DEBUG_PRINTLN("Info: Reading BME280...");
     setLedColour(CRGB::Yellow); // Change LED colour
 
     // Wake sensor and return to sleep once measurement is made

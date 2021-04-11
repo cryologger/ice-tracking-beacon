@@ -22,6 +22,8 @@ void readImu()
 
   if (online.imu)
   {
+    DEBUG_PRINTLN("Info: Reading ICM-20948...");
+    
     // Wake the sensor
     imu.sleep(false);
     imu.lowPower(false);

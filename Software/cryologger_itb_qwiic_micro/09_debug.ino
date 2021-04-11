@@ -30,7 +30,7 @@ void printSettings()
 
 void printTimers()
 {
-  //printLine();
+  printLine();
   DEBUG_PRINTLN("Function Execution Timers (ms)");
   printLine();
   DEBUG_PRINT("rtc: ");       printTab(2);  DEBUG_PRINTLN(timer.rtc);

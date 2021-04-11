@@ -13,5 +13,5 @@ void setLedColour(CRGB colour)
   FastLED.show();
 
   // Non-blocking delay
-  myDelay(2000);
+  myDelay(1000);
 }

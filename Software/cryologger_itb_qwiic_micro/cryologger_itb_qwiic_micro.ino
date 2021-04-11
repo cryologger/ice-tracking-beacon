@@ -1,6 +1,6 @@
 /*
-    Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0 Prototype
-    Date:     January 8, 2020
+    Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0
+    Date:     April 10, 2021
     Author:   Adam Garbo
 
     Description:
@@ -31,14 +31,15 @@
 #include <SparkFunBME280.h>                       // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
 #include <SparkFun_RV8803.h>                      // https://github.com/sparkfun/SparkFun_RV-8803_Arduino_Library
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_u-blox_GNSS_Arduino_Library
+#include <TimeLib.h>                              // https://github.com/PaulStoffregen/Time
 #include <Wire.h>                                 // https://www.arduino.cc/en/Reference/Wire
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
 // ------------------------------------------------------------------------------------------------
 #define DEBUG           true   // Output debug messages to Serial Monitor
-#define DEBUG_GNSS      true   // Output GNSS debug information
-#define DEBUG_IRIDIUM   true   // Output Iridium debug messages to Serial Monitor
+#define DEBUG_GNSS      false   // Output GNSS debug information
+#define DEBUG_IRIDIUM   false   // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
 #define DEBUG_PRINT(x)            SERIAL_PORT.print(x)
@@ -89,13 +90,13 @@ SFE_UBLOX_GNSS    gnss;           // I2C Address: 0x42
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
 unsigned long alarmInterval         = 300;    // Sleep duration in seconds
-byte          alarmMinutes          = 1;      // Rolling alarm mintues
+byte          alarmMinutes          = 2;      // Rolling alarm mintues
 byte          alarmHours            = 0;      // Rolling alarm hours
 byte          alarmDate             = 0;      // Rolling alarm days
 unsigned int  transmitInterval      = 1;      // Number of messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitCounterMax  = 1;      // Number of failed data transmissions to reattempt (340 byte limit)
-unsigned int  gnssTimeout           = 1;     // Timeout for GNSS signal acquisition
-int           iridiumTimeout        = 30;     // Timeout for Iridium transmission (s)
+unsigned int  retransmitCounterMax  = 10;      // Number of failed data transmissions to reattempt (340 byte limit)
+unsigned int  gnssTimeout           = 1;      // Timeout for GNSS signal acquisition
+unsigned int  iridiumTimeout        = 30;     // Timeout for Iridium transmission (s)
 unsigned long ledDelay              = 2000;   // Duration of RGB LED colour change (ms)
 
 // ------------------------------------------------------------------------------------------------
@@ -106,12 +107,8 @@ const float   R2                    = 998700.0;    // Voltage divider resistor 2
 volatile bool alarmFlag             = true;   // Flag for alarm interrupt service routine
 volatile bool watchdogFlag          = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter       = 0;      // Watchdog Timer interrupt counter
-bool          firstTimeFlag         = false;   // Flag to determine if the program is running for the first time
+bool          firstTimeFlag         = true;   // Flag to determine if the program is running for the first time
 bool          resetFlag             = 0;      // Flag to force system reset using Watchdog Timer
-bool          gnssFixFlag           = false;  // Flag to indicate if GNSS valid fix has been acquired
-bool          rtcSyncFlag           = false;  // Flag to indicate if the RTC was syned with the GNSS
-byte          gnssFixCounter        = 0;      // Counter for valid GNSS fixes
-byte          gnssFixCounterMax     = 30;     // Counter limit for threshold of valid GNSS fixes
 float         voltage               = 0.0;    // Battery voltage
 uint8_t       transmitBuffer[340]   = {};     // Iridium 9603 transmission buffer (MO SBD message max length: 340 bytes)
 unsigned int  messageCounter        = 0;      // Iridium 9603 transmission counter (zero indicates a reset)
@@ -152,12 +149,12 @@ typedef union
 {
   struct
   {
-    uint32_t  alarmInterval;      // (4 bytes)
-    uint8_t   transmitInterval;   // (1 byte)
-    uint8_t   retransmitCounter;  // (1 byte)
-    uint8_t   resetFlag;          // (1 byte)
+    uint32_t  alarmInterval;      // 4 bytes
+    uint8_t   transmitInterval;   // 1 byte
+    uint8_t   retransmitCounter;  // 1 byte
+    uint8_t   resetFlag;          // 1 byte
   };
-  uint8_t bytes[7]; // Size of message to be received (in bytes)
+  uint8_t bytes[7]; // Size of message to be received in bytes
 } SBD_MT_MESSAGE;
 
 SBD_MT_MESSAGE mtMessage;
@@ -224,12 +221,14 @@ void setup()
   configureWatchdog();    // Configure Watchdog Timer (WDT)
   configureRtc();         // Configure real-time clock (RTC)
   configureGnss();        // Configure GNSS receiver
-  syncRtc();
+  syncRtc();              // Synchronize RTC with GNSS
   configureImu();         // Configure interial measurement unit (IMU)
   configureSensors();     // Configure attached sensors
   configureIridium();     // Configure Iridium 9603 transceiver
 
-  DEBUG_PRINT("Info: "); printDateTime();
+  setInitialAlarm();      // Configure and set intial RTC alarm
+  
+  DEBUG_PRINT("Info: "); printCurrentDateTime();
   DEBUG_PRINT("Info: Initial alarm "); printAlarm();
 
   setLedColour(CRGB::White); // Change LED colour to indicate completion of setup
@@ -249,13 +248,14 @@ void loop()
     // Check if RTC alarm flag was set
     if (rtc.getInterruptFlag(FLAG_ALARM) || firstTimeFlag)
     {
-      DEBUG_PRINT("Info: Alarm interrupt triggered ");
-      printDateTime(); // Print RTC's current date and time
-     
+      // Check if program is running for the first time
       if (!firstTimeFlag)
       {
         wakeUp();
       }
+
+      DEBUG_PRINT("Info: Alarm interrupt trigger ");
+      printDateTime(); // Print RTC date and time at time of alarm interrupt
 
       // Perform measurements
       petDog();         // Reset the Watchdog Timer

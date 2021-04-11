@@ -3,7 +3,6 @@ void configureGnss()
 {
   if (gnss.begin())
   {
-
     //gnss.enableDebugging();                           // Uncomment to enable GNSS debug messages on Serial
     gnss.setI2COutput(COM_TYPE_UBX);                  // Set I2C port to output UBX only
     gnss.saveConfigSelective(VAL_CFG_SUBSEC_IOPORT);  // Save communications port settings to flash and BBR
@@ -29,12 +28,13 @@ void syncRtc()
   {
     // Clear flag
     bool rtcSyncFlag = false;
+    int gnssFixCounter = 0;
 
     setLedColour(CRGB::Cyan);
     DEBUG_PRINTLN("Info: Attempting to synchronize RTC with GNSS...");
 
     // Attempt to acquire a valid GNSS position fix for up to 5 minutes
-    while (!rtcSyncFlag && millis() - loopStartTime < gnssTimeout * 10UL * 1000UL)
+    while (!rtcSyncFlag && millis() - loopStartTime < gnssTimeout * 60UL * 1000UL)
     {
       petDog(); // Reset watchdog timer
 
@@ -58,9 +58,15 @@ void syncRtc()
         DEBUG_PRINTLN(gnssBuffer);
 #endif
 
-        // Check if date and time are valid and sync RTC with GNSS
-        if (fixType == 3 && dateValidFlag && timeValidFlag)
+        if (fixType >= 2)
         {
+          gnssFixCounter++;
+        }
+
+        // Check if date and time are valid and sync RTC with GNSS
+        if (gnssFixCounter > 3 && fixType == 3 && dateValidFlag && timeValidFlag)
+        {
+          rtc.updateTime();                               // Update time variables from RTC
           unsigned long rtcEpoch = rtc.getEpoch();        // Get RTC epoch time
           unsigned long gnssEpoch = gnss.getUnixEpoch();  // Get GNSS epoch time
           rtc.setEpoch(gnssEpoch);                        // Set RTC date and time
@@ -82,8 +88,7 @@ void syncRtc()
   }
   else
   {
-    // Clear flag
-    rtcSyncFlag = false;
+    DEBUG_PRINTLN("Warning: u-blox GNSS is offline!");
   }
 
   // Stop the loop timer
@@ -101,12 +106,12 @@ void readGnss()
   if (online.gnss)
   {
     // Clear flag
-    bool rtcSyncFlag = false;
+    bool gnssFixFlag = false;
     setLedColour(CRGB::Cyan);
     DEBUG_PRINTLN("Info: Attempting to acquire a GNSS fix...");
 
     // Attempt to acquire a valid GNSS position fix for up to 5 minutes
-    while (!rtcSyncFlag && millis() - loopStartTime < gnssTimeout * 10UL * 1000UL)
+    while (!gnssFixFlag && millis() - loopStartTime < gnssTimeout * 60UL * 1000UL)
     {
       petDog(); // Reset watchdog timer
 
@@ -131,14 +136,15 @@ void readGnss()
 #endif
 
         // Check if date and time are valid and sync RTC with GNSS if required
-        if (fixType == 3 && dateValidFlag && timeValidFlag)
+        if (fixType >= 2 && dateValidFlag && timeValidFlag)
         {
+          gnssFixFlag = true;                             // Set flag
+          rtc.updateTime();                               // Update time variables from RTC
           unsigned long rtcEpoch = rtc.getEpoch();        // Get RTC epoch time
           unsigned long gnssEpoch = gnss.getUnixEpoch();  // Get GNSS epoch time
           rtc.setEpoch(gnssEpoch);                        // Set RTC date and time
           unsigned long rtcDrift = gnssEpoch - rtcEpoch;  // Calculate RTC drift
-          rtcSyncFlag = true;                             // Set flag
-
+          
           // Write data to union
           moMessage.rtcDrift = rtcDrift;
           moMessage.latitude = gnss.getLatitude();
@@ -151,17 +157,16 @@ void readGnss()
         }
       }
     }
-    if (!rtcSyncFlag)
+    if (!gnssFixFlag)
     {
-      DEBUG_PRINTLN("Warning: Unable to sync RTC!");
+      DEBUG_PRINTLN("Warning: Unable to acquire GNSS fix!");
     }
   }
   else
   {
-    // Clear flag
-    rtcSyncFlag = false;
+    DEBUG_PRINTLN("Warning: u-blox GNSS is offline!");
   }
 
   // Stop the loop timer
-  timer.syncRtc = millis() - loopStartTime;
+  timer.gnss = millis() - loopStartTime;
 }

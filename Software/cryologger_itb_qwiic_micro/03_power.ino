@@ -45,8 +45,7 @@ void enableSerial()
 #if DEBUG
   USBDevice.attach(); // Re-attach USB
   SERIAL_PORT.begin(115200);
-  //while (!SERIAL_PORT);
-  blinkLed(2, 1000); // Non-blocking delay to allow user to open Serial Monitor
+  myDelay(4000); // Non-blocking delay to allow user to open Serial Monitor
 #endif
 }
 

@@ -1,11 +1,11 @@
 // Configure RockBLOCK 9603
 void configureIridium()
 {
-  //modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE);     // Assume USB power
-  modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
+  modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE);     // Assume USB power
+  //modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
   modem.adjustATTimeout(20);                                // Adjust timeout timer for serial AT commands (default = 20 s)
   modem.adjustSendReceiveTimeout(iridiumTimeout);           // Adjust timeout timer for library send/receive commands (default = 300 s)
-  modem.adjustStartupTimeout(30);                           // Adjust timeout for Iridium modem startup (default = 240 s)
+  //modem.adjustStartupTimeout(30);                           // Adjust timeout for Iridium modem startup (default = 240 s)
 }
 
 // Write data from structure to transmit buffer
@@ -20,7 +20,7 @@ void writeBuffer()
 
   // Print MO-SBD union/structure
   printMoSbd();
-  printMoSbdHex();
+  //printMoSbdHex();
   //printTransmitBuffer();
 
   // Write zeroes to MO-SBD union/structure
@@ -33,14 +33,14 @@ void transmitData()
   // Start loop timer
   unsigned long loopStartTime = millis();
 
-  // Enable power to Iridium 9603
+  // Enable power to Iridium 9603N
   digitalWrite(PIN_IRIDIUM_EN, HIGH);
 
   // Check if data transmission is required
   if ((transmitCounter == transmitInterval) || firstTimeFlag)
   {
     // Change LED colour
-    setLedColour(CRGB::Purple); 
+    setLedColour(CRGB::Purple);
 
     // Start the serial port connected to the satellite modem
     IRIDIUM_PORT.begin(19200);
@@ -126,6 +126,8 @@ void transmitData()
     if (err != ISBD_SUCCESS)
     {
       retransmitCounter++;
+      failedTransmitCounter++;
+      
       // Reset counter if reattempt limit is exceeded
       if (retransmitCounter > retransmitCounterMax)
       {
@@ -163,6 +165,7 @@ void transmitData()
     timer.iridium = millis() - loopStartTime;
     moMessage.transmitDuration = timer.iridium / 1000;
 
+    printSettings();
     DEBUG_PRINT("transmitDuration: "); DEBUG_PRINTLN(moMessage.transmitDuration);
     DEBUG_PRINT("retransmitCounter: "); DEBUG_PRINTLN(retransmitCounter);
 
