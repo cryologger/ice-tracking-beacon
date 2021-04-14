@@ -73,7 +73,7 @@
 #define PIN_IRIDIUM_EN      3
 #define PIN_IRIDIUM_SLEEP   4
 #define PIN_RTC_INT         5
-#define PIN_MOSFET          6
+#define PIN_GNSS_EN         6
 #define PIN_LED             7
 
 // ------------------------------------------------------------------------------------------------
@@ -89,7 +89,7 @@ SFE_UBLOX_GNSS    gnss;           // I2C Address: 0x42
 // ------------------------------------------------------------------------------------------------
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
-unsigned long alarmInterval         = 300;    // Sleep duration in seconds
+unsigned long alarmInterval         = 120;    // Sleep duration in seconds
 byte          alarmMinutes          = 2;      // Rolling alarm mintues
 byte          alarmHours            = 0;      // Rolling alarm hours
 byte          alarmDate             = 0;      // Rolling alarm days
@@ -114,6 +114,7 @@ uint8_t       transmitBuffer[340]   = {};     // Iridium 9603 transmission buffe
 unsigned int  messageCounter        = 0;      // Iridium 9603 transmission counter (zero indicates a reset)
 byte          retransmitCounter     = 0;      // Iridium 9603 failed transmission counter
 byte          transmitCounter       = 0;      // Iridium 9603 transmission interval counter
+unsigned int  failedTransmitCounter = 0;
 unsigned long previousMillis        = 0;      // Global millis() timer
 unsigned long powerDelay            = 2500;   // Delay after power to MOSFET is enabled
 time_t        alarmTime, unixtime   = 0;      // Global RTC time variables
@@ -188,11 +189,10 @@ void setup()
   // Pin assignments
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(PIN_IRIDIUM_EN, OUTPUT);
-  pinMode(PIN_MOSFET, OUTPUT);
+  pinMode(PIN_GNSS_EN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
-  digitalWrite(PIN_MOSFET, HIGH);     // Disable MOSFET
+  digitalWrite(PIN_GNSS_EN, LOW);     // Disable power to GNSS
   digitalWrite(PIN_IRIDIUM_EN, LOW);  // Disable power to Iridium 9603
-
 
   // Set analog resolution to 12-bits
   analogReadResolution(12);
@@ -209,7 +209,7 @@ void setup()
   blinkLed(2, 1000); // Non-blocking delay to allow user to open Serial Monitor
 #endif
 
-  enablePower(); // Enable power to MOSFET controlled components
+  enableGnssPower(); // Enable power to GNSS
   configureLed(); // Configure WS2812B RGB LED
 
   DEBUG_PRINTLN();
@@ -227,7 +227,7 @@ void setup()
   configureIridium();     // Configure Iridium 9603 transceiver
 
   setInitialAlarm();      // Configure and set intial RTC alarm
-  
+
   DEBUG_PRINT("Info: "); printCurrentDateTime();
   DEBUG_PRINT("Info: Initial alarm "); printAlarm();
 

@@ -11,6 +11,9 @@ void configureRtc()
     online.rtc; // Set flag
   }
 
+  // Update time variables from RTC
+  rtc.updateTime();
+
   // Enable 24-hour time format
   rtc.set24Hour();
 
@@ -74,11 +77,11 @@ void readRtc()
 // Set RTC alarm time and date
 void setRtcAlarm()
 {
-  // If multiple failed transmissions are detected, the RTC alarm 
+  // If multiple failed transmissions are detected, the RTC alarm
   // interval will increase up to a maximum of 1 day.
-  // When a transmission is made successfully, the RTC alarm 
+  // When a transmission is made successfully, the RTC alarm
   // interval will return to the default value
-  
+
   if (failedTransmitCounter < 5)
   {
     // Calculate next alarm

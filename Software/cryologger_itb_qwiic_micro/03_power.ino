@@ -50,16 +50,28 @@ void enableSerial()
 }
 
 // Enable power to MOSFET
-void enablePower()
+void enableGnssPower()
 {
-  digitalWrite(PIN_MOSFET, LOW);
+  digitalWrite(PIN_GNSS_EN, HIGH);
   myDelay(2000);  // Non-blocking delay
 }
 
 // Disable power to MOSFET
-void disablePower()
+void disableGnssPower()
 {
-  digitalWrite(PIN_MOSFET, HIGH);
+  digitalWrite(PIN_GNSS_EN, HIGH);
+}
+
+// Enable power to Pololu step-down regulator powering RockBLOCK 9603
+void enableIridiumPower()
+{
+  digitalWrite(PIN_IRIDIUM_EN, HIGH);
+}
+
+// Disable power to MOSFET
+void disableIridiumPower()
+{
+  digitalWrite(PIN_IRIDIUM_EN, LOW);
 }
 
 // Enter deep sleep
@@ -76,7 +88,7 @@ void goToSleep()
   digitalWrite(LED_BUILTIN, LOW);
 
   // Disable power
-  //disablePower();
+  disableGnssPower();
 
   // Enter deep sleep
   LowPower.deepSleep();
@@ -92,7 +104,7 @@ void wakeUp()
 #if DEBUG
   enableSerial();       // Re-enable serial port
 #endif
-  //enablePower();        // Enable power to MOSFET controlled components
+  enableGnssPower();    // Enable power to GNSS
   configureLed();       // Configure WS2812B RGB LED
   configureGnss();      // Configure GNSS receiver
   configureImu();       // Configure interial measurement unit

@@ -33,8 +33,8 @@ void transmitData()
   // Start loop timer
   unsigned long loopStartTime = millis();
 
-  // Enable power to Iridium 9603N
-  digitalWrite(PIN_IRIDIUM_EN, HIGH);
+  // Enable power to RockBLOCK 9603
+  enableIridiumPower();
 
   // Check if data transmission is required
   if ((transmitCounter == transmitInterval) || firstTimeFlag)
@@ -127,7 +127,7 @@ void transmitData()
     {
       retransmitCounter++;
       failedTransmitCounter++;
-      
+
       // Reset counter if reattempt limit is exceeded
       if (retransmitCounter > retransmitCounterMax)
       {
@@ -157,7 +157,7 @@ void transmitData()
     IRIDIUM_PORT.end();
 
     // Disable power to Iridium 9603
-    //digitalWrite(PIN_IRIDIUM_EN, LOW);
+    disableIridiumPower();
 
     transmitCounter = 0;  // Reset transmit counter
 

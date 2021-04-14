@@ -76,6 +76,9 @@ void syncRtc()
           // Write data to union
           moMessage.rtcDrift = rtcDrift;
 
+          // Change LED colour
+          setLedColour(CRGB::Green);
+
           DEBUG_PRINT("Info: RTC drift: "); DEBUG_PRINTLN(rtcDrift);
           DEBUG_PRINT("Info: RTC time synced to "); printDateTime();
         }
@@ -144,13 +147,16 @@ void readGnss()
           unsigned long gnssEpoch = gnss.getUnixEpoch();  // Get GNSS epoch time
           rtc.setEpoch(gnssEpoch);                        // Set RTC date and time
           unsigned long rtcDrift = gnssEpoch - rtcEpoch;  // Calculate RTC drift
-          
+
           // Write data to union
           moMessage.rtcDrift = rtcDrift;
           moMessage.latitude = gnss.getLatitude();
           moMessage.longitude = gnss.getLongitude();
           moMessage.satellites = gnss.getSIV();
           moMessage.pdop = gnss.getPDOP();
+
+          // Change LED colour
+          setLedColour(CRGB::Green);
 
           DEBUG_PRINT("Info: RTC drift: "); DEBUG_PRINTLN(rtcDrift);
           DEBUG_PRINT("Info: RTC time synced to "); printDateTime();
@@ -160,11 +166,15 @@ void readGnss()
     if (!gnssFixFlag)
     {
       DEBUG_PRINTLN("Warning: Unable to acquire GNSS fix!");
+      // Change LED colour
+      setLedColour(CRGB::Orange);
     }
   }
   else
   {
     DEBUG_PRINTLN("Warning: u-blox GNSS is offline!");
+
+    setLedColour(CRGB::Red); // Change LED colour
   }
 
   // Stop the loop timer
