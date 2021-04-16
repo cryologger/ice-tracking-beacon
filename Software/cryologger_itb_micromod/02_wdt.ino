@@ -20,6 +20,6 @@ void configureWdt() {
 void petDog() {
   wdt.restart();
   //DEBUG_PRINT("Watchdog interrupt: "); DEBUG_PRINTLN(watchdogCounter);
-  watchdogFlag = false; // Clear watchdog flag
+  wdtFlag = false; // Clear watchdog flag
   watchdogCounter = 0; // Reset watchdog interrupt counter
 }

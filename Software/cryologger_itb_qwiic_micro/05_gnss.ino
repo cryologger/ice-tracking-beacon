@@ -98,14 +98,13 @@ void syncRtc()
   timer.syncRtc = millis() - loopStartTime;
 }
 
-
 // Acquire valid GNSS fix and sync RTC
 void readGnss()
 {
   // Start loop timer
   unsigned long loopStartTime = millis();
 
-  // Check if microSD and u-blox GNSS initialized successfully
+  // Check if u-blox GNSS initialized successfully
   if (online.gnss)
   {
     // Clear flag

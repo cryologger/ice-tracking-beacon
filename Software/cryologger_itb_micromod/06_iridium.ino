@@ -5,7 +5,7 @@ void configureIridium()
   {
     modem.adjustATTimeout(20);                      // Set AT timeout (Default: 20 seconds)
     modem.adjustSendReceiveTimeout(iridiumTimeout); // Set send/receive timeout (Default: 300 seconds)
-    modem.adjustStartupTimeout(60);                // Set Iridium transceiver startup timeout (Default: 240 seconds)
+    //modem.adjustStartupTimeout(60);                // Set Iridium transceiver startup timeout (Default: 240 seconds)
     modem.enable841lowPower(true);                  // Enable ATtiny841 low-power mode
     online.iridium = true;
   }
