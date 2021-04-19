@@ -1,11 +1,11 @@
 // Configure RockBLOCK 9603
 void configureIridium()
 {
-  modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE);     // Assume USB power
-  //modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
-  modem.adjustATTimeout(20);                                // Adjust timeout timer for serial AT commands (default = 20 s)
-  modem.adjustSendReceiveTimeout(iridiumTimeout);           // Adjust timeout timer for library send/receive commands (default = 300 s)
-  //modem.adjustStartupTimeout(30);                           // Adjust timeout for Iridium modem startup (default = 240 s)
+  //modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE); // Assume USB power
+  modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
+  modem.adjustATTimeout(20); // Adjust timeout timer for serial AT commands (default = 20 s)
+  modem.adjustSendReceiveTimeout(iridiumTimeout); // Adjust timeout timer for library send/receive commands (default = 300 s)
+  //modem.adjustStartupTimeout(30); // Adjust timeout for Iridium modem startup (default = 240 s)
 }
 
 // Write data from structure to transmit buffer
@@ -27,16 +27,15 @@ void writeBuffer()
   memset(&moMessage, 0, sizeof(moMessage));
 }
 
-// Transmit data using RockBLOCK 9603
+// Attempt to transmit data via RockBLOCK 9603
 void transmitData()
 {
+  //begin, sendSBDText, sendSBDBinary, sendReceiveSBDText, sendReceiveSBDBinary, getSignalQuality, and sleep
+  
   // Start loop timer
   unsigned long loopStartTime = millis();
 
-  // Enable power to RockBLOCK 9603
-  enableIridiumPower();
-
-  // Check if data transmission is required
+  // Check if data transmission interval has been reached
   if ((transmitCounter == transmitInterval) || firstTimeFlag)
   {
     // Change LED colour
@@ -45,8 +44,12 @@ void transmitData()
     // Start the serial port connected to the satellite modem
     IRIDIUM_PORT.begin(19200);
 
-    // Begin satellite modem operation
-    DEBUG_PRINTLN("Starting modem...");
+    // Assign pins for SERCOM functionality for new Serial2 instance
+    pinPeripheral(PIN_IRIDIUM_TX, PIO_SERCOM);
+    pinPeripheral(PIN_IRIDIUM_RX, PIO_SERCOM);
+
+    // Wake up the RockBLOCK 9604 and prepare it to communicate
+    DEBUG_PRINTLN("Info: Starting modem...");
     int err = modem.begin();
     if (err != ISBD_SUCCESS)
     {
@@ -65,7 +68,7 @@ void transmitData()
       size_t mtBufferSize = sizeof(mtBuffer);
       memset(mtBuffer, 0x00, sizeof(mtBuffer)); // Clear mtBuffer array
 
-      DEBUG_PRINTLN("Attempting to transmit message...");
+      DEBUG_PRINTLN("Info: Attempting to transmit message...");
 
       // Transmit and receieve SBD message data in binary format
       err = modem.sendReceiveSBDBinary(transmitBuffer, (sizeof(moMessage) * (transmitCounter + (retransmitCounter * transmitInterval))), mtBuffer, mtBufferSize);
@@ -73,9 +76,10 @@ void transmitData()
       // Check if transmission was successful
       if (err == ISBD_SUCCESS)
       {
-        DEBUG_PRINTLN("MO-SBD message transmission successful!");
+        DEBUG_PRINTLN("Info: MO-SBD message transmission successful!");
         setLedColourIridium(err); // Set LED colour to appropriate return code
 
+        failedTransmitCounter = 0;
         retransmitCounter = 0; // Clear message retransmit counter
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmit buffer array
 
@@ -83,7 +87,7 @@ void transmitData()
         // If no message is available, mtBufferSize = 0
         if (mtBufferSize > 0)
         {
-          DEBUG_PRINT("MT-SBD message received. Size: ");
+          DEBUG_PRINT("Info: MT-SBD message received. Size: ");
           DEBUG_PRINT(sizeof(mtBuffer)); DEBUG_PRINTLN(" bytes.");
 
           // Print contents of mtBuffer in hexadecimal
@@ -106,12 +110,12 @@ void transmitData()
               (mtMessage.retransmitCounter  >= 0    && mtMessage.retransmitCounter  <= 24) &&
               (mtMessage.resetFlag          == 0    || mtMessage.resetFlag          == 255))
           {
-            alarmInterval         = mtMessage.alarmInterval;      // Update alarm interval
-            transmitInterval      = mtMessage.transmitInterval;   // Update transmit interval
-            retransmitCounterMax  = mtMessage.retransmitCounter;  // Update max retransmit counter
-            resetFlag             = mtMessage.resetFlag;          // Update force reset flag
+            alarmInterval = mtMessage.alarmInterval;            // Update alarm interval
+            transmitInterval = mtMessage.transmitInterval;      // Update transmit interval
+            retransmitCounterMax = mtMessage.retransmitCounter; // Update max retransmit counter
+            resetFlag = mtMessage.resetFlag;                    // Update force reset flag
           }
-          printSettings();
+          printSettings(); // Print settings
         }
       }
       else
@@ -146,11 +150,11 @@ void transmitData()
 
     // Put modem to sleep
     DEBUG_PRINTLN("Putting modem to sleep...");
-    err = modem.sleep();
-    if (err != ISBD_SUCCESS)
+    int sleep_err = modem.sleep();
+    if (sleep_err != ISBD_SUCCESS)
     {
       DEBUG_PRINT("Warning: Sleep failed error "); DEBUG_PRINTLN(err);
-      setLedColourIridium(err); // Set LED colour to appropriate return code
+      setLedColourIridium(sleep_err); // Set LED colour to appropriate return code
     }
 
     // Close the serial port connected to the RockBLOCK
@@ -159,10 +163,16 @@ void transmitData()
     // Disable power to Iridium 9603
     disableIridiumPower();
 
-    transmitCounter = 0;  // Reset transmit counter
+    // Reset transmit counter
+    transmitCounter = 0;
 
     // Stop the loop timer
     timer.iridium = millis() - loopStartTime;
+
+    // Write err to union
+    moMessage.transmitErr = err;
+
+    // Write duration of last transmission to union
     moMessage.transmitDuration = timer.iridium / 1000;
 
     printSettings();
@@ -239,7 +249,6 @@ void setLedColourIridium(byte err)
   else if (err == 13) // ISBD_MSG_TOO_LONG
     setLedColour(CRGB::Yellow);
 }
-
 
 // Call user function 1
 void userFunction1()

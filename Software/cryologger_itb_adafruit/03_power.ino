@@ -1,40 +1,43 @@
 // Read battery voltage from voltage divider
-void readBattery() {
-
+void readBattery()
+{
   // Start loop timer
   unsigned long loopStartTime = millis();
 
   int reading = 0;
   byte samples = 30;
 
-  for (byte i = 0; i < samples; ++i) {
+  for (byte i = 0; i < samples; ++i)
+  {
     reading += analogRead(PIN_VBAT); // Read VIN across a 1/10 MΩ resistor divider
     delay(1);
   }
 
   voltage = (float)reading / samples * 3.3 * ((R2 + R1) / R2) / 4096.0; // Convert 1/10 VIN to VIN (12-bit resolution)
 
-  // Write minimum battery voltage value to union
-  if (moMessage.voltage == 0) {
-    moMessage.voltage = voltage * 1000;
-  }
-  else if ((voltage * 1000) < moMessage.voltage) {
-    moMessage.voltage = voltage * 1000;
-  }
-
-  //DEBUG_PRINT("voltage: "); DEBUG_PRINTLN(voltage);
-
+  moMessage.voltage = voltage * 1000;
+  /*
+    // Write minimum battery voltage value to union
+    if (moMessage.voltage == 0)
+    {
+      moMessage.voltage = voltage * 1000;
+    } else if ((voltage * 1000) < moMessage.voltage)
+    {
+      moMessage.voltage = voltage * 1000;
+    }
+  */
   // Stop loop timer
-  unsigned long loopEndTime = millis() - loopStartTime;
+  timer.battery = millis() - loopStartTime;
 }
 
 // Disable serial port
 void disableSerial()
 {
 #if DEBUG
-  SERIAL_PORT.flush();  // Wait for transmission of any serial data to complete
-  SERIAL_PORT.end();    // Close serial port
+  SERIAL_PORT.flush(); // Wait for transmission of any serial data to complete
+  SERIAL_PORT.end();   // Close serial port
   USBDevice.detach();   // Safely detach USB prior to sleeping
+  //USBDevice.standby();
 #endif
 }
 
@@ -44,17 +47,17 @@ void enableSerial()
 #if DEBUG
   USBDevice.attach(); // Re-attach USB
   SERIAL_PORT.begin(115200);
-  myDelay(4000); // Non-blocking delay to allow user to open Serial Monitor
+  myDelay(2000); // Non-blocking delay to allow user to open Serial Monitor
 #endif
 }
 
-// Enable power to MOSFET
+// Enable power to GPS
 void enableGpsPower()
 {
   digitalWrite(PIN_GPS_EN, LOW);
 }
 
-// Disable power to MOSFET
+// Disable power to GPS
 void disableGpsPower()
 {
   digitalWrite(PIN_GPS_EN, HIGH);
@@ -81,12 +84,18 @@ void goToSleep()
     firstTimeFlag = false;
   }
 
+  // Clear timer union
+  memset(&timer, 0, sizeof(timer));
+
   // Turn off LEDs
   setLedColour(CRGB::Black);
   digitalWrite(LED_BUILTIN, LOW);
 
   // Enter deep sleep
-  LowPower.deepSleep();
+  //LowPower.deepSleep();
+
+  // Sleep until next alarm match
+  rtc.standbyMode();
 
   /* Code sleeps here and awaits RTC or WDT interrupt */
 }
@@ -94,7 +103,8 @@ void goToSleep()
 // Wake from deep sleep
 void wakeUp()
 {
-
+  // Enable serial port
+  enableSerial();
 }
 
 // Non-blocking blink LED (https://forum.arduino.cc/index.php?topic=503368.0)
@@ -119,13 +129,13 @@ void blinkLed(byte ledFlashes, unsigned int ledDelay)
 // https://arduino.stackexchange.com/questions/12587/how-can-i-handle-the-millis-rollover
 void myDelay(unsigned long ms)
 {
-  unsigned long start = millis();         // Start: timestamp
+  unsigned long start = millis(); // Start: timestamp
   for (;;)
   {
-    petDog();                             // Reset watchdog timer
-    unsigned long now = millis();         // Now: timestamp
-    unsigned long elapsed = now - start;  // Elapsed: duration
-    if (elapsed >= ms)                    // Comparing durations: OK
+    petDog();                            // Reset watchdog timer
+    unsigned long now = millis();        // Now: timestamp
+    unsigned long elapsed = now - start; // Elapsed: duration
+    if (elapsed >= ms)                   // Comparing durations: OK
       return;
   }
 }
