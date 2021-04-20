@@ -16,16 +16,16 @@ void readBattery()
   voltage = (float)reading / samples * 3.3 * ((R2 + R1) / R2) / 4096.0; // Convert 1/10 VIN to VIN (12-bit resolution)
 
   moMessage.voltage = voltage * 1000;
-  /*
-    // Write minimum battery voltage value to union
-    if (moMessage.voltage == 0)
-    {
-      moMessage.voltage = voltage * 1000;
-    } else if ((voltage * 1000) < moMessage.voltage)
-    {
-      moMessage.voltage = voltage * 1000;
-    }
-  */
+
+  // Write minimum battery voltage value to union
+  if (moMessage.voltage == 0)
+  {
+    moMessage.voltage = voltage * 1000;
+  } else if ((voltage * 1000) < moMessage.voltage)
+  {
+    moMessage.voltage = voltage * 1000;
+  }
+
   // Stop loop timer
   timer.battery = millis() - loopStartTime;
 }
@@ -47,7 +47,7 @@ void enableSerial()
 #if DEBUG
   USBDevice.attach(); // Re-attach USB
   SERIAL_PORT.begin(115200);
-  myDelay(2000); // Non-blocking delay to allow user to open Serial Monitor
+  myDelay(3000); // Non-blocking delay to allow user to open Serial Monitor
 #endif
 }
 

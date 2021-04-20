@@ -3,7 +3,7 @@ void configureIridium()
 {
   //modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE); // Assume USB power
   modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
-  modem.adjustATTimeout(20); // Adjust timeout timer for serial AT commands (default = 20 s)
+  modem.adjustATTimeout(30); // Adjust timeout timer for serial AT commands (default = 20 s)
   modem.adjustSendReceiveTimeout(iridiumTimeout); // Adjust timeout timer for library send/receive commands (default = 300 s)
   //modem.adjustStartupTimeout(30); // Adjust timeout for Iridium modem startup (default = 240 s)
 }
@@ -30,8 +30,6 @@ void writeBuffer()
 // Attempt to transmit data via RockBLOCK 9603
 void transmitData()
 {
-  //begin, sendSBDText, sendSBDBinary, sendReceiveSBDText, sendReceiveSBDBinary, getSignalQuality, and sleep
-  
   // Start loop timer
   unsigned long loopStartTime = millis();
 
@@ -50,15 +48,15 @@ void transmitData()
 
     // Wake up the RockBLOCK 9604 and prepare it to communicate
     DEBUG_PRINTLN("Info: Starting modem...");
-    int err = modem.begin();
-    if (err != ISBD_SUCCESS)
+    int returnCode = modem.begin();
+    if (returnCode != ISBD_SUCCESS)
     {
       DEBUG_PRINT("Warning: Begin failed with error ");
-      DEBUG_PRINTLN(err);
-      if (err == ISBD_NO_MODEM_DETECTED)
+      DEBUG_PRINTLN(returnCode);
+      if (returnCode == ISBD_NO_MODEM_DETECTED)
       {
         DEBUG_PRINTLN("Warning: No modem detected! Check wiring.");
-        setLedColourIridium(err); // Set LED colour to appropriate return code
+        setLedColourIridium(returnCode); // Set LED colour
       }
     }
     else
@@ -71,15 +69,15 @@ void transmitData()
       DEBUG_PRINTLN("Info: Attempting to transmit message...");
 
       // Transmit and receieve SBD message data in binary format
-      err = modem.sendReceiveSBDBinary(transmitBuffer, (sizeof(moMessage) * (transmitCounter + (retransmitCounter * transmitInterval))), mtBuffer, mtBufferSize);
+      returnCode = modem.sendReceiveSBDBinary(transmitBuffer, (sizeof(moMessage) * (transmitCounter + (retransmitCounter * transmitInterval))), mtBuffer, mtBufferSize);
 
       // Check if transmission was successful
-      if (err == ISBD_SUCCESS)
+      if (returnCode == ISBD_SUCCESS)
       {
         DEBUG_PRINTLN("Info: MO-SBD message transmission successful!");
-        setLedColourIridium(err); // Set LED colour to appropriate return code
+        setLedColourIridium(returnCode); // Set LED colour to appropriate return code
 
-        failedTransmitCounter = 0;
+        failedTransmitCounter = 0; // Clear failed transmission counter
         retransmitCounter = 0; // Clear message retransmit counter
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmit buffer array
 
@@ -88,7 +86,7 @@ void transmitData()
         if (mtBufferSize > 0)
         {
           DEBUG_PRINT("Info: MT-SBD message received. Size: ");
-          DEBUG_PRINT(sizeof(mtBuffer)); DEBUG_PRINTLN(" bytes.");
+          DEBUG_PRINT(mtBufferSize); DEBUG_PRINTLN(" bytes.");
 
           // Print contents of mtBuffer in hexadecimal
           char tempData[20];
@@ -105,40 +103,45 @@ void transmitData()
           printMtSbd();
 
           // Check if MT-SBD message data is valid and update global variables accordingly
-          if ((mtMessage.alarmInterval      >= 300  && mtMessage.alarmInterval      <= 1209600) &&
-              (mtMessage.transmitInterval   >= 1    && mtMessage.transmitInterval   <= 24) &&
-              (mtMessage.retransmitCounter  >= 0    && mtMessage.retransmitCounter  <= 24) &&
-              (mtMessage.resetFlag          == 0    || mtMessage.resetFlag          == 255))
+          if ((mtMessage.alarmInterval      >= 300  && mtMessage.alarmInterval    <= 1209600) &&
+              (mtMessage.transmitInterval   >= 1    && mtMessage.transmitInterval <= 24) &&
+              (mtMessage.retransmitLimit    >= 0    && mtMessage.retransmitLimit  <= 24) &&
+              (mtMessage.resetFlag          == 0    || mtMessage.resetFlag        == 255))
           {
-            alarmInterval = mtMessage.alarmInterval;            // Update alarm interval
-            transmitInterval = mtMessage.transmitInterval;      // Update transmit interval
-            retransmitCounterMax = mtMessage.retransmitCounter; // Update max retransmit counter
-            resetFlag = mtMessage.resetFlag;                    // Update force reset flag
+            alarmInterval = mtMessage.alarmInterval;        // Update alarm interval
+            transmitInterval = mtMessage.transmitInterval;  // Update transmit interval
+            retransmitLimit = mtMessage.retransmitLimit;    // Update retransmit limit
+            resetFlag = mtMessage.resetFlag;                // Update force reset flag
           }
-          printSettings(); // Print settings
+          else
+          {
+            DEBUG_PRINT("Warning: Received values exceed accepted range! ");
+          }
         }
       }
       else
       {
         DEBUG_PRINT("Warning: Transmission failed with error code ");
-        DEBUG_PRINTLN(err);
-        setLedColourIridium(err); // Set LED colour to appropriate return code
+        DEBUG_PRINTLN(returnCode);
+        setLedColourIridium(returnCode); // Set LED colour to return code
       }
     }
 
+    // Write return error code to union
+    moMessage.transmitStatus = returnCode;
+
     // Store message in transmit buffer if transmission or modem begin fails
-    if (err != ISBD_SUCCESS)
+    if (returnCode != ISBD_SUCCESS)
     {
       retransmitCounter++;
       failedTransmitCounter++;
 
       // Reset counter if reattempt limit is exceeded
-      if (retransmitCounter > retransmitCounterMax)
+      if (retransmitCounter > retransmitLimit)
       {
         retransmitCounter = 0;
         memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmitBuffer array
       }
-      setLedColourIridium(err); // Set LED colour to appropriate return code
     }
 
     // Clear transmit buffer if program running for the first time
@@ -149,19 +152,19 @@ void transmitData()
     }
 
     // Put modem to sleep
-    DEBUG_PRINTLN("Putting modem to sleep...");
-    int sleep_err = modem.sleep();
-    if (sleep_err != ISBD_SUCCESS)
+    DEBUG_PRINTLN("Info: Putting modem to sleep...");
+    returnCode = modem.sleep();
+    if (returnCode != ISBD_SUCCESS)
     {
-      DEBUG_PRINT("Warning: Sleep failed error "); DEBUG_PRINTLN(err);
-      setLedColourIridium(sleep_err); // Set LED colour to appropriate return code
+      DEBUG_PRINT("Warning: Sleep failed error "); DEBUG_PRINTLN(returnCode);
+      setLedColourIridium(returnCode); // Set LED colour to appropriate return code
     }
 
     // Close the serial port connected to the RockBLOCK
     IRIDIUM_PORT.end();
 
     // Disable power to Iridium 9603
-    disableIridiumPower();
+    //disableIridiumPower();
 
     // Reset transmit counter
     transmitCounter = 0;
@@ -169,20 +172,15 @@ void transmitData()
     // Stop the loop timer
     timer.iridium = millis() - loopStartTime;
 
-    // Write err to union
-    moMessage.transmitErr = err;
-
     // Write duration of last transmission to union
     moMessage.transmitDuration = timer.iridium / 1000;
 
-    printSettings();
-    DEBUG_PRINT("transmitDuration: "); DEBUG_PRINTLN(moMessage.transmitDuration);
-    DEBUG_PRINT("retransmitCounter: "); DEBUG_PRINTLN(retransmitCounter);
+    printSettings(); // Print current settings
 
     // Check if reset flag was transmitted
     if (resetFlag)
     {
-      DEBUG_PRINTLN("Forced system reset...");
+      DEBUG_PRINTLN("Info: Forced system reset...");
       digitalWrite(LED_BUILTIN, HIGH); // Turn on LED
       while (true); // Wait for Watchdog Timer to reset system
     }

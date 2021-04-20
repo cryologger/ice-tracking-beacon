@@ -63,7 +63,7 @@
 // ------------------------------------------------------------------------------------------------
 #define PIN_VBAT            A7
 #define PIN_GPS_EN          A5
-#define PIN_LED             A1
+#define PIN_LED             8
 #define PIN_IRIDIUM_EN      6
 #define PIN_IRIDIUM_RX      10 // Pin 1 RXD (Yellow wire)
 #define PIN_IRIDIUM_TX      11 // Pin 6 TXD (Orange)
@@ -99,33 +99,30 @@ TinyGPSPlus       gps;
 // ------------------------------------------------------------------------------------------------
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
-unsigned long alarmInterval         = 1800;   // Sleep duration in seconds
-byte          alarmMinutes          = 2;      // Rolling alarm mintues
-byte          alarmHours            = 0;      // Rolling alarm hours
-byte          alarmDay              = 0;      // Rolling alarm days
+unsigned long alarmInterval         = 300;   // Sleep duration in seconds
 unsigned int  transmitInterval      = 1;      // Messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitCounterMax  = 10;     // Failed data transmission reattempt (340 byte limit)
-unsigned int  gpsTimeout            = 5;      // Timeout for GNSS signal acquisition
-unsigned int  iridiumTimeout        = 300;    // Timeout for Iridium transmission (s)
+unsigned int  retransmitLimit       = 10;     // Failed data transmission reattempt (340 byte limit)
+unsigned int  gpsTimeout            = 60;     // Timeout for GPS signal acquisition
+unsigned int  iridiumTimeout        = 60;     // Timeout for Iridium transmission (s)
 bool          firstTimeFlag         = true;   // Flag to determine if the program is running for the first time
 
 // ------------------------------------------------------------------------------------------------
 // Global variable declarations
 // ------------------------------------------------------------------------------------------------
-const float   R1                      = 100000.0;   // Voltage divider resistor 1
-const float   R2                      = 100000.0;   // Voltage divider resistor 2
-volatile bool alarmFlag               = false;      // Flag for alarm interrupt service routine
-volatile bool wdtFlag                 = false;      // Flag for Watchdog Timer interrupt service routine
-volatile int  wdtCounter              = 0;          // Watchdog Timer interrupt counter
-bool          resetFlag               = 0;          // Flag to force system reset using Watchdog Timer
-float         voltage                 = 0.0;        // Battery voltage
-uint8_t       transmitBuffer[340]     = {};         // Iridium 9603 transmission buffer (MO SBD message max length: 340 bytes)
-unsigned int  messageCounter          = 0;          // Iridium 9603 transmission counter (zero indicates a reset)
-byte          retransmitCounter       = 0;          // Iridium 9603 failed transmission counter
-byte          transmitCounter         = 0;          // Iridium 9603 transmission interval counter
-unsigned int  failedTransmitCounter   = 0;
-unsigned long previousMillis          = 0;          // Global millis() timer
-unsigned long alarmTime, unixtime     = 0;          // Global RTC time variables
+const float   R1                    = 9875000.0;   // Voltage divider resistor 1
+const float   R2                    = 988600.0;   // Voltage divider resistor 2
+volatile bool alarmFlag             = false;      // Flag for alarm interrupt service routine
+volatile bool wdtFlag               = false;      // Flag for Watchdog Timer interrupt service routine
+volatile int  wdtCounter            = 0;          // Watchdog Timer interrupt counter
+bool          resetFlag             = 0;          // Flag to force system reset using Watchdog Timer
+float         voltage               = 0.0;        // Battery voltage
+uint8_t       transmitBuffer[340]   = {};         // Iridium 9603 transmission buffer (MO SBD message max length: 340 bytes)
+unsigned int  messageCounter        = 0;          // Iridium 9603 transmission counter (zero indicates a reset)
+byte          retransmitCounter     = 0;          // Iridium 9603 failed transmission counter
+byte          transmitCounter       = 0;          // Iridium 9603 transmission interval counter
+unsigned int  failedTransmitCounter = 0;          // Counter to track failed messages
+unsigned long previousMillis        = 0;          // Global millis() timer
+unsigned long alarmTime, unixtime   = 0;          // Global RTC time variables
 tmElements_t  tm;
 
 // ------------------------------------------------------------------------------------------------
@@ -150,9 +147,9 @@ typedef union
     int32_t   rtcDrift;         // RTC offset from GPS time       (4 bytes)
     uint16_t  voltage;          // Battery voltage (V)            (2 bytes)
     uint16_t  transmitDuration; // Previous transmission duration (2 bytes)
-    byte      transmitErr;      // Iridium error message
+    byte      transmitStatus;   // Iridium return code            
     uint16_t  messageCounter;   // Message counter                (2 bytes)
-  } __attribute__((packed));                            // Total: (38 bytes)
+  } __attribute__((packed));                            // Total: (39 bytes)
   uint8_t bytes[37];
 } SBD_MO_MESSAGE;
 
@@ -165,7 +162,7 @@ typedef union
   {
     uint32_t  alarmInterval;      // 4 bytes
     uint8_t   transmitInterval;   // 1 byte
-    uint8_t   retransmitCounter;  // 1 byte
+    uint8_t   retransmitLimit;    // 1 byte
     uint8_t   resetFlag;          // 1 byte
   };
   uint8_t bytes[7]; // Size of message to be received in bytes
@@ -183,7 +180,7 @@ struct struct_online
   bool bme280 = false;
 } online;
 
-// Union to store loop timers
+// Union to store loop timers`
 struct struct_timer
 {
   unsigned long rtc;

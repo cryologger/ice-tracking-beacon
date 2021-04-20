@@ -2,7 +2,6 @@
 void configureSensors()
 {
   DEBUG_PRINT("Info: Initializing BME280...");
-  // SparkFun BME280 Configuration
   if (bme280.begin())
   {
     bme280.setSampling(Adafruit_BME280::MODE_FORCED,
@@ -30,7 +29,7 @@ void readSensors()
   if (online.bme280)
   {
     DEBUG_PRINT("Info: Reading BME280...");
-    setLedColour(CRGB::Yellow); // Change LED colour
+    setLedColour(CRGB::Orange); // Change LED colour
 
     // Wake sensor and return to sleep once measurement is made
     bme280.takeForcedMeasurement();
@@ -50,15 +49,10 @@ void readSensors()
 
     DEBUG_PRINTLN("done.");
     
-    //DEBUG_PRINT(F("temperature: ")); DEBUG_PRINTLN(temperature);
-    //DEBUG_PRINT(F("humidity: ")); DEBUG_PRINTLN(humidity);
-    //DEBUG_PRINT(F("pressure: ")); DEBUG_PRINTLN(pressure);
-    
     // Stop the loop timer
     timer.sensors = millis() - loopStartTime;
 
     setLedColour(CRGB::Green); // Change LED colour
-
   }
   else
   {

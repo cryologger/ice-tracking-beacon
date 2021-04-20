@@ -19,11 +19,12 @@ void printTab(byte _times)
 void printSettings()
 {
   printLine();
-  DEBUG_PRINTLN("Settings");
+  DEBUG_PRINTLN("Current Settings");
   printLine();
   DEBUG_PRINT("alarmInterval: ");     printTab(2);  DEBUG_PRINTLN(alarmInterval);
   DEBUG_PRINT("transmitInterval: ");  printTab(1);  DEBUG_PRINTLN(transmitInterval);
   DEBUG_PRINT("retransmitCounter: "); printTab(1);  DEBUG_PRINTLN(retransmitCounter);
+  DEBUG_PRINT("retransmitLimit: ");   printTab(1);  DEBUG_PRINTLN(retransmitLimit);
   DEBUG_PRINT("resetFlag: ");         printTab(2);  DEBUG_PRINTLN(resetFlag);
   printLine();
 }
@@ -33,12 +34,12 @@ void printTimers()
   //printLine();
   DEBUG_PRINTLN("Function Execution Timers");
   printLine();
-  DEBUG_PRINT("readRtc: ");       printTab(1);  DEBUG_PRINTLN(timer.rtc);
-  DEBUG_PRINT("readSensors: ");   printTab(1);  DEBUG_PRINTLN(timer.sensors);
-  DEBUG_PRINT("readImu: ");       printTab(1);  DEBUG_PRINTLN(timer.imu);
-  DEBUG_PRINT("readGps: ");       printTab(1);  DEBUG_PRINTLN(timer.gps);
-  DEBUG_PRINT("transmitData: ");  printTab(1);  DEBUG_PRINTLN(timer.iridium);
-  
+  DEBUG_PRINT("readRtc: ");         printTab(1);  DEBUG_PRINTLN(timer.rtc);
+  DEBUG_PRINT("readSensors: ");     printTab(1);  DEBUG_PRINTLN(timer.sensors);
+  DEBUG_PRINT("readImu: ");         printTab(1);  DEBUG_PRINTLN(timer.imu);
+  DEBUG_PRINT("readGps: ");         printTab(1);  DEBUG_PRINTLN(timer.gps);
+  DEBUG_PRINT("transmitData: ");    printTab(1);  DEBUG_PRINTLN(timer.iridium);
+
   printLine();
 }
 
@@ -62,6 +63,7 @@ void printMoSbd()
   DEBUG_PRINT("rtcDrift:");         printTab(2);  DEBUG_PRINTLN(moMessage.rtcDrift);
   DEBUG_PRINT("voltage:");          printTab(2);  DEBUG_PRINTLN(moMessage.voltage);
   DEBUG_PRINT("transmitDuration:"); printTab(1);  DEBUG_PRINTLN(moMessage.transmitDuration);
+  DEBUG_PRINT("transmitStatus:");   printTab(2);  DEBUG_PRINTLN(moMessage.transmitStatus);
   DEBUG_PRINT("messageCounter:");   printTab(2);  DEBUG_PRINTLN(moMessage.messageCounter);
   printLine();
 }
@@ -74,7 +76,7 @@ void printMtSbd()
   printLine();
   DEBUG_PRINT("alarmInterval:");      printTab(2);  DEBUG_PRINTLN(mtMessage.alarmInterval);
   DEBUG_PRINT("transmitInterval:");   printTab(1);  DEBUG_PRINTLN(mtMessage.transmitInterval);
-  DEBUG_PRINT("retransmitCounter:");  printTab(1);  DEBUG_PRINTLN(mtMessage.retransmitCounter);
+  DEBUG_PRINT("retransmitLimit:");  printTab(1);  DEBUG_PRINTLN(mtMessage.retransmitLimit);
   DEBUG_PRINT("resetFlag:");          printTab(2);  DEBUG_PRINTLN(mtMessage.resetFlag);
   printLine();
 }

@@ -30,7 +30,7 @@ void readGps()
   //GPS_PORT.println("$PGCMD,33,0*6D"); // Disable antenna updates
 
   // Look for GPS signal for up to 2 minutes
-  while (!fixFound && millis() - loopStartTime < gpsTimeout * 60UL * 1000UL)
+  while (!fixFound && millis() - loopStartTime < gpsTimeout * 1000UL) // * 60UL
   {
     if (GPS_PORT.available())
     {
@@ -93,6 +93,7 @@ void readGps()
     if ((millis() - loopStartTime) > 5000 && gps.charsProcessed() < 10)
     {
       DEBUG_PRINTLN(F("Warning: No GPS data received. Please check wiring."));
+      setLedColour(CRGB::Red);
       break;
     }
   }
@@ -111,6 +112,7 @@ void readGps()
   {
     GPS_PORT.read();
   }
+  
   // Disable power to GPS
   disableGpsPower();
 

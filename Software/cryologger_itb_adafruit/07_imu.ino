@@ -6,7 +6,7 @@ void configureImu()
   {
     online.imu = true;
 
-    setLedColour(CRGB::Green); // Change LED colour
+    setLedColour(CRGB::Blue); // Change LED colour
     imu.enableDefault(); // Turn on accelerometer and magnetometer
     /*
       Calibration values: the default values of +/-32767 for each axis lead to an assumed
@@ -49,6 +49,7 @@ void readImu()
     // Average accelerometer readings
     float fXa, fYa, fZa = 0.0;
     float alpha = 0.10; // Alpha
+    
     // Apply low-pass filter to accelerometer data
     for (byte i = 0; i < 30; i++)   // 30 samples
     {

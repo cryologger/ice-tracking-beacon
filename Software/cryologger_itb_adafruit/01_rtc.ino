@@ -82,7 +82,7 @@ void setRtcAlarm()
     rtc.setAlarmTime(0, 0, 0); // hours, minutes, seconds
 
     // Enable alarm for hour rollover match
-    rtc.enableAlarm(rtc.MATCH_MMSS);
+    rtc.enableAlarm(rtc.MATCH_SS);
   }
   else
   {
