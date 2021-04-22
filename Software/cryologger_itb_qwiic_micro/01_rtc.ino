@@ -2,18 +2,29 @@
 void configureRtc()
 {
   // Initialize RTC
-  if (!rtc.begin()) {
+  if (!rtc.begin())
+  {
     DEBUG_PRINTLN("Warning: RTC initialization failed!");
   }
-
-  // Ensure RTC uses 24-hour time format
-  rtc.set24Hour();
+  else
+  {
+    online.rtc; // Set flag
+  }
 
   // Update time variables from RTC
-  if (!rtc.updateTime()) {
-    DEBUG_PRINT("Warning: RTC failed to update!");
-    setLedColour(CRGB::Orange); // Change LED colour to indicate failure
-  }
+  rtc.updateTime();
+
+  // Enable 24-hour time format
+  rtc.set24Hour();
+
+  DEBUG_PRINT("Info: Time at power up "); printDateTime();
+}
+
+
+void setInitialAlarm()
+{
+  // Update time variables from RTC
+  rtc.updateTime();
 
   // Disable all RTC interrupts
   rtc.disableAllInterrupts();
@@ -21,14 +32,14 @@ void configureRtc()
   // Ensure all interrupt flags are cleared
   rtc.clearAllInterruptFlags();
 
-  // Set initial alarm to occur on hour rollover
-  rtc.setAlarmMinutes(0);
-
   // Select alarm interrupt registers to compare with the current time registers
   rtc.setItemsToMatchForAlarm(1, 0, 0, 0); // minutes, hours, weekday, date
 
+  // Set initial alarm to occur on hour rollover
+  //rtc.setAlarmMinutes(0);
+
   // Set initial alarm
-  //rtc.setAlarmMinutes((rtc.getMinutes() + alarmMinutes) % 60);
+  rtc.setAlarmMinutes((rtc.getMinutes() + alarmMinutes) % 60);
 
   // Generate an interrupt signal on the INT pin when an alarm match occurs
   rtc.enableHardwareInterrupt(ALARM_INTERRUPT);
@@ -36,8 +47,6 @@ void configureRtc()
   // Configure and attach interrupt on the INT pin
   pinMode(PIN_RTC_INT, INPUT_PULLUP);
   LowPower.attachInterruptWakeup(PIN_RTC_INT, alarmIsr, FALLING);
-
-  DEBUG_PRINTLN(rtc.stringTime8601());
 }
 
 // Read RTC
@@ -47,7 +56,8 @@ void readRtc()
   unsigned long loopStartTime = micros();
 
   // Update time variables from RTC
-  if (!rtc.updateTime()) {
+  if (!rtc.updateTime())
+  {
     DEBUG_PRINT("Warning: RTC failed to update!");
     setLedColour(CRGB::Orange);
   }
@@ -67,14 +77,30 @@ void readRtc()
 // Set RTC alarm time and date
 void setRtcAlarm()
 {
-  // Calculate next alarm
-  alarmTime = unixtime + alarmInterval;
+  // If multiple failed transmissions are detected, the RTC alarm
+  // interval will increase up to a maximum of 1 day.
+  // When a transmission is made successfully, the RTC alarm
+  // interval will return to the default value
+
+  if (failedTransmitCounter < 5)
+  {
+    // Calculate next alarm
+    alarmTime = unixtime + alarmInterval;
+  }
+  else if (failedTransmitCounter > 5 && failedTransmitCounter < 5 )
+  {
+    // Calculate next alarm
+    alarmTime = unixtime + 43200;
+  }
+  else
+  {
+    // Calculate next alarm
+    alarmTime = unixtime + 86400;
+  }
+
 
   // Update time variables from RTC
-  if (!rtc.updateTime()) {
-    DEBUG_PRINT("Warning: RTC failed to update!");
-    setLedColour(CRGB::Orange);
-  }
+  rtc.updateTime();
 
   // Check if the alarm was set in the past
   if (alarmTime < rtc.getEpoch())
@@ -89,7 +115,7 @@ void setRtcAlarm()
     // Set alarm to occur on next hour rollover
     rtc.setAlarmMinutes(0);
   }
-  else // Set alarm as normal
+  else
   {
     // Check if the program is running for the first time
     if (firstTimeFlag)
@@ -100,12 +126,13 @@ void setRtcAlarm()
       rtc.setItemsToMatchForAlarm(1, 0, 0, 0); // minutes, hours, weekday, date
 
       // Set initial alarm to occur on next hour rollover
-      rtc.setAlarmMinutes(0);
-      //rtc.setAlarmMinutes((rtc.getMinutes() + alarmMinutes) % 60);
+      //rtc.setAlarmMinutes(0);
+      rtc.setAlarmMinutes((rtc.getMinutes() + alarmMinutes) % 60);
     }
-    else {
+    else
+    {
       // Select alarm interrupt registers to compare with the current time registers
-      rtc.setItemsToMatchForAlarm(1, 1, 0, 1); // minutes, hours, weekday, date
+      rtc.setItemsToMatchForAlarm(1, 1, 0, 0); // minutes, hours, weekday, date
 
       // Set RTC alarm
       rtc.setAlarmMinutes(minute(alarmTime));
@@ -134,8 +161,19 @@ void alarmIsr()
   alarmFlag = true; // Set alarm flag
 }
 
-// Print the RTC's current date and time
+
+// Print the RTC date and time of last call to .updateTime()
 void printDateTime()
+{
+  char dateTimeBuffer[25];
+  sprintf(dateTimeBuffer, "%04d-%02d-%02d %02d:%02d:%02d",
+          rtc.getYear(), rtc.getMonth(), rtc.getDate(),
+          rtc.getHours(), rtc.getMinutes(), rtc.getSeconds());
+  DEBUG_PRINTLN(dateTimeBuffer);
+}
+
+// Print the RTC's current date and time
+void printCurrentDateTime()
 {
   rtc.updateTime();
   char dateTimeBuffer[25];

@@ -1,6 +1,6 @@
 /*
-    Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0 Prototype
-    Date:     January 8, 2020
+    Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0
+    Date:     April 10, 2021
     Author:   Adam Garbo
 
     Description:
@@ -29,7 +29,6 @@
 #include <IridiumSBD.h>                           // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
 #include <SAMD_AnalogCorrection.h>                // https://github.com/arduino/ArduinoCore-samd/tree/master/libraries/SAMD_AnalogCorrection
 #include <SparkFunBME280.h>                       // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
-#include <SparkFun_Qwiic_Power_Switch_Arduino_Library.h>
 #include <SparkFun_RV8803.h>                      // https://github.com/sparkfun/SparkFun_RV-8803_Arduino_Library
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_u-blox_GNSS_Arduino_Library
 #include <TimeLib.h>                              // https://github.com/PaulStoffregen/Time
@@ -39,8 +38,8 @@
 // Debugging macros
 // ------------------------------------------------------------------------------------------------
 #define DEBUG           true   // Output debug messages to Serial Monitor
-#define DEBUG_GNSS      true   // Output GNSS debug information
-#define DEBUG_IRIDIUM   true   // Output Iridium debug messages to Serial Monitor
+#define DEBUG_GNSS      false   // Output GNSS debug information
+#define DEBUG_IRIDIUM   false   // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
 #define DEBUG_PRINT(x)            SERIAL_PORT.print(x)
@@ -64,7 +63,7 @@
 // ------------------------------------------------------------------------------------------------
 // Port definitions
 // ------------------------------------------------------------------------------------------------
-#define SERIAL_PORT     SerialUSB   // Required by SparkFun Qwiic Micro
+#define SERIAL_PORT     SerialUSB
 #define IRIDIUM_PORT    Serial
 
 // ------------------------------------------------------------------------------------------------
@@ -74,7 +73,7 @@
 #define PIN_IRIDIUM_EN      3
 #define PIN_IRIDIUM_SLEEP   4
 #define PIN_RTC_INT         5
-#define PIN_MOSFET          6
+#define PIN_GNSS_EN         6
 #define PIN_LED             7
 
 // ------------------------------------------------------------------------------------------------
@@ -83,23 +82,21 @@
 CRGB              led[1];
 BME280            bme280;         // I2C Address: 0x77
 ICM_20948_I2C     imu;            // I2C Address: 0x69
-//IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP); // D16 (TX): Pin 1 (yellow) D17 (RX): Pin 6 (orange)
-IridiumSBD        modem(Wire);    // I2C address: 0x63
-QWIIC_POWER       mySwitch;
+IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP); // D16 (TX): Pin 1 (yellow) D17 (RX): Pin 6 (orange)
 RV8803            rtc;            // I2C Address: 0x32
 SFE_UBLOX_GNSS    gnss;           // I2C Address: 0x42
 
 // ------------------------------------------------------------------------------------------------
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
-unsigned long alarmInterval         = 300;  // Sleep duration in seconds
-byte          alarmMinutes          = 5;      // RTC rolling alarm mintues
-byte          alarmHours            = 0;      // RTC rolling alarm hours
-byte          alarmDate             = 0;      // RTC rolling alarm days
+unsigned long alarmInterval         = 120;    // Sleep duration in seconds
+byte          alarmMinutes          = 2;      // Rolling alarm mintues
+byte          alarmHours            = 0;      // Rolling alarm hours
+byte          alarmDate             = 0;      // Rolling alarm days
 unsigned int  transmitInterval      = 1;      // Number of messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitCounterMax  = 1;      // Number of failed data transmissions to reattempt (340 byte limit)
-unsigned int  gnssTimeout           = 10;    // Timeout for GNSS signal acquisition (s)
-int           iridiumTimeout        = 30;     // Timeout for Iridium transmission (s)
+unsigned int  retransmitCounterMax  = 10;      // Number of failed data transmissions to reattempt (340 byte limit)
+unsigned int  gnssTimeout           = 1;      // Timeout for GNSS signal acquisition
+unsigned int  iridiumTimeout        = 30;     // Timeout for Iridium transmission (s)
 unsigned long ledDelay              = 2000;   // Duration of RGB LED colour change (ms)
 
 // ------------------------------------------------------------------------------------------------
@@ -112,15 +109,12 @@ volatile bool watchdogFlag          = false;  // Flag for Watchdog Timer interru
 volatile int  watchdogCounter       = 0;      // Watchdog Timer interrupt counter
 bool          firstTimeFlag         = true;   // Flag to determine if the program is running for the first time
 bool          resetFlag             = 0;      // Flag to force system reset using Watchdog Timer
-bool          gnssFixFlag           = false;  // Flag to indicate if GNSS valid fix has been acquired
-bool          rtcSyncFlag           = false;  // Flag to indicate if the RTC was syned with the GNSS
-byte          gnssFixCounter        = 0;      // Counter for valid GNSS fixes
-byte          gnssFixCounterMax     = 30;     // Counter limit for threshold of valid GNSS fixes
 float         voltage               = 0.0;    // Battery voltage
 uint8_t       transmitBuffer[340]   = {};     // Iridium 9603 transmission buffer (MO SBD message max length: 340 bytes)
 unsigned int  messageCounter        = 0;      // Iridium 9603 transmission counter (zero indicates a reset)
 byte          retransmitCounter     = 0;      // Iridium 9603 failed transmission counter
 byte          transmitCounter       = 0;      // Iridium 9603 transmission interval counter
+unsigned int  failedTransmitCounter = 0;
 unsigned long previousMillis        = 0;      // Global millis() timer
 unsigned long powerDelay            = 2500;   // Delay after power to MOSFET is enabled
 time_t        alarmTime, unixtime   = 0;      // Global RTC time variables
@@ -156,12 +150,12 @@ typedef union
 {
   struct
   {
-    uint32_t  alarmInterval;      // (4 bytes)
-    uint8_t   transmitInterval;   // (1 byte)
-    uint8_t   retransmitCounter;  // (1 byte)
-    uint8_t   resetFlag;          // (1 byte)
+    uint32_t  alarmInterval;      // 4 bytes
+    uint8_t   transmitInterval;   // 1 byte
+    uint8_t   retransmitCounter;  // 1 byte
+    uint8_t   resetFlag;          // 1 byte
   };
-  uint8_t bytes[7]; // Size of message to be received (in bytes)
+  uint8_t bytes[7]; // Size of message to be received in bytes
 } SBD_MT_MESSAGE;
 
 SBD_MT_MESSAGE mtMessage;
@@ -169,6 +163,7 @@ SBD_MT_MESSAGE mtMessage;
 // Structure to store device online/offline states
 struct struct_online
 {
+  bool rtc = false;
   bool imu = false;
   bool gnss = false;
   bool iridium = false;
@@ -179,8 +174,8 @@ struct struct_online
 struct struct_timer
 {
   unsigned long rtc;
-  unsigned long sync;
-  unsigned long sensor;
+  unsigned long syncRtc;
+  unsigned long sensors;
   unsigned long imu;
   unsigned long gnss;
   unsigned long iridium;
@@ -194,12 +189,11 @@ void setup()
   // Pin assignments
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(PIN_IRIDIUM_EN, OUTPUT);
-  pinMode(PIN_MOSFET, OUTPUT);
+  pinMode(PIN_GNSS_EN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
-  digitalWrite(PIN_MOSFET, HIGH);     // Disable MOSFET
+  digitalWrite(PIN_GNSS_EN, LOW);     // Disable power to GNSS
   digitalWrite(PIN_IRIDIUM_EN, LOW);  // Disable power to Iridium 9603
 
- 
   // Set analog resolution to 12-bits
   analogReadResolution(12);
 
@@ -207,7 +201,7 @@ void setup()
   analogReadCorrection(17, 2057);
 
   Wire.begin(); // Initialize I2C
-  Wire.setClock(100000); // Set I2C clock speed to 400 kHz
+  Wire.setClock(400000); // Set I2C clock speed to 400 kHz
 
 #if DEBUG
   SERIAL_PORT.begin(115200); // Begin serial at 115200 baud
@@ -215,7 +209,7 @@ void setup()
   blinkLed(2, 1000); // Non-blocking delay to allow user to open Serial Monitor
 #endif
 
-  enablePower(); // Enable power to MOSFET controlled components
+  enableGnssPower(); // Enable power to GNSS
   configureLed(); // Configure WS2812B RGB LED
 
   DEBUG_PRINTLN();
@@ -224,16 +218,18 @@ void setup()
   printLine();
 
   // Configure devices
-  configurePowerSwitch();
   configureWatchdog();    // Configure Watchdog Timer (WDT)
   configureRtc();         // Configure real-time clock (RTC)
   configureGnss();        // Configure GNSS receiver
+  syncRtc();              // Synchronize RTC with GNSS
   configureImu();         // Configure interial measurement unit (IMU)
   configureSensors();     // Configure attached sensors
   configureIridium();     // Configure Iridium 9603 transceiver
 
-  DEBUG_PRINT("Datetime: "); printDateTime();
-  DEBUG_PRINT("Initial alarm: "); printAlarm();
+  setInitialAlarm();      // Configure and set intial RTC alarm
+
+  DEBUG_PRINT("Info: "); printCurrentDateTime();
+  DEBUG_PRINT("Info: Initial alarm "); printAlarm();
 
   setLedColour(CRGB::White); // Change LED colour to indicate completion of setup
 }
@@ -252,26 +248,27 @@ void loop()
     // Check if RTC alarm flag was set
     if (rtc.getInterruptFlag(FLAG_ALARM) || firstTimeFlag)
     {
-      if (!firstTimeFlag) {
-        // Wake up
+      // Check if program is running for the first time
+      if (!firstTimeFlag)
+      {
         wakeUp();
       }
 
-      DEBUG_PRINT("Alarm interrupt trigger: ");
-      printDateTime(); // Print RTC's current date and time
+      DEBUG_PRINT("Info: Alarm interrupt trigger ");
+      printDateTime(); // Print RTC date and time at time of alarm interrupt
 
       // Perform measurements
-      petDog();             // Reset the Watchdog Timer
-      readBattery();        // Read the battery voltage
-      readSensors();        // Read attached sensors
-      readImu();            // Read the IMU
-      readGnss();           // Read the GNSS
-      writeBuffer();        // Write the data to transmit buffer
-      transmitData();       // Transmit data
-      printTimers();        // Print function execution timers
-      setRtcAlarm();        // Set the RTC alarm
+      petDog();         // Reset the Watchdog Timer
+      readBattery();    // Read the battery voltage
+      readSensors();    // Read attached sensors
+      readImu();        // Read the IMU
+      readGnss();       // Read the GNSS
+      writeBuffer();    // Write the data to transmit buffer
+      transmitData();   // Transmit data
+      printTimers();    // Print function execution timers
+      setRtcAlarm();    // Set the RTC alarm
 
-      DEBUG_PRINTLN("Entering deep sleep...");
+      DEBUG_PRINTLN("Info: Entering deep sleep...");
       DEBUG_PRINTLN();
 
       // Disable serial

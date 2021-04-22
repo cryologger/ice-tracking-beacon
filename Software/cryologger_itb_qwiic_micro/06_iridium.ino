@@ -1,12 +1,11 @@
-/*
 // Configure RockBLOCK 9603
 void configureIridium()
 {
-  //modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE); // Assume USB power
-  modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
-  modem.adjustATTimeout(20); // Adjust timeout timer for serial AT commands (default = 20 s)
-  modem.adjustSendReceiveTimeout(iridiumTimeout); // Adjust timeout timer for library send/receive commands (default = 300 s)
-  //modem.adjustStartupTimeout(60); // Adjust timeout for Iridium modem startup (default = 240 s)
+  modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE);     // Assume USB power
+  //modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
+  modem.adjustATTimeout(20);                                // Adjust timeout timer for serial AT commands (default = 20 s)
+  modem.adjustSendReceiveTimeout(iridiumTimeout);           // Adjust timeout timer for library send/receive commands (default = 300 s)
+  //modem.adjustStartupTimeout(30);                           // Adjust timeout for Iridium modem startup (default = 240 s)
 }
 
 // Write data from structure to transmit buffer
@@ -21,7 +20,7 @@ void writeBuffer()
 
   // Print MO-SBD union/structure
   printMoSbd();
-  printMoSbdHex();
+  //printMoSbdHex();
   //printTransmitBuffer();
 
   // Write zeroes to MO-SBD union/structure
@@ -34,14 +33,14 @@ void transmitData()
   // Start loop timer
   unsigned long loopStartTime = millis();
 
-  // Enable power to Iridium 9603
-  digitalWrite(PIN_IRIDIUM_EN, HIGH);
+  // Enable power to RockBLOCK 9603
+  enableIridiumPower();
 
   // Check if data transmission is required
   if ((transmitCounter == transmitInterval) || firstTimeFlag)
   {
     // Change LED colour
-    setLedColour(purple);
+    setLedColour(CRGB::Purple);
 
     // Start the serial port connected to the satellite modem
     IRIDIUM_PORT.begin(19200);
@@ -127,6 +126,8 @@ void transmitData()
     if (err != ISBD_SUCCESS)
     {
       retransmitCounter++;
+      failedTransmitCounter++;
+
       // Reset counter if reattempt limit is exceeded
       if (retransmitCounter > retransmitCounterMax)
       {
@@ -156,7 +157,7 @@ void transmitData()
     IRIDIUM_PORT.end();
 
     // Disable power to Iridium 9603
-    //digitalWrite(PIN_IRIDIUM_EN, LOW);
+    disableIridiumPower();
 
     transmitCounter = 0;  // Reset transmit counter
 
@@ -164,6 +165,7 @@ void transmitData()
     timer.iridium = millis() - loopStartTime;
     moMessage.transmitDuration = timer.iridium / 1000;
 
+    printSettings();
     DEBUG_PRINT("transmitDuration: "); DEBUG_PRINTLN(moMessage.transmitDuration);
     DEBUG_PRINT("retransmitCounter: "); DEBUG_PRINTLN(retransmitCounter);
 
@@ -205,44 +207,39 @@ void ISBDDiagsCallback(IridiumSBD * device, char c)
 }
 #endif
 
-// Change LED colour to indicate encountered return error code
+// Change LED colour to indicate return error code
 void setLedColourIridium(byte err)
 {
   if (err == 0) // ISBD_SUCCESS
-    setLedColour(green);
+    setLedColour(CRGB::Green);
   else if (err == 1) // ISBD_ALREADY_AWAKE
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 2) // ISBD_SERIAL_FAILURE
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 3) // ISBD_PROTOCOL_ERROR
-    setLedColour(blue);
+    setLedColour(CRGB::Blue);
   else if (err == 4) // ISBD_CANCELLED
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 5) // ISBD_NO_MODEM_DETECTED
-    setLedColour(red);
+    setLedColour(CRGB::Red);
   else if (err == 6) // ISBD_SBDIX_FATAL_ERROR
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 7) // ISBD_SENDRECEIVE_TIMEOUT
-    setLedColour(orange);
+    setLedColour(CRGB::Orange);
   else if (err == 8) // ISBD_RX_OVERFLOW
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 9) // ISBD_REENTRANT
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 10) // ISBD_IS_ASLEEP
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 11) // ISBD_NO_SLEEP_PIN
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 12) // ISBD_NO_NETWORK
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
   else if (err == 13) // ISBD_MSG_TOO_LONG
-    setLedColour(yellow);
+    setLedColour(CRGB::Yellow);
 }
 
-// Function to test if data is in range
-bool inRange(unsigned long val, unsigned long minimum, unsigned long maximum)
-{
-  return ((minimum <= val) && (val <= maximum));
-}
 
 // Call user function 1
 void userFunction1()
@@ -267,4 +264,3 @@ void userFunction4()
 {
 
 }
-*/

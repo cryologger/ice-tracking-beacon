@@ -1,14 +1,35 @@
 // Configure microSD
 void configureSd()
 {
-  if (sd.begin(SdSpiConfig(PIN_SD_CS, DEDICATED_SPI)))
+  // Start loop timer
+  unsigned long loopStartTime = millis();
+
+  // Initialize microSD
+  if (!sd.begin(PIN_SD_CS, SD_SCK_MHZ(24)))
+  {
+    DEBUG_PRINTLN("Warning: microSD failed to initialize. Reattempting...");
+
+    // Delay between initialization attempts
+    myDelay(250);
+
+    if (!sd.begin(PIN_SD_CS, SD_SCK_MHZ(24)))
+    {
+      DEBUG_PRINTLN("Warning: microSD failed to initialize.");
+      online.microSd = false;
+      while (1); // Force watchdog timer to reset system
+    }
+    else
+    {
+      online.microSd = true;
+    }
+  }
+  else
   {
     online.microSd = true;
   }
-  else {
-    DEBUG_PRINTLN("Warning: microSD not detected! Please check wiring.");
-    //while(1);
-  }
+  
+  // Stop the loop timer
+  timer.microSd = millis() - loopStartTime;
 }
 
 // Create log file
@@ -27,7 +48,6 @@ void createLogFile()
   sprintf(fileName, "20%02d%02d%02d_%02d%02d%02d.csv",
           rtc.year, rtc.month, rtc.dayOfMonth,
           rtc.hour, rtc.minute, rtc.seconds);
-
 
   // Open log file for writing
   // O_CREAT - Create the file if it does not exist
@@ -50,7 +70,7 @@ void createLogFile()
   // Write header to file
   file.println("unixtime,temperature,humidity,pressure,latitude,longitude,"
                "satellites,pdop,drift,voltage,transmitDuration,messageCounter,"
-               "adcTimer,voltageTimer,rtcTimer,sdTimer,sensorTimer,gnssTimer,iridiumTimer,"
+               "voltageTimer,rtcTimer,sdTimer,sensorTimer,gnssTimer,iridiumTimer,"
                "adc,bme280,microsd,iridium,gnss");
 
   // Sync the log file
@@ -83,14 +103,12 @@ void logData()
     file.print(moMessage.voltage);              file.print(",");
     file.print(moMessage.transmitDuration);     file.print(",");
     file.print(messageCounter);                 file.print(",");
-    file.print(timer.adc);                      file.print(",");
     file.print(timer.voltage);                  file.print(",");
     file.print(timer.rtc);                      file.print(",");
     file.print(timer.microSd);                  file.print(",");
     file.print(timer.sensor);                   file.print(",");
     file.print(timer.gnss);                     file.print(",");
     file.print(timer.iridium);                  file.print(",");
-    file.print(online.adc);                     file.print(",");
     file.print(online.bme280);                  file.print(",");
     file.print(online.microSd);                 file.print(",");
     file.print(online.gnss);                    file.print(",");

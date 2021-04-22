@@ -23,7 +23,6 @@
 #include <IridiumSBD.h>                           // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
 #include <RTC.h>
 #include <SparkFunBME280.h>                       // https://github.com/sparkfun/SparkFun_BME280_Arduino_Library
-#include <SparkFun_ADS1015_Arduino_Library.h>     // https://github.com/sparkfun/SparkFun_ADS1015_Arduino_Library
 #include <SparkFun_u-blox_GNSS_Arduino_Library.h> // https://github.com/sparkfun/SparkFun_Ublox_Arduino_Library
 #include <SdFat.h>                                // https://github.com/greiman/SdFat
 #include <SPI.h>
@@ -68,7 +67,6 @@
 // ----------------------------------------------------------------------------
 // Object instantiations
 // ----------------------------------------------------------------------------
-ADS1015           adc;            // I2C address: 0x48
 APM3_RTC          rtc;
 APM3_WDT          wdt;
 BME280            bme280;         // I2C address: 0x77
@@ -95,7 +93,7 @@ int           iridiumTimeout        = 300;   // Timeout for Iridium transmission
 const float   R1                  = 99800.0; // Voltage divider resistor 1
 const float   R2                  = 9914.0; // Voltage divider resistor 2
 volatile bool alarmFlag           = false;  // Flag for alarm interrupt service routine
-volatile bool watchdogFlag        = false;  // Flag for Watchdog Timer interrupt service routine
+volatile bool wdtFlag        = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  watchdogCounter     = 0;      // Watchdog Timer interrupt counter
 bool          firstTimeFlag       = true;   // Flag to determine if the program is running for the first time
 bool          resetFlag           = 0;      // Flag to force system reset using Watchdog Timer
@@ -159,7 +157,6 @@ SBD_MT_MESSAGE mtMessage;
 // Union to store device online/offline states
 struct struct_online
 {
-  bool adc      = false;
   bool bme280   = false;
   bool microSd  = false;
   bool iridium  = false;
@@ -169,9 +166,10 @@ struct struct_online
 // Union to store loop timers
 struct struct_timer
 {
-  unsigned long adc;
-  unsigned long voltage;
+  unsigned long wdt;
   unsigned long rtc;
+  unsigned long voltage;
+  unsigned long syncRtc;
   unsigned long microSd;
   unsigned long sensor;
   unsigned long gnss;
@@ -235,39 +233,39 @@ void setup()
 void loop()
 {
   // Check if alarm flag is set or if program is running for the first time
-  if (alarmFlag || firstTimeFlag)
+  if (alarmFlag)
   {
-    // Clear alarm flag
-    alarmFlag = false;
-
     DEBUG_PRINT("Alarm trigger: "); printDateTime();
 
-    // If program is running for the first time
-    if (firstTimeFlag)
-    {
-      readRtc(); // Read RTC
-    }
+    // Configure devices
+    readRtc();            // Read RTC
+    qwiicPowerOn();       // Enable power to Qwiic connector
+    peripheralPowerOn();  // Enable power to peripherals
+    configureSd();        // Configure microSD
+    configureGnss();      // Configure u-blox GNSS receiver
+    configureIridium();   // Configure RockBLOCK
+    configureSensors();   // Configure attached sensors
 
     // Perform measurements
-    readSensors();  // Read attached sensors
-    readGnss();     // Read GNSS
-    logData();      // Write data to SD
-    writeBuffer();  // Write the data to transmit buffer
-    transmitData(); // Transmit data
-    printTimers();  // Print function execution timers
-    setRtcAlarm();  // Set the next RTC alarm
+    readSensors();        // Read attached sensors
+    readGnss();           // Read u-blox GNSS
+    logData();            // Write data to microSD
+    writeBuffer();        // Write data to transmit buffer
+    transmitData();       // Transmit data
+    printTimers();        // Print function execution timers
+    setRtcAlarm();        // Set the next RTC alarm
   }
 
   // Check for watchdog interrupt
-  if (watchdogFlag)
+  if (wdtFlag)
   {
     petDog();
   }
 
   // Blink LED
-  blinkLed(1, 100);
+  blinkLed(1, 10);
 
-  // Enter deep sleep and await RTC alarm interrupt
+  // Enter deep sleep
   goToSleep();
 }
 
@@ -297,6 +295,6 @@ extern "C" void am_watchdog_isr(void)
   {
     wdt.restart(); // "Pet" the dog
   }
-  watchdogFlag = true; // Set the watchdog flag
+  wdtFlag = true; // Set the watchdog flag
   watchdogCounter++; // Increment watchdog interrupt counter
 }

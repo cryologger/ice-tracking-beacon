@@ -1,14 +1,3 @@
-void configurePowerSwitch() {
-  // Configure Qwiic Power Switch
-  if (!mySwitch.begin()) //Connect to the power switch using Wire port
-  {
-    DEBUG_PRINTLN("Qwiic Power Switch not detected at default I2C address. Please check wiring.");
-    setLedColour(CRGB::Red);
-  }
-}
-
-
-
 // Read battery voltage from voltage divider
 void readBattery() {
 
@@ -56,43 +45,33 @@ void enableSerial()
 #if DEBUG
   USBDevice.attach(); // Re-attach USB
   SERIAL_PORT.begin(115200);
-  //while (!SERIAL_PORT);
-  blinkLed(2, 1000); // Non-blocking delay to allow user to open Serial Monitor
+  myDelay(4000); // Non-blocking delay to allow user to open Serial Monitor
 #endif
 }
 
-
 // Enable power to MOSFET
-void enablePower() {
-  digitalWrite(PIN_MOSFET, LOW);
-  // Non-blocking delay
-  unsigned long currentMillis = millis();
-  while (millis() - currentMillis < powerDelay) {
-    // Wait...
-  }
+void enableGnssPower()
+{
+  digitalWrite(PIN_GNSS_EN, HIGH);
+  myDelay(2000);  // Non-blocking delay
 }
 
 // Disable power to MOSFET
-void disablePower()
+void disableGnssPower()
 {
-  digitalWrite(PIN_MOSFET, HIGH);
+  digitalWrite(PIN_GNSS_EN, HIGH);
 }
 
-
-// Enable power to Qwiic Power Switch
-void enablePowerSwitch() {
-  mySwitch.powerOn();
-  // Non-blocking delay
-  unsigned long currentMillis = millis();
-  while (millis() - currentMillis < powerDelay) {
-    // Wait...
-  }
+// Enable power to Pololu step-down regulator powering RockBLOCK 9603
+void enableIridiumPower()
+{
+  digitalWrite(PIN_IRIDIUM_EN, HIGH);
 }
 
 // Disable power to MOSFET
-void disablePowerSwitch()
+void disableIridiumPower()
 {
-  mySwitch.powerOff();
+  digitalWrite(PIN_IRIDIUM_EN, LOW);
 }
 
 // Enter deep sleep
@@ -104,10 +83,13 @@ void goToSleep()
     firstTimeFlag = false;
   }
 
-  setLedColour(CRGB::Black); // Turn off LED
+  // Turn off LEDs
+  setLedColour(CRGB::Black);
   digitalWrite(LED_BUILTIN, LOW);
-  //disablePower();
-  disablePowerSwitch();
+
+  // Disable power
+  disableGnssPower();
+
   // Enter deep sleep
   LowPower.deepSleep();
 
@@ -115,12 +97,14 @@ void goToSleep()
 }
 
 // Wake from deep sleep
-void wakeUp() {
+void wakeUp()
+{
+  // Re-configure devices
 
-  // Re-configure all devices
+#if DEBUG
   enableSerial();       // Re-enable serial port
-  //enablePower();        // Enable power to MOSFET controlled components
-  enablePowerSwitch();
+#endif
+  enableGnssPower();    // Enable power to GNSS
   configureLed();       // Configure WS2812B RGB LED
   configureGnss();      // Configure GNSS receiver
   configureImu();       // Configure interial measurement unit
@@ -144,4 +128,19 @@ void blinkLed(byte ledFlashes, unsigned int ledDelay)
   }
   // Ensure LED is off at end of blink cycle
   digitalWrite(LED_BUILTIN, LOW);
+}
+
+// Non-blocking delay (ms: duration)
+// https://arduino.stackexchange.com/questions/12587/how-can-i-handle-the-millis-rollover
+void myDelay(unsigned long ms)
+{
+  unsigned long start = millis();         // Start: timestamp
+  for (;;)
+  {
+    petDog();                             // Reset watchdog timer
+    unsigned long now = millis();         // Now: timestamp
+    unsigned long elapsed = now - start;  // Elapsed: duration
+    if (elapsed >= ms)                    // Comparing durations: OK
+      return;
+  }
 }

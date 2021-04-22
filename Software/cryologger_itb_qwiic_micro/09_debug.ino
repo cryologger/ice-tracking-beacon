@@ -30,15 +30,15 @@ void printSettings()
 
 void printTimers()
 {
-  //printLine();
+  printLine();
   DEBUG_PRINTLN("Function Execution Timers (ms)");
   printLine();
-  DEBUG_PRINT("rtc: ");     printTab(2);  DEBUG_PRINTLN(timer.rtc);
-  DEBUG_PRINT("sync: ");    printTab(2);  DEBUG_PRINTLN(timer.sync);
-  DEBUG_PRINT("sensor: ");  printTab(1);  DEBUG_PRINTLN(timer.sensor);
-  DEBUG_PRINT("imu: ");     printTab(2);  DEBUG_PRINTLN(timer.imu);
-  DEBUG_PRINT("gnss: ");    printTab(2);  DEBUG_PRINTLN(timer.gnss);
-  DEBUG_PRINT("iridium: "); printTab(1);  DEBUG_PRINTLN(timer.iridium);
+  DEBUG_PRINT("rtc: ");       printTab(2);  DEBUG_PRINTLN(timer.rtc);
+  DEBUG_PRINT("syncRtc: ");   printTab(1);  DEBUG_PRINTLN(timer.syncRtc);
+  DEBUG_PRINT("sensors: ");   printTab(1);  DEBUG_PRINTLN(timer.sensors);
+  DEBUG_PRINT("imu: ");       printTab(2);  DEBUG_PRINTLN(timer.imu);
+  DEBUG_PRINT("gnss: ");      printTab(2);  DEBUG_PRINTLN(timer.gnss);
+  DEBUG_PRINT("iridium: ");   printTab(1);  DEBUG_PRINTLN(timer.iridium);
   printLine();
 }
 

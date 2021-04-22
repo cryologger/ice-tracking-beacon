@@ -6,7 +6,7 @@
 
   The RTC will wake the system every minute, print the next rolling alarm, and flash the LED. 
 
-  Current consumption is measured across the BATT jumpers with a 3.7V LiPo battery. Absolute minimum current draw acheived 
+  Current consumption is measured across the BATT jumpers with a 3.7V (4.2V) LiPo battery. Absolute minimum current draw acheived 
   with the onboard voltage divider disabled was ~280 uA.
 
   Note: 
@@ -26,7 +26,7 @@ APM3_RTC myRTC;
 
 volatile bool alarmFlag       = false;
 bool ledState                 = LOW;    // LED toggle flag for blink() function
-byte alarmSeconds             = 30;
+byte alarmSeconds             = 10;
 byte alarmMinutes             = 0;
 byte alarmHours               = 0;
 unsigned long previousMillis  = 0;
@@ -137,19 +137,19 @@ void goToSleep()
   }
 
   qwiicPowerOff();
-  peripheralPowerOff();
+  //peripheralPowerOff();
 
-  // Power down Flash, SRAM, cache
-  am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_CACHE); // Turn off CACHE
-  am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_FLASH_512K); // Turn off everything but lower 512k
-  am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_SRAM_64K_DTCM); // Turn off everything but lower 64k
-  //am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_ALL); //Turn off all memory (doesn't recover)
+  // Power down flash, SRAM, cache
+  am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_ALL); // Power down all memory during deepsleep
+  am_hal_pwrctrl_memory_deepsleep_retain(AM_HAL_PWRCTRL_MEM_SRAM_384K); // Retain all SRAM
 
   // Keep the 32kHz clock running for RTC
   am_hal_stimer_config(AM_HAL_STIMER_CFG_CLEAR | AM_HAL_STIMER_CFG_FREEZE);
   am_hal_stimer_config(AM_HAL_STIMER_XTAL_32KHZ);
 
-  am_hal_sysctrl_sleep(AM_HAL_SYSCTRL_SLEEP_DEEP); // Sleep forever
+  // Enter deep sleep
+  am_hal_sysctrl_sleep(AM_HAL_SYSCTRL_SLEEP_DEEP);
+
 
   // And we're back!
   wakeUp();
@@ -158,9 +158,6 @@ void goToSleep()
 // Power up gracefully
 void wakeUp()
 {
-  // Power up SRAM, turn on entire Flash
-  am_hal_pwrctrl_memory_deepsleep_powerdown(AM_HAL_PWRCTRL_MEM_MAX);
-
   // Go back to using the main clock
   am_hal_stimer_config(AM_HAL_STIMER_CFG_CLEAR | AM_HAL_STIMER_CFG_FREEZE);
   am_hal_stimer_config(AM_HAL_STIMER_HFRC_3MHZ);
