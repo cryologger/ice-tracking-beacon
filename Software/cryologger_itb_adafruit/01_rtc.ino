@@ -2,13 +2,13 @@
 void configureRtc()
 {
   // Alarm modes:
-  // MATCH_OFF          Never
-  // MATCH_SS           Every Minute
-  // MATCH_MMSS         Every Hour
-  // MATCH_HHMMSS       Every Day
-  // MATCH_DHHMMSS      Every Month
-  // MATCH_MMDDHHMMSS   Every Year
-  // MATCH_YYMMDDHHMMSS Once, on a specific date and a specific time
+  // 0: MATCH_OFF          Never
+  // 1: MATCH_SS           Every Minute
+  // 2: MATCH_MMSS         Every Hour
+  // 3: MATCH_HHMMSS       Every Day
+  // 4: MATCH_DHHMMSS      Every Month
+  // 5: MATCH_MMDDHHMMSS   Every Year
+  // 6: MATCH_YYMMDDHHMMSS Once, on a specific date and a specific time
 
   // Initialize RTC
   rtc.begin();
@@ -31,6 +31,7 @@ void configureRtc()
 
   DEBUG_PRINT("Info: RTC initialized "); printDateTime();
   DEBUG_PRINT("Info: Initial alarm "); printAlarm();
+  DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_MMSS);
 }
 
 // Read RTC
@@ -42,7 +43,7 @@ void readRtc()
   unixtime = rtc.getEpoch();
 
   // Write data to union
-  moMessage.unixtime = unixtime;
+  moSbdMessage.unixtime = unixtime;
 
   // Stop loop timer
   timer.rtc = millis() - loopStartTime;
@@ -52,29 +53,34 @@ void readRtc()
 void setRtcAlarm()
 {
   // Set RTC alarm according to number of consecutive failed transmissions
-  if (failedTransmitCounter < 5)
+  if (failureCounter < 5)
   {
     // Calculate next alarm
     alarmTime = unixtime + alarmInterval;
+    DEBUG_PRINT(F("Info: unixtime ")); DEBUG_PRINTLN(unixtime);
+    DEBUG_PRINT(F("Info: alarmTime ")); DEBUG_PRINTLN(alarmTime);
   }
-  else if (failedTransmitCounter > 5 && failedTransmitCounter < 10)
+  else if (failureCounter > 5 && failureCounter < 10)
   {
+    DEBUG_PRINTLN(F("Warning: Increasing transmission interval to +12 hours!"));
     // Add a 12-hour delay to next transmission attempt
     alarmTime = unixtime + alarmInterval + 43200;
   }
-  else if (failedTransmitCounter > 10)
+  else if (failureCounter > 10)
   {
+    DEBUG_PRINTLN(F("Warning: Increasing transmission interval to +24 hours!"));
     // Add a 24-hour delay to next transmission attempt
     alarmTime = unixtime + alarmInterval + 86400;
   }
-  else if (failedTransmitCounter > 20)
+  else if (failureCounter > 20)
   {
+    DEBUG_PRINTLN(F("Warning: Increasing transmission interval to +48 hours!"));
     // Add a 48-hour delay to next transmission attempt
     alarmTime = unixtime + alarmInterval + 172800;
   }
 
   // Check if alarm was set in the past
-  if ((rtc.getEpoch() >= alarmTime) || firstTimeFlag)
+  if ((rtc.getEpoch() >= alarmTime) || firstTimeFlag) // 
   {
     DEBUG_PRINTLN(F("Warning: RTC alarm set in the past or program running for the first time."));
 
@@ -82,12 +88,11 @@ void setRtcAlarm()
     rtc.setAlarmTime(0, 0, 0); // hours, minutes, seconds
 
     // Enable alarm for hour rollover match
-    rtc.enableAlarm(rtc.MATCH_SS);
+    rtc.enableAlarm(rtc.MATCH_MMSS);
   }
   else
   {
     DEBUG_PRINTLN(F("Info: Setting RTC alarm based on specified interval."));
-
 
     // Set alarm time
     rtc.setAlarmTime(hour(alarmTime), minute(alarmTime), 0); // hours, minutes, seconds
@@ -101,6 +106,7 @@ void setRtcAlarm()
 
   DEBUG_PRINT("Info: "); printDateTime();
   DEBUG_PRINT("Info: Next alarm "); printAlarm();
+  DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_DHHMMSS);
   alarmFlag = false; // Clear flag
 }
 

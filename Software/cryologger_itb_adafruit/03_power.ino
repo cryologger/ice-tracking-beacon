@@ -5,7 +5,7 @@ void readBattery()
   unsigned long loopStartTime = millis();
 
   int reading = 0;
-  byte samples = 30;
+  byte samples = 10;
 
   for (byte i = 0; i < samples; ++i)
   {
@@ -13,19 +13,21 @@ void readBattery()
     delay(1);
   }
 
-  voltage = (float)reading / samples * 3.3 * ((R2 + R1) / R2) / 4096.0; // Convert 1/10 VIN to VIN (12-bit resolution)
+  float voltage = (float)reading / samples * 3.3 * ((R2 + R1) / R2) / 4096.0; // Convert 1/10 VIN to VIN (12-bit resolution)
 
-  moMessage.voltage = voltage * 1000;
+  // Write data to union
+  moSbdMessage.voltage = voltage * 1000;
 
-  // Write minimum battery voltage value to union
-  if (moMessage.voltage == 0)
-  {
-    moMessage.voltage = voltage * 1000;
-  } else if ((voltage * 1000) < moMessage.voltage)
-  {
-    moMessage.voltage = voltage * 1000;
-  }
-
+  /*
+      // Write minimum battery voltage value to union
+      if (moSbdMessage.voltage == 0)
+      {
+      moSbdMessage.voltage = voltage * 1000;
+      } else if ((voltage * 1000) < moSbdMessage.voltage)
+      {
+      moSbdMessage.voltage = voltage * 1000;
+      }
+  */
   // Stop loop timer
   timer.battery = millis() - loopStartTime;
 }
@@ -37,7 +39,6 @@ void disableSerial()
   SERIAL_PORT.flush(); // Wait for transmission of any serial data to complete
   SERIAL_PORT.end();   // Close serial port
   USBDevice.detach();   // Safely detach USB prior to sleeping
-  //USBDevice.standby();
 #endif
 }
 
@@ -47,7 +48,7 @@ void enableSerial()
 #if DEBUG
   USBDevice.attach(); // Re-attach USB
   SERIAL_PORT.begin(115200);
-  myDelay(3000); // Non-blocking delay to allow user to open Serial Monitor
+  //myDelay(3000); // Non-blocking delay to allow user to open Serial Monitor
 #endif
 }
 
@@ -84,6 +85,10 @@ void goToSleep()
     firstTimeFlag = false;
   }
 
+  // Clear device states
+  online.imu = false;
+  online.bme280 = false;
+
   // Clear timer union
   memset(&timer, 0, sizeof(timer));
 
@@ -92,10 +97,10 @@ void goToSleep()
   digitalWrite(LED_BUILTIN, LOW);
 
   // Enter deep sleep
-  //LowPower.deepSleep();
+  LowPower.deepSleep();
 
   // Sleep until next alarm match
-  rtc.standbyMode();
+  //rtc.standbyMode();
 
   /* Code sleeps here and awaits RTC or WDT interrupt */
 }

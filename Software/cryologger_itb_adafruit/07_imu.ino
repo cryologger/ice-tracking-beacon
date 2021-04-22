@@ -22,7 +22,7 @@ void configureImu()
     {
       +32767, +32767, +32767
     };
-    DEBUG_PRINTLN("done.");
+    DEBUG_PRINTLN("success!");
   }
   else
   {
@@ -38,18 +38,18 @@ void readImu()
   // Start loop timer
   unsigned long loopStartTime = millis();
 
-  // Change LED colour
-  setLedColour(CRGB::Pink);
-
   // Check if IMU initialized successfully
   if (online.imu)
   {
+    // Change LED colour
+    setLedColour(CRGB::Blue);
+
     DEBUG_PRINT("Info: Reading IMU...");
 
     // Average accelerometer readings
     float fXa, fYa, fZa = 0.0;
     float alpha = 0.10; // Alpha
-    
+
     // Apply low-pass filter to accelerometer data
     for (byte i = 0; i < 30; i++)   // 30 samples
     {
@@ -67,14 +67,15 @@ void readImu()
     // Calculate orientation
     float pitch = (atan2(-fXa, sqrt((int32_t)fYa * fYa + (int32_t)fZa * fZa))) * 180 / PI;
     float roll = (atan2(fYa, fZa)) * 180 / PI;
-    float heading = imu.heading((LSM303::vector<int>) {
+    float heading = imu.heading((LSM303::vector<int>)
+    {
       1, 0, 0   // PCB orientation
     });
 
     // Write orientation data to union
-    moMessage.pitch = pitch * 100;
-    moMessage.roll = roll * 100;
-    moMessage.heading = heading * 10;
+    moSbdMessage.pitch = pitch * 100;
+    moSbdMessage.roll = roll * 100;
+    moSbdMessage.heading = heading * 10;
 
     DEBUG_PRINTLN("done.");
 

@@ -22,6 +22,7 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 #include <Arduino.h>                // https://github.com/arduino/ArduinoCore-samd
+#include <ArduinoLowPower.h>        // https://github.com/arduino-libraries/ArduinoLowPower
 #include <FastLED.h>                // https://github.com/adafruit/Adafruit_NeoPixel
 #include <IridiumSBD.h>             // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
 #include <LSM303.h>                 // https://github.com/pololu/lsm303-arduino
@@ -36,7 +37,7 @@
 // Debugging macros
 // ------------------------------------------------------------------------------------------------
 #define DEBUG           true   // Output debug messages to Serial Monitor
-#define DEBUG_GPS       true   // Output GPS debug information
+#define DEBUG_GPS       false   // Output GPS debug information
 #define DEBUG_IRIDIUM   true   // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
@@ -67,7 +68,7 @@
 #define PIN_IRIDIUM_EN      6
 #define PIN_IRIDIUM_RX      10 // Pin 1 RXD (Yellow wire)
 #define PIN_IRIDIUM_TX      11 // Pin 6 TXD (Orange)
-#define PIN_IRIDIUM_ONOFF   12 // Pin 7 OnOff (Grey)
+#define PIN_IRIDIUM_SLEEP   12 // Pin 7 OnOff (Grey)
 
 // ------------------------------------------------------------------------------------------------
 // Port configuration
@@ -91,7 +92,7 @@ void SERCOM1_Handler()
 // ------------------------------------------------------------------------------------------------
 Adafruit_BME280   bme280;
 CRGB              led[1];
-IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_ONOFF);
+IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP);
 LSM303            imu; //
 RTCZero           rtc;
 TinyGPSPlus       gps;
@@ -99,36 +100,39 @@ TinyGPSPlus       gps;
 // ------------------------------------------------------------------------------------------------
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
-unsigned long alarmInterval         = 300;   // Sleep duration in seconds
-unsigned int  transmitInterval      = 1;      // Messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitLimit       = 10;     // Failed data transmission reattempt (340 byte limit)
-unsigned int  gpsTimeout            = 60;     // Timeout for GPS signal acquisition
-unsigned int  iridiumTimeout        = 60;     // Timeout for Iridium transmission (s)
-bool          firstTimeFlag         = true;   // Flag to determine if the program is running for the first time
+unsigned long alarmInterval     = 1800;  // Sleep duration in seconds
+unsigned int  transmitInterval  = 1;     // Messages to transmit in each Iridium transmission (340 byte limit)
+unsigned int  retransmitLimit   = 5;     // Failed data transmission reattempt (340 byte limit)
+unsigned int  gpsTimeout        = 180;   // Timeout for GPS signal acquisition
+unsigned int  iridiumTimeout    = 180;   // Timeout for Iridium transmission (s)
+bool          firstTimeFlag     = true;  // Flag to determine if the program is running for the first time
 
 // ------------------------------------------------------------------------------------------------
 // Global variable declarations
 // ------------------------------------------------------------------------------------------------
-const float   R1                    = 9875000.0;   // Voltage divider resistor 1
-const float   R2                    = 988600.0;   // Voltage divider resistor 2
-volatile bool alarmFlag             = false;      // Flag for alarm interrupt service routine
-volatile bool wdtFlag               = false;      // Flag for Watchdog Timer interrupt service routine
-volatile int  wdtCounter            = 0;          // Watchdog Timer interrupt counter
-bool          resetFlag             = 0;          // Flag to force system reset using Watchdog Timer
-float         voltage               = 0.0;        // Battery voltage
-uint8_t       transmitBuffer[340]   = {};         // Iridium 9603 transmission buffer (MO SBD message max length: 340 bytes)
-unsigned int  messageCounter        = 0;          // Iridium 9603 transmission counter (zero indicates a reset)
-byte          retransmitCounter     = 0;          // Iridium 9603 failed transmission counter
-byte          transmitCounter       = 0;          // Iridium 9603 transmission interval counter
-unsigned int  failedTransmitCounter = 0;          // Counter to track failed messages
-unsigned long previousMillis        = 0;          // Global millis() timer
-unsigned long alarmTime, unixtime   = 0;          // Global RTC time variables
-tmElements_t  tm;
+const float   R1                = 9875000.0; // Resistor values of voltage divider
+const float   R2                = 988600.0;
+volatile bool alarmFlag         = false;  // Flag for alarm interrupt service routine
+volatile bool wdtFlag           = false;  // Flag for Watchdog Timer interrupt service routine
+volatile int  wdtCounter        = 0;      // Watchdog Timer interrupt counter
+bool          resetFlag         = 0;      // Flag to force system reset using Watchdog Timer
+uint8_t       moSbdBuffer[340];           // Buffer for Mobile Originated SBD (MO-SBD) message (340 bytes max)
+uint8_t       mtSbdBuffer[270];           // Buffer for Mobile Terminated SBD (MT-SBD) message (270 bytes max)
+size_t        moSbdBufferSize;            
+size_t        mtSbdBufferSize;
+unsigned int  iterationCounter  = 0;      // Counter to track total number of code iterations (zero indicates a reset)
+byte          retransmitCounter = 0;      // Counter to track Iridium 9603 transmission reattempts
+byte          transmitCounter   = 0;      // Counter to track Iridium 9603 transmission intervals
+unsigned int  failureCounter    = 0;      // Counter to track consecutive failed Iridium transmission attempts
+unsigned long previousMillis    = 0;      // Global millis() timer
+unsigned long alarmTime         = 0;      // Global epoch alarm time variable
+unsigned long unixtime          = 0;      // Global epoch time variable
+tmElements_t  tm;                         // Time elements variable for converting time
 
 // ------------------------------------------------------------------------------------------------
 // Data transmission unions/structures
 // ------------------------------------------------------------------------------------------------
-// Union to transmit Iridium Short Burst Data (SBD) Mobile Originated (MO) message
+// Union to store Iridium Short Burst Data (SBD) Mobile Originated (MO) messages
 typedef union
 {
   struct
@@ -147,15 +151,15 @@ typedef union
     int32_t   rtcDrift;         // RTC offset from GPS time       (4 bytes)
     uint16_t  voltage;          // Battery voltage (V)            (2 bytes)
     uint16_t  transmitDuration; // Previous transmission duration (2 bytes)
-    byte      transmitStatus;   // Iridium return code            
-    uint16_t  messageCounter;   // Message counter                (2 bytes)
-  } __attribute__((packed));                            // Total: (39 bytes)
-  uint8_t bytes[37];
+    byte      transmitStatus;   // Iridium return code            (1 byte)
+    uint16_t  iterationCounter; // Message counter                (2 bytes)
+  } __attribute__((packed));                            // Total: (38 bytes)
+  uint8_t bytes[38];
 } SBD_MO_MESSAGE;
 
-SBD_MO_MESSAGE moMessage;
+SBD_MO_MESSAGE moSbdMessage;
 
-// Union to receive Iridium SBD Mobile Terminated (MT) message
+// Union to store received Iridium SBD Mobile Terminated (MT) message
 typedef union
 {
   struct
@@ -168,7 +172,7 @@ typedef union
   uint8_t bytes[7]; // Size of message to be received in bytes
 } SBD_MT_MESSAGE;
 
-SBD_MT_MESSAGE mtMessage;
+SBD_MT_MESSAGE mtSbdMessage;
 
 // Structure to store device online/offline states
 struct struct_online
@@ -202,13 +206,13 @@ void setup()
   pinMode(PIN_GPS_EN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
   digitalWrite(PIN_GPS_EN, HIGH); // Disable power to GPS
-  digitalWrite(PIN_IRIDIUM_EN, HIGH); // Disable power to Iridium 9603
+  digitalWrite(PIN_IRIDIUM_EN, LOW); // Disable power to Iridium 9603
 
   // Set analog resolution to 12-bits
   analogReadResolution(12);
 
   // Apply ADC gain and offset error calibration correction
-  analogReadCorrection(13, 2060);
+  analogReadCorrection(10, 2054);
 
   Wire.begin(); // Initialize I2C
   Wire.setClock(400000); // Set I2C clock speed to 400 kHz
@@ -225,10 +229,12 @@ void setup()
 
   // Configure devices
   configureLed();       // Configure RGB LED
-  configureWdt();       // Configure Watchdog Timer (WDT)
   configureRtc();       // Configure real-time clock (RTC)
+  configureWdt();       // Configure Watchdog Timer (WDT)
   readGps();            // Synchronize RTC with GNSS
   configureIridium();   // Configure Iridium 9603 transceiver
+
+  printSettings();      // Print configuration settings
 
   // Close serial port if immediately entering deep sleep
   if (!firstTimeFlag)
@@ -254,11 +260,10 @@ void loop()
     {
       wakeUp();
     }
-
+    
     DEBUG_PRINT("Info: Alarm trigger "); printDateTime();
 
-    // Enable power to RockBLOCK 9603
-    //enableIridiumPower();
+    // Reconfigure devices
     configureSensors();
     configureImu();
 
@@ -287,7 +292,7 @@ void loop()
   }
 
   // Blink LED to indicate WDT interrupt and nominal system operation
-  blinkLed(1, 100);
+  blinkLed(1, 25);
 
   // Enter deep sleep and wait for WDT or RTC alarm interrupt
   goToSleep();

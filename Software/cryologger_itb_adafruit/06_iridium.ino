@@ -1,30 +1,30 @@
 // Configure RockBLOCK 9603
 void configureIridium()
 {
-  //modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE); // Assume USB power
+  //modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE);     // Assume USB power
   modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
-  modem.adjustATTimeout(30); // Adjust timeout timer for serial AT commands (default = 20 s)
-  modem.adjustSendReceiveTimeout(iridiumTimeout); // Adjust timeout timer for library send/receive commands (default = 300 s)
-  //modem.adjustStartupTimeout(30); // Adjust timeout for Iridium modem startup (default = 240 s)
+  modem.adjustATTimeout(20);                                // Adjust timeout timer for serial AT commands (default = 20 s)
+  modem.adjustSendReceiveTimeout(iridiumTimeout);           // Adjust timeout timer for library send/receive commands (default = 300 s)
+  //modem.adjustStartupTimeout(30);                           // Adjust timeout for Iridium modem startup (default = 240 s)
 }
 
 // Write data from structure to transmit buffer
 void writeBuffer()
 {
-  messageCounter++; // Increment message counter
+  iterationCounter++; // Increment iteration counter
   transmitCounter++; // Increment data transmission counter
-  moMessage.messageCounter = messageCounter; // Write message counter data to union
+  moSbdMessage.iterationCounter = iterationCounter; // Write message counter data to union
 
   // Concatenate current message with existing message(s) stored in transmit buffer
-  memcpy(transmitBuffer + (sizeof(moMessage) * (transmitCounter + (retransmitCounter * transmitInterval) - 1)), moMessage.bytes, sizeof(moMessage));
+  memcpy(moSbdBuffer + (sizeof(moSbdMessage) * (transmitCounter + (retransmitCounter * transmitInterval) - 1)), moSbdMessage.bytes, sizeof(moSbdMessage));
 
   // Print MO-SBD union/structure
   printMoSbd();
   //printMoSbdHex();
-  //printTransmitBuffer();
+  //printMoSbdBuffer();
 
-  // Write zeroes to MO-SBD union/structure
-  memset(&moMessage, 0, sizeof(moMessage));
+  // Clear MO-SBD message union/structure
+  memset(&moSbdMessage, 0x00, sizeof(moSbdMessage));
 }
 
 // Attempt to transmit data via RockBLOCK 9603
@@ -36,18 +36,22 @@ void transmitData()
   // Check if data transmission interval has been reached
   if ((transmitCounter == transmitInterval) || firstTimeFlag)
   {
+    // Enable power to the RockBLOCK 9603
+    enableIridiumPower();
+
     // Change LED colour
     setLedColour(CRGB::Purple);
 
-    // Start the serial port connected to the satellite modem
+    // Open the Iridium serial port
     IRIDIUM_PORT.begin(19200);
 
     // Assign pins for SERCOM functionality for new Serial2 instance
     pinPeripheral(PIN_IRIDIUM_TX, PIO_SERCOM);
     pinPeripheral(PIN_IRIDIUM_RX, PIO_SERCOM);
 
-    // Wake up the RockBLOCK 9604 and prepare it to communicate
+    // Wake up the RockBLOCK 9603 and begin communications
     DEBUG_PRINTLN("Info: Starting modem...");
+
     int returnCode = modem.begin();
     if (returnCode != ISBD_SUCCESS)
     {
@@ -55,67 +59,75 @@ void transmitData()
       DEBUG_PRINTLN(returnCode);
       if (returnCode == ISBD_NO_MODEM_DETECTED)
       {
-        DEBUG_PRINTLN("Warning: No modem detected! Check wiring.");
-        setLedColourIridium(returnCode); // Set LED colour
+        DEBUG_PRINTLN("Warning: No modem detected! Please check wiring.");
+        setLedColourIridium(returnCode); // Set LED colour to corresponding return code
       }
     }
     else
     {
-      // Create buffer to store Mobile Terminated SBD (MT-SBD) message (270 bytes max)
-      uint8_t mtBuffer[270];
-      size_t mtBufferSize = sizeof(mtBuffer);
-      memset(mtBuffer, 0x00, sizeof(mtBuffer)); // Clear mtBuffer array
+      // Calculate SBD message buffer sizes
+      moSbdBufferSize = sizeof(moSbdMessage) * (transmitCounter + (retransmitCounter * transmitInterval));
+      mtSbdBufferSize = sizeof(mtSbdBuffer);
+      memset(mtSbdBuffer, 0x00, sizeof(mtSbdBuffer)); // Clear MT-SBD buffer
 
       DEBUG_PRINTLN("Info: Attempting to transmit message...");
 
       // Transmit and receieve SBD message data in binary format
-      returnCode = modem.sendReceiveSBDBinary(transmitBuffer, (sizeof(moMessage) * (transmitCounter + (retransmitCounter * transmitInterval))), mtBuffer, mtBufferSize);
+      returnCode = modem.sendReceiveSBDBinary(moSbdBuffer, moSbdBufferSize, mtSbdBuffer, mtSbdBufferSize);
 
       // Check if transmission was successful
       if (returnCode == ISBD_SUCCESS)
       {
         DEBUG_PRINTLN("Info: MO-SBD message transmission successful!");
-        setLedColourIridium(returnCode); // Set LED colour to appropriate return code
+        setLedColourIridium(returnCode); // Set LED colour to corresponding return code
 
-        failedTransmitCounter = 0; // Clear failed transmission counter
+        failureCounter = 0; // Clear failed transmission counter
         retransmitCounter = 0; // Clear message retransmit counter
-        memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmit buffer array
+        memset(moSbdBuffer, 0x00, sizeof(moSbdBuffer)); // Clear MO-SBD message buffer
 
-        // Check if a Mobile Terminated (MT) message was received
-        // If no message is available, mtBufferSize = 0
-        if (mtBufferSize > 0)
+        // Check if a Mobile Terminated (MT) SBD message was received
+        // If no message is available, mtSbdBufferSize = 0
+        if (mtSbdBufferSize > 0)
         {
           DEBUG_PRINT("Info: MT-SBD message received. Size: ");
-          DEBUG_PRINT(mtBufferSize); DEBUG_PRINTLN(" bytes.");
+          DEBUG_PRINT(mtSbdBufferSize); DEBUG_PRINTLN(" bytes.");
 
-          // Print contents of mtBuffer in hexadecimal
-          char tempData[20];
-          DEBUG_PRINTLN("Byte\tHex");
-          for (int i = 0; i < sizeof(mtBuffer); ++i)
+          // Check if MT-SBD message is the correct size
+          if (mtSbdBufferSize == 7)
           {
-            // Write incoming message buffer to union/structure
-            mtMessage.bytes[i] = mtBuffer[i];
-            sprintf(tempData, "%d\t0x%02X", i, mtBuffer[i]);
-            DEBUG_PRINTLN(tempData);
-          }
+            DEBUG_PRINTLN("Info: MT-SBD message correct size.");
 
-          // Print MT-SBD message as stored in union/structure
-          printMtSbd();
+            // Write incoming MT-SBD message to union/structure
+            for (int i = 0; i < mtSbdBufferSize; ++i)
+            {
+              mtSbdMessage.bytes[i] = mtSbdBuffer[i];
+            }
 
-          // Check if MT-SBD message data is valid and update global variables accordingly
-          if ((mtMessage.alarmInterval      >= 300  && mtMessage.alarmInterval    <= 1209600) &&
-              (mtMessage.transmitInterval   >= 1    && mtMessage.transmitInterval <= 24) &&
-              (mtMessage.retransmitLimit    >= 0    && mtMessage.retransmitLimit  <= 24) &&
-              (mtMessage.resetFlag          == 0    || mtMessage.resetFlag        == 255))
-          {
-            alarmInterval = mtMessage.alarmInterval;        // Update alarm interval
-            transmitInterval = mtMessage.transmitInterval;  // Update transmit interval
-            retransmitLimit = mtMessage.retransmitLimit;    // Update retransmit limit
-            resetFlag = mtMessage.resetFlag;                // Update force reset flag
+            // Print MT-SBD message
+            printMtSbdBuffer(); // Print MT-SBD message in hexadecimal
+            printMtSbd(); // Print MT-SBD message stored in union/structure
+
+            // Check if MT-SBD message data is valid and update variables
+            if ((mtSbdMessage.alarmInterval      >= 300  && mtSbdMessage.alarmInterval    <= 1209600) &&
+                (mtSbdMessage.transmitInterval   >= 1    && mtSbdMessage.transmitInterval <= 24) &&
+                (mtSbdMessage.retransmitLimit    >= 0    && mtSbdMessage.retransmitLimit  <= 24) &&
+                (mtSbdMessage.resetFlag          == 0    || mtSbdMessage.resetFlag        == 255))
+            {
+              DEBUG_PRINTLN("Info: All received values within accepted ranges.");
+
+              alarmInterval = mtSbdMessage.alarmInterval;        // Update alarm interval
+              transmitInterval = mtSbdMessage.transmitInterval;  // Update transmit interval
+              retransmitLimit = mtSbdMessage.retransmitLimit;    // Update retransmit limit
+              resetFlag = mtSbdMessage.resetFlag;                // Update force reset flag
+            }
+            else
+            {
+              DEBUG_PRINT("Warning: Received values exceed accepted range!");
+            }
           }
           else
           {
-            DEBUG_PRINT("Warning: Received values exceed accepted range! ");
+            DEBUG_PRINTLN("Warning: MT-SBD message incorrect size!");
           }
         }
       }
@@ -123,24 +135,24 @@ void transmitData()
       {
         DEBUG_PRINT("Warning: Transmission failed with error code ");
         DEBUG_PRINTLN(returnCode);
-        setLedColourIridium(returnCode); // Set LED colour to return code
+        setLedColourIridium(returnCode); // Set LED colour to corresponding return code
       }
     }
 
-    // Write return error code to union
-    moMessage.transmitStatus = returnCode;
+    // Store return error code
+    moSbdMessage.transmitStatus = returnCode;
 
     // Store message in transmit buffer if transmission or modem begin fails
     if (returnCode != ISBD_SUCCESS)
     {
       retransmitCounter++;
-      failedTransmitCounter++;
+      failureCounter++;
 
       // Reset counter if reattempt limit is exceeded
       if (retransmitCounter > retransmitLimit)
       {
         retransmitCounter = 0;
-        memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmitBuffer array
+        memset(moSbdBuffer, 0x00, sizeof(moSbdBuffer)); // Clear transmit buffer
       }
     }
 
@@ -148,7 +160,7 @@ void transmitData()
     if (firstTimeFlag)
     {
       retransmitCounter = 0;
-      memset(transmitBuffer, 0x00, sizeof(transmitBuffer)); // Clear transmitBuffer array
+      memset(moSbdBuffer, 0x00, sizeof(moSbdBuffer)); // Clear moSbdBuffer array
     }
 
     // Put modem to sleep
@@ -157,14 +169,14 @@ void transmitData()
     if (returnCode != ISBD_SUCCESS)
     {
       DEBUG_PRINT("Warning: Sleep failed error "); DEBUG_PRINTLN(returnCode);
-      setLedColourIridium(returnCode); // Set LED colour to appropriate return code
+      setLedColourIridium(returnCode); // Set LED colour to corresponding return code
     }
 
-    // Close the serial port connected to the RockBLOCK
+    // Close the Iridium serial port
     IRIDIUM_PORT.end();
 
     // Disable power to Iridium 9603
-    //disableIridiumPower();
+    disableIridiumPower();
 
     // Reset transmit counter
     transmitCounter = 0;
@@ -173,7 +185,7 @@ void transmitData()
     timer.iridium = millis() - loopStartTime;
 
     // Write duration of last transmission to union
-    moMessage.transmitDuration = timer.iridium / 1000;
+    moSbdMessage.transmitDuration = timer.iridium / 1000;
 
     printSettings(); // Print current settings
 

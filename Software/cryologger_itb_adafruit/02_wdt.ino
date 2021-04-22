@@ -1,23 +1,24 @@
 // Configure the Watchdog Timer to perform a system reset if loop() blocks for more than 8-16 seconds
 void configureWdt()
 {
-  // Configure Generic Clock Controller 1 (GCLK1) 
+  /*
+  // Configure Generic Clock Controller 2 (GCLK1) 
   // for use with the Watchdog Timer (WDT) at 1.024kHz
-  REG_GCLK_GENDIV = GCLK_GENDIV_ID(1) |           // Select Generic Clock Controller 1
+  REG_GCLK_GENDIV = GCLK_GENDIV_ID(2) |           // Select Generic Clock Controller 2
                     GCLK_GENDIV_DIV(4) ;          // Divide the 32.768kHz clock source by divisor 32, where 2^(4 + 1): 32.768kHz/32=1.024kHz
   while (GCLK->STATUS.bit.SYNCBUSY);              // Wait for synchronization
 
-  REG_GCLK_GENCTRL = GCLK_GENCTRL_ID(1) |         // Select GCLK1
-                     GCLK_GENCTRL_GENEN |         // Enable GCLK1
+  REG_GCLK_GENCTRL = GCLK_GENCTRL_ID(2) |         // Select GCLK2
+                     GCLK_GENCTRL_GENEN |         // Enable GCLK2
                      GCLK_GENCTRL_SRC_OSCULP32K | // Set the clock source to the ultra low power oscillator (OSCULP32K)
                      GCLK_GENCTRL_DIVSEL |        // Set to divide by 2^(GCLK_GENDIV_DIV(4) + 1)
                      GCLK_GENCTRL_IDC;            // Set the duty cycle to 50/50 HIGH/LOW (REQUIRED?)
   while (GCLK->STATUS.bit.SYNCBUSY);              // Wait for synchronization to complete
-
-  // Feed GCLK1 to WDT
+*/
+  // Feed GCLK2 (preconfigured by the RTC) to WDT
   REG_GCLK_CLKCTRL = GCLK_CLKCTRL_ID_WDT |        // Identify it as the WDT clock
-                     GCLK_CLKCTRL_CLKEN |         // Select GCLK1
-                     GCLK_CLKCTRL_GEN_GCLK1;      // Enable the generic clock by setting the Clock Enabler bit
+                     GCLK_CLKCTRL_CLKEN |         // Enable the generic clock by setting the Clock Enabler bit
+                     GCLK_CLKCTRL_GEN_GCLK2;      // Select GCLK2
   while (GCLK->STATUS.bit.SYNCBUSY);              // Wait for synchronization
 
   REG_WDT_EWCTRL = WDT_EWCTRL_EWOFFSET_8K;        // Set the Early Warning Interrupt Time Offset to 8 seconds   // WDT->EWCTRL.bit.EWOFFSET = 0xA;
@@ -39,14 +40,14 @@ void petDog()
   //DEBUG_PRINT("Watchdog interrupt: "); DEBUG_PRINTLN(wdtCounter);
   WDT->CLEAR.bit.CLEAR = 0xA5;        // Clear the Watchdog Timer and restart time-out period //REG_WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;
   while (WDT->STATUS.bit.SYNCBUSY);   // Await synchronization of registers between clock domains
-  wdtFlag = false;               // Clear watchdog flag
-  wdtCounter = 0;                // Reset watchdog interrupt counter
+  wdtFlag = false;                    // Clear watchdog flag
+  wdtCounter = 0;                     // Reset watchdog interrupt counter
 }
 
 // Watchdog Timer interrupt service routine
 void WDT_Handler()
 {
-  WDT->INTFLAG.bit.EW = 1;          // Clear the Early Warning interrupt flag //REG_WDT_INTFLAG = WDT_INTFLAG_EW;
+  WDT->INTFLAG.bit.EW = 1;            // Clear the Early Warning interrupt flag //REG_WDT_INTFLAG = WDT_INTFLAG_EW;
 
   // Perform system reset after 10 watchdog interrupts (should not occur)
   if (wdtCounter < 10)

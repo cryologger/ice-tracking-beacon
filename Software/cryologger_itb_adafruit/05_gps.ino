@@ -14,10 +14,11 @@ void readGps()
   // Enable power to GPS
   enableGpsPower();
 
+  DEBUG_PRINTLN("Info: Beginning to listen for GPS traffic...");
+
   // Change LED colour
   setLedColour(CRGB::Cyan);
 
-  DEBUG_PRINTLN("Info: Beginning to listen for GPS traffic...");
   GPS_PORT.begin(9600);
   myDelay(1000);
 
@@ -29,7 +30,7 @@ void readGps()
   //GPS_PORT.println("$PGCMD,33,1*6C"); // Enable antenna updates
   //GPS_PORT.println("$PGCMD,33,0*6D"); // Disable antenna updates
 
-  // Look for GPS signal for up to 2 minutes
+  // Look for GPS signal for up to gpsTimeout
   while (!fixFound && millis() - loopStartTime < gpsTimeout * 1000UL) // * 60UL
   {
     if (GPS_PORT.available())
@@ -48,7 +49,7 @@ void readGps()
           fixCounter++; // Increment fix counter
 
           // Wait until a specified number of GPS fixes have been collected
-          if (fixCounter == 10)
+          if (fixCounter >= 10)
           {
             fixFound = true;
             setLedColour(CRGB::Green);
@@ -73,15 +74,14 @@ void readGps()
             DEBUG_PRINT(F("Info: RTC synced ")); printDateTime();
 
             // Write data to buffer
-            moMessage.latitude = gps.location.lat() * 1000000;
-            moMessage.longitude = gps.location.lng() * 1000000;
-            moMessage.satellites = gps.satellites.value();
-            moMessage.hdop = gps.hdop.value();
-            moMessage.rtcDrift = rtcDrift;
+            moSbdMessage.latitude = gps.location.lat() * 1000000;
+            moSbdMessage.longitude = gps.location.lng() * 1000000;
+            moSbdMessage.satellites = gps.satellites.value();
+            moSbdMessage.hdop = gps.hdop.value();
+            moSbdMessage.rtcDrift = rtcDrift;
 
             DEBUG_PRINT(F("Info: RTC drift ")); DEBUG_PRINT(rtcDrift); DEBUG_PRINTLN(F(" seconds"));
           }
-
         }
       }
     }
@@ -112,7 +112,7 @@ void readGps()
   {
     GPS_PORT.read();
   }
-  
+
   // Disable power to GPS
   disableGpsPower();
 

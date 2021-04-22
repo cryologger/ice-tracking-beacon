@@ -43,9 +43,9 @@ void readSensors()
     float pressure = bme280.readPressure();
 
     // Write data to union
-    moMessage.temperature = temperature * 100;
-    moMessage.humidity = humidity * 100;
-    moMessage.pressure = pressure / 10;
+    moSbdMessage.temperature = temperature * 100;
+    moSbdMessage.humidity = humidity * 100;
+    moSbdMessage.pressure = pressure / 10;
 
     DEBUG_PRINTLN("done.");
     
