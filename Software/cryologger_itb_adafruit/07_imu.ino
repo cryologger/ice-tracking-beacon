@@ -6,7 +6,7 @@ void configureImu()
   {
     online.imu = true;
 
-    setLedColour(CRGB::Blue); // Change LED colour
+    //setLedColour(CRGB::Blue); // Change LED colour
     imu.enableDefault(); // Turn on accelerometer and magnetometer
     /*
       Calibration values: the default values of +/-32767 for each axis lead to an assumed
@@ -28,7 +28,8 @@ void configureImu()
   {
     DEBUG_PRINTLN(F("failed!"));
     online.imu = false;
-    setLedColour(CRGB::Red); // Change LED colour
+    //setLedColour(CRGB::Red); // Change LED colour
+    blinkLed(3, 1000);
   }
 }
 
@@ -42,7 +43,7 @@ void readImu()
   if (online.imu)
   {
     // Change LED colour
-    setLedColour(CRGB::Blue);
+    //setLedColour(CRGB::Blue);
 
     DEBUG_PRINT("Info: Reading IMU...");
 
@@ -79,12 +80,12 @@ void readImu()
 
     DEBUG_PRINTLN("done.");
 
-    setLedColour(CRGB::Green); // Change LED colour
+    //setLedColour(CRGB::Green); // Change LED colour
   }
   else
   {
     DEBUG_PRINTLN("Warning: IMU offline!");
-    setLedColour(CRGB::Red); // Change LED colour
+    //setLedColour(CRGB::Red); // Change LED colour
   }
   // Stop loop timer
   timer.imu = millis() - loopStartTime;

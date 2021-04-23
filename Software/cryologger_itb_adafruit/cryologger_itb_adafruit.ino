@@ -19,8 +19,8 @@
 // ------------------------------------------------------------------------------------------------
 // Libraries
 // ------------------------------------------------------------------------------------------------
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BME280.h>
+#include <Adafruit_Sensor.h>        // https://github.com/adafruit/Adafruit_Sensor
+#include <Adafruit_BME280.h>        // https://github.com/adafruit/Adafruit_BME280_Library
 #include <Arduino.h>                // https://github.com/arduino/ArduinoCore-samd
 #include <ArduinoLowPower.h>        // https://github.com/arduino-libraries/ArduinoLowPower
 #include <FastLED.h>                // https://github.com/adafruit/Adafruit_NeoPixel
@@ -37,7 +37,7 @@
 // Debugging macros
 // ------------------------------------------------------------------------------------------------
 #define DEBUG           true   // Output debug messages to Serial Monitor
-#define DEBUG_GPS       false   // Output GPS debug information
+#define DEBUG_GPS       false  // Output GPS debug information
 #define DEBUG_IRIDIUM   true   // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
@@ -62,7 +62,7 @@
 // ------------------------------------------------------------------------------------------------
 // Pin definitions
 // ------------------------------------------------------------------------------------------------
-#define PIN_VBAT            A7
+#define PIN_VBAT            A0
 #define PIN_GPS_EN          A5
 #define PIN_LED             8
 #define PIN_IRIDIUM_EN      6
@@ -100,7 +100,7 @@ TinyGPSPlus       gps;
 // ------------------------------------------------------------------------------------------------
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
-unsigned long alarmInterval     = 1800;  // Sleep duration in seconds
+unsigned long alarmInterval     = 3600;  // Sleep duration in seconds
 unsigned int  transmitInterval  = 1;     // Messages to transmit in each Iridium transmission (340 byte limit)
 unsigned int  retransmitLimit   = 5;     // Failed data transmission reattempt (340 byte limit)
 unsigned int  gpsTimeout        = 180;   // Timeout for GPS signal acquisition
@@ -118,7 +118,7 @@ volatile int  wdtCounter        = 0;      // Watchdog Timer interrupt counter
 bool          resetFlag         = 0;      // Flag to force system reset using Watchdog Timer
 uint8_t       moSbdBuffer[340];           // Buffer for Mobile Originated SBD (MO-SBD) message (340 bytes max)
 uint8_t       mtSbdBuffer[270];           // Buffer for Mobile Terminated SBD (MT-SBD) message (270 bytes max)
-size_t        moSbdBufferSize;            
+size_t        moSbdBufferSize;
 size_t        mtSbdBufferSize;
 unsigned int  iterationCounter  = 0;      // Counter to track total number of code iterations (zero indicates a reset)
 byte          retransmitCounter = 0;      // Counter to track Iridium 9603 transmission reattempts
@@ -177,10 +177,8 @@ SBD_MT_MESSAGE mtSbdMessage;
 // Structure to store device online/offline states
 struct struct_online
 {
-  bool rtc = false;
   bool imu = false;
   bool gnss = false;
-  bool iridium = false;
   bool bme280 = false;
 } online;
 
@@ -228,20 +226,20 @@ void setup()
   printLine();
 
   // Configure devices
-  configureLed();       // Configure RGB LED
+  //configureLed();       // Configure RGB LED
   configureRtc();       // Configure real-time clock (RTC)
   configureWdt();       // Configure Watchdog Timer (WDT)
+  printSettings();      // Print configuration settings
   readGps();            // Synchronize RTC with GNSS
   configureIridium();   // Configure Iridium 9603 transceiver
-
-  printSettings();      // Print configuration settings
 
   // Close serial port if immediately entering deep sleep
   if (!firstTimeFlag)
   {
     disableSerial();
   }
-  setLedColour(CRGB::White); // Change LED colour to indicate completion of setup
+  //setLedColour(CRGB::White); // Change LED colour to indicate completion of setup
+  blinkLed(5, 500);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -260,7 +258,7 @@ void loop()
     {
       wakeUp();
     }
-    
+
     DEBUG_PRINT("Info: Alarm trigger "); printDateTime();
 
     // Reconfigure devices
@@ -274,15 +272,15 @@ void loop()
     readImu();        // Read the IMU
     readSensors();    // Read sensors
     writeBuffer();    // Write the data to transmit buffer
-    transmitData();   // Transmit data
+    transmitData();   // Transmit data via Iridium transceiver
     printTimers();    // Print function execution timers
     setRtcAlarm();    // Set the RTC alarm
 
     DEBUG_PRINTLN("Info: Entering deep sleep...");
     DEBUG_PRINTLN();
 
-    // Disable serial
-    disableSerial();
+    // Prepare system for sleep
+    prepareForSleep();
   }
 
   // Check for Watchdog Timer interrupts

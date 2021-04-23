@@ -3,9 +3,7 @@ void configureIridium()
 {
   //modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE);     // Assume USB power
   modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
-  modem.adjustATTimeout(20);                                // Adjust timeout timer for serial AT commands (default = 20 s)
   modem.adjustSendReceiveTimeout(iridiumTimeout);           // Adjust timeout timer for library send/receive commands (default = 300 s)
-  //modem.adjustStartupTimeout(30);                           // Adjust timeout for Iridium modem startup (default = 240 s)
 }
 
 // Write data from structure to transmit buffer
@@ -40,7 +38,7 @@ void transmitData()
     enableIridiumPower();
 
     // Change LED colour
-    setLedColour(CRGB::Purple);
+    //setLedColour(CRGB::Purple);
 
     // Open the Iridium serial port
     IRIDIUM_PORT.begin(19200);
@@ -60,7 +58,7 @@ void transmitData()
       if (returnCode == ISBD_NO_MODEM_DETECTED)
       {
         DEBUG_PRINTLN("Warning: No modem detected! Please check wiring.");
-        setLedColourIridium(returnCode); // Set LED colour to corresponding return code
+        //setLedColourIridium(returnCode); // Set LED colour to corresponding return code
       }
     }
     else
@@ -79,8 +77,9 @@ void transmitData()
       if (returnCode == ISBD_SUCCESS)
       {
         DEBUG_PRINTLN("Info: MO-SBD message transmission successful!");
-        setLedColourIridium(returnCode); // Set LED colour to corresponding return code
-
+        //setLedColourIridium(returnCode); // Set LED colour to corresponding return code
+        blinkLed(10, 250);
+        
         failureCounter = 0; // Clear failed transmission counter
         retransmitCounter = 0; // Clear message retransmit counter
         memset(moSbdBuffer, 0x00, sizeof(moSbdBuffer)); // Clear MO-SBD message buffer
@@ -135,7 +134,7 @@ void transmitData()
       {
         DEBUG_PRINT("Warning: Transmission failed with error code ");
         DEBUG_PRINTLN(returnCode);
-        setLedColourIridium(returnCode); // Set LED colour to corresponding return code
+        //setLedColourIridium(returnCode); // Set LED colour to corresponding return code
       }
     }
 
@@ -169,7 +168,7 @@ void transmitData()
     if (returnCode != ISBD_SUCCESS)
     {
       DEBUG_PRINT("Warning: Sleep failed error "); DEBUG_PRINTLN(returnCode);
-      setLedColourIridium(returnCode); // Set LED colour to corresponding return code
+      //setLedColourIridium(returnCode); // Set LED colour to corresponding return code
     }
 
     // Close the Iridium serial port

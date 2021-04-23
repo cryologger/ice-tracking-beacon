@@ -80,7 +80,7 @@ void setRtcAlarm()
   }
 
   // Check if alarm was set in the past
-  if ((rtc.getEpoch() >= alarmTime) || firstTimeFlag) // 
+  if ((rtc.getEpoch() >= alarmTime) || firstTimeFlag)
   {
     DEBUG_PRINTLN(F("Warning: RTC alarm set in the past or program running for the first time."));
 
