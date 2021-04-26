@@ -18,6 +18,7 @@ void configureSensors()
   {
     DEBUG_PRINTLN("failed!");
     online.bme280 = false;
+    blinkLed(5, 1000);
   }
 }
 
@@ -31,7 +32,7 @@ void readSensors()
   if (online.bme280)
   {
     DEBUG_PRINT("Info: Reading BME280...");
-    setLedColour(CRGB::Orange); // Change LED colour
+    //setLedColour(CRGB::Orange); // Change LED colour
 
     // Wake sensor and return to sleep once measurement is made
     bme280.takeForcedMeasurement();
@@ -50,20 +51,10 @@ void readSensors()
     moSbdMessage.pressure = pressure / 10;
 
     DEBUG_PRINTLN("done.");
-    
-<<<<<<< Updated upstream
-    // Stop the loop timer
-    timer.sensors = millis() - loopStartTime;
-
-    setLedColour(CRGB::Green); // Change LED colour
-=======
-    //setLedColour(CRGB::Green); // Change LED colour
->>>>>>> Stashed changes
   }
   else
   {
     DEBUG_PRINTLN("Warning: BME280 offline!");
-    setLedColour(CRGB::Red); // Change LED colour
   }
   // Stop the loop timer
   timer.sensors = millis() - loopStartTime;

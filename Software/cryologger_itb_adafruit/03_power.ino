@@ -10,7 +10,7 @@ void readBattery()
   for (byte i = 0; i < samples; ++i)
   {
     reading += analogRead(PIN_VBAT); // Read VIN across a 1/10 MΩ resistor divider
-    delay(1);
+    myDelay(1);
   }
 
   float voltage = (float)reading / samples * 3.3 * ((R2 + R1) / R2) / 4096.0; // Convert 1/10 VIN to VIN (12-bit resolution)
@@ -36,7 +36,6 @@ void readBattery()
 void disableSerial()
 {
 #if DEBUG
-  SERIAL_PORT.flush(); // Wait for transmission of any serial data to complete
   SERIAL_PORT.end();   // Close serial port
   USBDevice.detach();   // Safely detach USB prior to sleeping
 #endif
@@ -102,6 +101,19 @@ void disableIridiumPower()
   digitalWrite(PIN_IRIDIUM_EN, LOW);
 }
 
+// 
+void prepareForSleep()
+{
+  // Disable serial
+  disableSerial();
+
+  // Clear online union
+  memset(&online, 0, sizeof(online));
+
+  // Clear timer union
+  memset(&timer, 0, sizeof(timer));
+}
+
 // Enter deep sleep
 void goToSleep()
 {
@@ -110,17 +122,6 @@ void goToSleep()
   {
     firstTimeFlag = false;
   }
-
-  // Clear device states
-  online.imu = false;
-  online.bme280 = false;
-
-  // Clear timer union
-  memset(&timer, 0, sizeof(timer));
-
-  // Turn off LEDs
-  setLedColour(CRGB::Black);
-  digitalWrite(LED_BUILTIN, LOW);
 
   // Enter deep sleep
   LowPower.deepSleep();

@@ -17,7 +17,7 @@ void readGps()
   DEBUG_PRINTLN("Info: Beginning to listen for GPS traffic...");
 
   // Change LED colour
-  setLedColour(CRGB::Cyan);
+  //setLedColour(CRGB::Cyan);
 
   GPS_PORT.begin(9600);
   myDelay(1000);
@@ -52,7 +52,7 @@ void readGps()
           if (fixCounter >= 10)
           {
             fixFound = true;
-            setLedColour(CRGB::Green);
+            //setLedColour(CRGB::Green);
 
             // Convert GPS date and time to epoch time
             tm.Hour = gps.time.hour();
@@ -93,7 +93,7 @@ void readGps()
     if ((millis() - loopStartTime) > 5000 && gps.charsProcessed() < 10)
     {
       DEBUG_PRINTLN(F("Warning: No GPS data received. Please check wiring."));
-      setLedColour(CRGB::Red);
+      //setLedColour(CRGB::Red);
       break;
     }
   }
@@ -101,17 +101,11 @@ void readGps()
   if (!fixFound)
   {
     DEBUG_PRINTLN(F("Warning: No GPS fix found!"));
-    setLedColour(CRGB::Red);
+    //setLedColour(CRGB::Red);
   }
 
   // Close GPS port
   GPS_PORT.end();
-
-  // Flush GPS port
-  while (GPS_PORT.available())
-  {
-    GPS_PORT.read();
-  }
 
   // Disable power to GPS
   disableGpsPower();

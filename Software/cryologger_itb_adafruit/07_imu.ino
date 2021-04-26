@@ -11,36 +11,12 @@ void configureImu()
   {
     online.imu = true;
 
-<<<<<<< Updated upstream
-    setLedColour(CRGB::Blue); // Change LED colour
-    imu.enableDefault(); // Turn on accelerometer and magnetometer
-    /*
-      Calibration values: the default values of +/-32767 for each axis lead to an assumed
-      magnetometer bias of 0. Use the Pololu LSM303 library Calibrate example program to
-      determine appropriate values for each LSM303 sensor.
-    */
-    // 2 = 1, 1 = 3, 3 = 2
-    imu.m_min = (LSM303::vector<int16_t>)
-    {
-      -32767, -32767, -32767
-    };
-    imu.m_max = (LSM303::vector<int16_t>)
-    {
-      +32767, +32767, +32767
-    };
-=======
-    imu.enableDefault();
->>>>>>> Stashed changes
     DEBUG_PRINTLN("success!");
   }
   else
   {
     DEBUG_PRINTLN(F("Warning: Failed to detect and initialize LSM6DS33!"));
     online.imu = false;
-<<<<<<< Updated upstream
-    setLedColour(CRGB::Red); // Change LED colour
-=======
->>>>>>> Stashed changes
   }
 
   // Initialize LIS3MDL magnetometer
@@ -52,6 +28,7 @@ void configureImu()
   {
     DEBUG_PRINTLN(F("Warning: Failed to detect and initialize LIS3MDL!"));
     online.mag = false;
+    blinkLed(3, 1000);
   }
 
 }
@@ -99,7 +76,7 @@ void readImu()
   if (online.imu)
   {
     // Change LED colour
-    setLedColour(CRGB::Blue);
+    //setLedColour(CRGB::Blue);
 
     DEBUG_PRINT("Info: Reading IMU...");
 
@@ -126,19 +103,11 @@ void readImu()
     moSbdMessage.heading = heading;
 
     DEBUG_PRINTLN("done.");
-<<<<<<< Updated upstream
 
-    setLedColour(CRGB::Green); // Change LED colour
-=======
->>>>>>> Stashed changes
   }
   else
   {
     DEBUG_PRINTLN("Warning: IMU offline!");
-<<<<<<< Updated upstream
-    setLedColour(CRGB::Red); // Change LED colour
-=======
->>>>>>> Stashed changes
   }
   // Enable pin power to IMU
   disableImuPower();
