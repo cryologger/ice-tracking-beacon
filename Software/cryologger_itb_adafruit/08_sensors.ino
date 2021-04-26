@@ -2,6 +2,8 @@
 void configureSensors()
 {
   DEBUG_PRINT("Info: Initializing BME280...");
+  enableBme280Power();
+
   if (bme280.begin())
   {
     bme280.setSampling(Adafruit_BME280::MODE_FORCED,
@@ -49,14 +51,23 @@ void readSensors()
 
     DEBUG_PRINTLN("done.");
     
+<<<<<<< Updated upstream
     // Stop the loop timer
     timer.sensors = millis() - loopStartTime;
 
     setLedColour(CRGB::Green); // Change LED colour
+=======
+    //setLedColour(CRGB::Green); // Change LED colour
+>>>>>>> Stashed changes
   }
   else
   {
     DEBUG_PRINTLN("Warning: BME280 offline!");
     setLedColour(CRGB::Red); // Change LED colour
   }
+  // Stop the loop timer
+  timer.sensors = millis() - loopStartTime;
+  
+  disableBme280Power();
+
 }

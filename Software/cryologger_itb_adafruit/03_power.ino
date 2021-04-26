@@ -52,6 +52,32 @@ void enableSerial()
 #endif
 }
 
+// Enable power to IMU
+void enableImuPower()
+{
+  digitalWrite(PIN_IMU_EN, HIGH);
+  myDelay(500);
+}
+
+// Disable power to IMU
+void disableImuPower()
+{
+  digitalWrite(PIN_IMU_EN, LOW); 
+}
+
+// Enable power to BME280
+void enableBme280Power()
+{
+  digitalWrite(PIN_BME280_EN, HIGH);
+  myDelay(500);
+}
+
+// Disable power to BME280
+void disableBme280Power()
+{
+  digitalWrite(PIN_BME280_EN, LOW); 
+}
+
 // Enable power to GPS
 void enableGpsPower()
 {

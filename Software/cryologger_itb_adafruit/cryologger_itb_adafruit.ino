@@ -1,6 +1,6 @@
 /*
     Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0
-    Date:     April 19, 2021
+    Date:     April 24, 2021
     Author:   Adam Garbo
 
     Description:
@@ -25,13 +25,15 @@
 #include <ArduinoLowPower.h>        // https://github.com/arduino-libraries/ArduinoLowPower
 #include <FastLED.h>                // https://github.com/adafruit/Adafruit_NeoPixel
 #include <IridiumSBD.h>             // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
-#include <LSM303.h>                 // https://github.com/pololu/lsm303-arduino
+#include <LIS3MDL.h>                // https://github.com/pololu/lis3mdl-arduino
+#include <LSM6.h>                   // https://github.com/pololu/lsm6-arduino
 #include <RTCZero.h>                // https://github.com/arduino-libraries/RTCZero
 #include <SAMD_AnalogCorrection.h>  // https://github.com/arduino/ArduinoCore-samd/tree/master/libraries/SAMD_AnalogCorrection
 #include <TimeLib.h>                // https://github.com/PaulStoffregen/Time
 #include <TinyGPS++.h>              // https://github.com/mikalhart/TinyGPSPlus
 #include <Wire.h>                   // https://www.arduino.cc/en/Reference/Wire
 #include <wiring_private.h>         // Required for creating new Serial instance with pinPeripheral() function 
+#include "vector.c"
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
@@ -62,9 +64,15 @@
 // ------------------------------------------------------------------------------------------------
 // Pin definitions
 // ------------------------------------------------------------------------------------------------
+<<<<<<< Updated upstream
 #define PIN_VBAT            A7
+=======
+#define PIN_VBAT            A0
+#define PIN_BME280_EN       A3
+#define PIN_IMU_EN          A4
+>>>>>>> Stashed changes
 #define PIN_GPS_EN          A5
-#define PIN_LED             8
+#define PIN_LED             5
 #define PIN_IRIDIUM_EN      6
 #define PIN_IRIDIUM_RX      10 // Pin 1 RXD (Yellow wire)
 #define PIN_IRIDIUM_TX      11 // Pin 6 TXD (Orange)
@@ -93,16 +101,21 @@ void SERCOM1_Handler()
 Adafruit_BME280   bme280;
 CRGB              led[1];
 IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP);
-LSM303            imu; //
+LSM6              imu;
+LIS3MDL           mag;
 RTCZero           rtc;
 TinyGPSPlus       gps;
 
 // ------------------------------------------------------------------------------------------------
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
+<<<<<<< Updated upstream
 unsigned long alarmInterval     = 1800;  // Sleep duration in seconds
+=======
+unsigned long alarmInterval     = 10800;  // Sleep duration in seconds
+>>>>>>> Stashed changes
 unsigned int  transmitInterval  = 1;     // Messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitLimit   = 5;     // Failed data transmission reattempt (340 byte limit)
+unsigned int  retransmitLimit   = 4;     // Failed data transmission reattempt (340 byte limit)
 unsigned int  gpsTimeout        = 180;   // Timeout for GPS signal acquisition
 unsigned int  iridiumTimeout    = 180;   // Timeout for Iridium transmission (s)
 bool          firstTimeFlag     = true;  // Flag to determine if the program is running for the first time
@@ -110,8 +123,8 @@ bool          firstTimeFlag     = true;  // Flag to determine if the program is 
 // ------------------------------------------------------------------------------------------------
 // Global variable declarations
 // ------------------------------------------------------------------------------------------------
-const float   R1                = 9875000.0; // Resistor values of voltage divider
-const float   R2                = 988600.0;
+const float   R1                = 10000000.0; // Resistor values of voltage divider
+const float   R2                = 1000000.0;
 volatile bool alarmFlag         = false;  // Flag for alarm interrupt service routine
 volatile bool wdtFlag           = false;  // Flag for Watchdog Timer interrupt service routine
 volatile int  wdtCounter        = 0;      // Watchdog Timer interrupt counter
@@ -120,14 +133,32 @@ uint8_t       moSbdBuffer[340];           // Buffer for Mobile Originated SBD (M
 uint8_t       mtSbdBuffer[270];           // Buffer for Mobile Terminated SBD (MT-SBD) message (270 bytes max)
 size_t        moSbdBufferSize;            
 size_t        mtSbdBufferSize;
-unsigned int  iterationCounter  = 0;      // Counter to track total number of code iterations (zero indicates a reset)
+unsigned int  iterationCounter  = 0;      // Counter to track total number of super loop iterations (zero indicates a reset)
 byte          retransmitCounter = 0;      // Counter to track Iridium 9603 transmission reattempts
 byte          transmitCounter   = 0;      // Counter to track Iridium 9603 transmission intervals
 unsigned int  failureCounter    = 0;      // Counter to track consecutive failed Iridium transmission attempts
 unsigned long previousMillis    = 0;      // Global millis() timer
 unsigned long alarmTime         = 0;      // Global epoch alarm time variable
 unsigned long unixtime          = 0;      // Global epoch time variable
-tmElements_t  tm;                         // Time elements variable for converting time
+tmElements_t  tm;                         // Variable for converting time elements to time_t
+
+// ------------------------------------------------------------------------------------------------
+// IMU calibration
+// ------------------------------------------------------------------------------------------------
+// Code initialization statements from magneto required to correct magnetometer distortion
+// See: https://forum.pololu.com/t/correcting-the-balboa-magnetometer/14315
+
+vector p = {1, 0, 0};
+
+char report[80];
+
+float B[3] { -2979.80,  432.81, -1757.11};
+
+float Ainv[3][3] {
+  {  0.28665,  0.01375,  0.00138},
+  {  0.01375,  0.28350, -0.00795},
+  {  0.00138, -0.00795,  0.28812}
+};
 
 // ------------------------------------------------------------------------------------------------
 // Data transmission unions/structures
@@ -179,6 +210,7 @@ struct struct_online
 {
   bool rtc = false;
   bool imu = false;
+  bool mag = false;
   bool gnss = false;
   bool iridium = false;
   bool bme280 = false;
@@ -204,15 +236,19 @@ void setup()
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(PIN_IRIDIUM_EN, OUTPUT);
   pinMode(PIN_GPS_EN, OUTPUT);
+  pinMode(PIN_BME280_EN, OUTPUT);
+  pinMode(PIN_IMU_EN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
-  digitalWrite(PIN_GPS_EN, HIGH); // Disable power to GPS
-  digitalWrite(PIN_IRIDIUM_EN, LOW); // Disable power to Iridium 9603
+  digitalWrite(PIN_BME280_EN, LOW);   // Disable power to BME280
+  digitalWrite(PIN_GPS_EN, HIGH);     // Disable power to GPS
+  digitalWrite(PIN_IMU_EN, LOW);      // Disable power to IMU
+  digitalWrite(PIN_IRIDIUM_EN, LOW);  // Disable power to Iridium 9603
 
   // Set analog resolution to 12-bits
   analogReadResolution(12);
 
   // Apply ADC gain and offset error calibration correction
-  analogReadCorrection(10, 2054);
+  analogReadCorrection(12, 2059);
 
   Wire.begin(); // Initialize I2C
   Wire.setClock(400000); // Set I2C clock speed to 400 kHz
