@@ -3,19 +3,19 @@ void configureImu()
 {
   DEBUG_PRINT("Info: Initializing IMU...");
 
-  // Enable pin power to IMU
+  // Enable power to IMU GPIO pin
   enableImuPower();
 
-  // Initialize LSM6DS33 IMU
+  // Initialize LSM6DS33 accelerometer/gyroscope
   if (imu.init())
   {
     online.imu = true;
-
+    imu.enableDefault();
     DEBUG_PRINTLN("success!");
   }
   else
   {
-    DEBUG_PRINTLN(F("Warning: Failed to detect and initialize LSM6DS33!"));
+    DEBUG_PRINTLN(F("Warning: Failed to initialize LSM6DS33!"));
     online.imu = false;
   }
 
@@ -23,12 +23,12 @@ void configureImu()
   if (mag.init())
   {
     mag.enableDefault();
+    online.mag = true;
   }
   else
   {
-    DEBUG_PRINTLN(F("Warning: Failed to detect and initialize LIS3MDL!"));
+    DEBUG_PRINTLN(F("Warning: Failed to initialize LIS3MDL!"));
     online.mag = false;
-    blinkLed(3, 1000);
   }
 
 }
@@ -73,7 +73,7 @@ void readImu()
   unsigned long loopStartTime = millis();
 
   // Check if IMU initialized successfully
-  if (online.imu)
+  if (online.imu && online.mag)
   {
     // Change LED colour
     //setLedColour(CRGB::Blue);
@@ -107,9 +107,10 @@ void readImu()
   }
   else
   {
-    DEBUG_PRINTLN("Warning: IMU offline!");
+    DEBUG_PRINTLN("Warning: LSM6DS33 and/or LIS3MDL offline!");
   }
-  // Enable pin power to IMU
+  
+  // Disable pin power to IMU
   disableImuPower();
 
   // Stop loop timer

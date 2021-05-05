@@ -33,7 +33,7 @@
 #include <TinyGPS++.h>              // https://github.com/mikalhart/TinyGPSPlus
 #include <Wire.h>                   // https://www.arduino.cc/en/Reference/Wire
 #include <wiring_private.h>         // Required for creating new Serial instance with pinPeripheral() function 
-#include "vector.c"
+#include "vector.c"                 // Magnetometer tilt-compensated heading code
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
@@ -106,9 +106,9 @@ TinyGPSPlus       gps;
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
 
-unsigned long alarmInterval     = 10800;  // Sleep duration in seconds
+unsigned long alarmInterval     = 3600;  // Sleep duration in seconds
 unsigned int  transmitInterval  = 1;     // Messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitLimit   = 4;     // Failed data transmission reattempt (340 byte limit)
+unsigned int  retransmitLimit   = 1;     // Failed data transmission reattempt (340 byte limit)
 unsigned int  gpsTimeout        = 180;   // Timeout for GPS signal acquisition
 unsigned int  iridiumTimeout    = 180;   // Timeout for Iridium transmission (s)
 bool          firstTimeFlag     = true;  // Flag to determine if the program is running for the first time
@@ -267,6 +267,7 @@ void setup()
   {
     disableSerial();
   }
+  
   //setLedColour(CRGB::White); // Change LED colour to indicate completion of setup
   blinkLed(5, 500);
 }
