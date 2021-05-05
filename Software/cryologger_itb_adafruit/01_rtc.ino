@@ -62,23 +62,28 @@ void setRtcAlarm()
   }
   else if (failureCounter > 5 && failureCounter < 10)
   {
-    DEBUG_PRINTLN(F("Warning: Increasing transmission interval to +12 hours!"));
+    DEBUG_PRINTLN(F("Warning: Increasing transmission interval to 12 hours!"));
     // Add a 12-hour delay to next transmission attempt
-    alarmTime = unixtime + alarmInterval + 43200;
+    alarmTime = unixtime + 43200;
   }
   else if (failureCounter > 10)
   {
-    DEBUG_PRINTLN(F("Warning: Increasing transmission interval to +24 hours!"));
+    DEBUG_PRINTLN(F("Warning: Increasing transmission interval to 24 hours!"));
     // Add a 24-hour delay to next transmission attempt
-    alarmTime = unixtime + alarmInterval + 86400;
+    alarmTime = unixtime + 86400;
   }
   else if (failureCounter > 20)
   {
-    DEBUG_PRINTLN(F("Warning: Increasing transmission interval to +48 hours!"));
+    DEBUG_PRINTLN(F("Warning: Increasing transmission interval to 48 hours!"));
     // Add a 48-hour delay to next transmission attempt
-    alarmTime = unixtime + alarmInterval + 172800;
+    alarmTime = unixtime + 172800;
   }
-
+  else if (failureCounter > 30)
+  {
+    DEBUG_PRINTLN(F("Warning: Increasing transmission interval to 96 hours!"));
+    // Add a 96-hour delay to next transmission attempt
+    alarmTime = unixtime + 345600;
+  }
   // Check if alarm was set in the past
   if ((rtc.getEpoch() >= alarmTime) || firstTimeFlag)
   {
