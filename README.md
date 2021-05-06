@@ -21,21 +21,23 @@ https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/main/Archiv
 https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/main/Archive/v2.0
 
 ### v3.0 Prototype
-* v3.0 of the Cryologger is currently under development and will be built almost entirely using SparkFun products. Cold-weather tests are currently being conducted (February, 2021) and initial results are promising.
+* v3.0 of the Cryologger is currently under development and will also be built using Adafruit components. It will be a simplified and improved version of v2.0, with a custom PCB to elimate the need for time consuming wiring.
 
 #### Materials 
 
 | Component | Product | Cost (USD) |
 | --- | --- | :---: | 
-| Satellite transceiver | SparkFun Qwiic Iridium 9603N | $249.95 |
-| Satellite antenna | Maxtena M1621HCT-P-SMA | $50.00 |
-| Processor | SparkFun MicroMod Artemis Processor | $14.95 |
-| Carrier Board | SparkFun MicroMod Data Logging Carrier Board | $19.95 |
-| GNSS | SparkFun GPS Breakout - Chip Antenna, SAM-M8Q (Qwiic) | $39.95 |
-| IMU | SparkFun VR IMU Breakout - BNO080 (Qwiic) | $34.95 |
-| Voltage Regulator | SparkFun Buck-Boost Converter | $9.95 |
+| Satellite transceiver | Rock7 RockBLOCK 9603 | $249.95 | http://www.rock7mobile.com/products-rockblock-9603 |
+| Satellite antenna | Maxtena M1621HCT-P-SMA | $50.00 | https://www.richardsonrfpd.com/Products/Product/M1621HCT-P-SMA |
+| Processor | Adafruit Feather M0 Basic Proto | $19.95 | https://www.adafruit.com/product/2772 |
+| GPS | Adafruit Ultimate GPS FeatherWing | $39.95 | https://www.adafruit.com/product/3133 |
+| IMU | Adafruit LSM6DS33 + LIS3MDL - 9 DoF IMU | $9.95 | https://www.pololu.com/product/2127 |
+| Sensor | Adafruit MS8607 Pressure Humidity Temperature PHT Sensor | $14.95 | https://www.adafruit.com/product/4716 |
+| Voltage Regulator | Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator | $4.95 | https://www.pololu.com/product/3791 |
+| Voltage Regulator | Pololu D36V6F5 5V 600mA Step-Down Voltage Regulator | $4.95 | https://www.pololu.com/product/3792 |
 | Enclosure |  | ~$50.00 |
-| Battery | Tadiran | ~$100.00 |
+| Battery | Tadiran | ~$150.00 |
+
 
 #### Measurements
 | Variable | Unit | Comments |
@@ -49,10 +51,11 @@ https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/main/Archiv
 | Latitude | DD |  |
 | Longitude | DD |  |
 | Satellites | # | Number of satellites in view  |
-| PDOP |  | Horizonal dilution of precision |
+| HDOP |  | Horizonal dilution of precision |
+| Altitude | m | GPS altitude |
 | Voltage | V | Battery voltage |
 | Transmit duration  | s | Length of Iridium transmission  |
-| Message counter |  | Number of transmitted messages |
+| Iteration counter |  | Number of program iterations |
 
 ## Repository Contents
 
