@@ -64,7 +64,7 @@
 // ------------------------------------------------------------------------------------------------
 // Pin definitions
 // ------------------------------------------------------------------------------------------------
-#define PIN_VBAT            A0
+#define PIN_VBAT            A7
 #define PIN_BME280_EN       A3
 #define PIN_IMU_EN          A4
 #define PIN_GPS_EN          A5
@@ -106,11 +106,11 @@ TinyGPSPlus       gps;
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
 
-unsigned long alarmInterval     = 3600;  // Sleep duration in seconds
+unsigned long alarmInterval     = 120;  // Sleep duration in seconds
 unsigned int  transmitInterval  = 1;     // Messages to transmit in each Iridium transmission (340 byte limit)
 unsigned int  retransmitLimit   = 1;     // Failed data transmission reattempt (340 byte limit)
-unsigned int  gpsTimeout        = 180;   // Timeout for GPS signal acquisition
-unsigned int  iridiumTimeout    = 180;   // Timeout for Iridium transmission (s)
+unsigned int  gpsTimeout        = 60;   // Timeout for GPS signal acquisition
+unsigned int  iridiumTimeout    = 30;   // Timeout for Iridium transmission (s)
 bool          firstTimeFlag     = true;  // Flag to determine if the program is running for the first time
 
 // ------------------------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ uint8_t       moSbdBuffer[340];           // Buffer for Mobile Originated SBD (M
 uint8_t       mtSbdBuffer[270];           // Buffer for Mobile Terminated SBD (MT-SBD) message (270 bytes max)
 size_t        moSbdBufferSize;
 size_t        mtSbdBufferSize;
-unsigned int  iterationCounter  = 0;      // Counter to track total number of super loop iterations (zero indicates a reset)
+unsigned int  iterationCounter  = 0;      // Counter to track total number of program iterations (zero indicates a reset)
 byte          retransmitCounter = 0;      // Counter to track Iridium 9603 transmission reattempts
 byte          transmitCounter   = 0;      // Counter to track Iridium 9603 transmission intervals
 unsigned int  failureCounter    = 0;      // Counter to track consecutive failed Iridium transmission attempts
@@ -172,6 +172,7 @@ typedef union
     int32_t   longitude;        // Longitude (DD)                 (4 bytes)
     uint8_t   satellites;       // # of satellites                (1 byte)
     uint16_t  hdop;             // PDOP                           (2 bytes)
+    int32_t   altitude;         // Altitude                       (4 bytes)
     int32_t   rtcDrift;         // RTC offset from GPS time       (4 bytes)
     uint16_t  voltage;          // Battery voltage (V)            (2 bytes)
     uint16_t  transmitDuration; // Previous transmission duration (2 bytes)

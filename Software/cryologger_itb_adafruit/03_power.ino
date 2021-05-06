@@ -13,7 +13,12 @@ void readBattery()
     myDelay(1);
   }
 
-  float voltage = (float)reading / samples * 3.3 * ((R2 + R1) / R2) / 4096.0; // Convert 1/10 VIN to VIN (12-bit resolution)
+  // External battery
+  //float voltage = (float)reading / samples * 3.3 * ((R2 + R1) / R2) / 4096.0; // Convert 1/10 VIN to VIN (12-bit resolution)
+
+  // LiPo
+  float voltage = (float)reading / samples * 3.3 * 2 / 4096.0; 
+
 
   // Write data to union
   moSbdMessage.voltage = voltage * 1000;
