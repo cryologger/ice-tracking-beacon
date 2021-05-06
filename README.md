@@ -25,8 +25,8 @@ https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/main/Archiv
 
 #### Materials 
 
-| Component | Product | Cost (USD) |
-| --- | --- | :---: | 
+| Component | Product | Cost (USD) | URL |
+| --- | --- | :---: |  --- |
 | Satellite transceiver | Rock7 RockBLOCK 9603 | $249.95 | http://www.rock7mobile.com/products-rockblock-9603 |
 | Satellite antenna | Maxtena M1621HCT-P-SMA | $50.00 | https://www.richardsonrfpd.com/Products/Product/M1621HCT-P-SMA |
 | Processor | Adafruit Feather M0 Basic Proto | $19.95 | https://www.adafruit.com/product/2772 |
@@ -35,8 +35,8 @@ https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/main/Archiv
 | Sensor | Adafruit MS8607 Pressure Humidity Temperature PHT Sensor | $14.95 | https://www.adafruit.com/product/4716 |
 | Voltage Regulator | Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator | $4.95 | https://www.pololu.com/product/3791 |
 | Voltage Regulator | Pololu D36V6F5 5V 600mA Step-Down Voltage Regulator | $4.95 | https://www.pololu.com/product/3792 |
-| Enclosure |  | ~$50.00 |
-| Battery | Tadiran | ~$150.00 |
+| Enclosure |  | ~$50.00 | |
+| Battery | Tadiran | ~$150.00 | |
 
 
 #### Measurements
