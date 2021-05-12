@@ -62,7 +62,7 @@ void printMoSbd()
   DEBUG_PRINT("satellites:");       printTab(2);  DEBUG_PRINTLN(moSbdMessage.satellites);
   DEBUG_PRINT("hdop:");             printTab(3);  DEBUG_PRINTLN(moSbdMessage.hdop);
   DEBUG_PRINT("altitude:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.altitude);
-  DEBUG_PRINT("rtcDrift:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.rtcDrift);
+  //DEBUG_PRINT("rtcDrift:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.rtcDrift);
   DEBUG_PRINT("voltage:");          printTab(2);  DEBUG_PRINTLN(moSbdMessage.voltage);
   DEBUG_PRINT("transmitDuration:"); printTab(1);  DEBUG_PRINTLN(moSbdMessage.transmitDuration);
   DEBUG_PRINT("transmitStatus:");   printTab(2);  DEBUG_PRINTLN(moSbdMessage.transmitStatus);

@@ -39,7 +39,7 @@
 // Debugging macros
 // ------------------------------------------------------------------------------------------------
 #define DEBUG           true   // Output debug messages to Serial Monitor
-#define DEBUG_GPS       false  // Output GPS debug information
+#define DEBUG_GPS       true  // Output GPS debug information
 #define DEBUG_IRIDIUM   true   // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
@@ -106,11 +106,11 @@ TinyGPSPlus       gps;
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
 
-unsigned long alarmInterval     = 120;  // Sleep duration in seconds
+unsigned long alarmInterval     = 3600;  // Sleep duration in seconds
 unsigned int  transmitInterval  = 1;     // Messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitLimit   = 1;     // Failed data transmission reattempt (340 byte limit)
-unsigned int  gpsTimeout        = 60;   // Timeout for GPS signal acquisition
-unsigned int  iridiumTimeout    = 30;   // Timeout for Iridium transmission (s)
+unsigned int  retransmitLimit   = 5;     // Failed data transmission reattempt (340 byte limit)
+unsigned int  gpsTimeout        = 180;   // Timeout for GPS signal acquisition
+unsigned int  iridiumTimeout    = 180;   // Timeout for Iridium transmission (s)
 bool          firstTimeFlag     = true;  // Flag to determine if the program is running for the first time
 
 // ------------------------------------------------------------------------------------------------
@@ -172,13 +172,12 @@ typedef union
     int32_t   longitude;        // Longitude (DD)                 (4 bytes)
     uint8_t   satellites;       // # of satellites                (1 byte)
     uint16_t  hdop;             // PDOP                           (2 bytes)
-    int32_t   altitude;         // Altitude                       (4 bytes)
-    int32_t   rtcDrift;         // RTC offset from GPS time       (4 bytes)
+    int32_t   altitude;         // Altitude                       (2 bytes)
     uint16_t  voltage;          // Battery voltage (V)            (2 bytes)
     uint16_t  transmitDuration; // Previous transmission duration (2 bytes)
     byte      transmitStatus;   // Iridium return code            (1 byte)
     uint16_t  iterationCounter; // Message counter                (2 bytes)
-  } __attribute__((packed));                            // Total: (38 bytes)
+  } __attribute__((packed));                            // Total: (36 bytes)
   uint8_t bytes[38];
 } SBD_MO_MESSAGE;
 

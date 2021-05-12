@@ -79,7 +79,7 @@ void readGps()
             moSbdMessage.satellites = gps.satellites.value();
             moSbdMessage.hdop = gps.hdop.value();
             moSbdMessage.altitude = gps.altitude.value();
-            moSbdMessage.rtcDrift = rtcDrift;
+            //moSbdMessage.rtcDrift = rtcDrift;
 
             DEBUG_PRINT(F("Info: RTC drift ")); DEBUG_PRINT(rtcDrift); DEBUG_PRINTLN(F(" seconds"));
           }
