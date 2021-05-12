@@ -36,10 +36,7 @@ void transmitData()
   {
     // Enable power to the RockBLOCK 9603
     enableIridiumPower();
-
-    // Change LED colour
-    //setLedColour(CRGB::Purple);
-
+    
     // Open the Iridium serial port
     IRIDIUM_PORT.begin(19200);
 
@@ -58,7 +55,6 @@ void transmitData()
       if (returnCode == ISBD_NO_MODEM_DETECTED)
       {
         DEBUG_PRINTLN("Warning: No modem detected! Please check wiring.");
-        //setLedColourIridium(returnCode); // Set LED colour to corresponding return code
       }
     }
     else
@@ -77,7 +73,6 @@ void transmitData()
       if (returnCode == ISBD_SUCCESS)
       {
         DEBUG_PRINTLN("Info: MO-SBD message transmission successful!");
-        //setLedColourIridium(returnCode); // Set LED colour to corresponding return code
         blinkLed(10, 250);
         
         failureCounter = 0; // Clear failed transmission counter
@@ -134,7 +129,6 @@ void transmitData()
       {
         DEBUG_PRINT("Warning: Transmission failed with error code ");
         DEBUG_PRINTLN(returnCode);
-        //setLedColourIridium(returnCode); // Set LED colour to corresponding return code
       }
     }
 
@@ -168,7 +162,6 @@ void transmitData()
     if (returnCode != ISBD_SUCCESS)
     {
       DEBUG_PRINT("Warning: Sleep failed error "); DEBUG_PRINTLN(returnCode);
-      //setLedColourIridium(returnCode); // Set LED colour to corresponding return code
     }
 
     // Close the Iridium serial port
@@ -225,60 +218,3 @@ void ISBDDiagsCallback(IridiumSBD * device, char c)
   DEBUG_WRITE(c);
 }
 #endif
-
-// Change LED colour to indicate return error code
-void setLedColourIridium(byte err)
-{
-  if (err == 0) // ISBD_SUCCESS
-    setLedColour(CRGB::Green);
-  else if (err == 1) // ISBD_ALREADY_AWAKE
-    setLedColour(CRGB::Yellow);
-  else if (err == 2) // ISBD_SERIAL_FAILURE
-    setLedColour(CRGB::Yellow);
-  else if (err == 3) // ISBD_PROTOCOL_ERROR
-    setLedColour(CRGB::Blue);
-  else if (err == 4) // ISBD_CANCELLED
-    setLedColour(CRGB::Yellow);
-  else if (err == 5) // ISBD_NO_MODEM_DETECTED
-    setLedColour(CRGB::Red);
-  else if (err == 6) // ISBD_SBDIX_FATAL_ERROR
-    setLedColour(CRGB::Yellow);
-  else if (err == 7) // ISBD_SENDRECEIVE_TIMEOUT
-    setLedColour(CRGB::Orange);
-  else if (err == 8) // ISBD_RX_OVERFLOW
-    setLedColour(CRGB::Yellow);
-  else if (err == 9) // ISBD_REENTRANT
-    setLedColour(CRGB::Yellow);
-  else if (err == 10) // ISBD_IS_ASLEEP
-    setLedColour(CRGB::Yellow);
-  else if (err == 11) // ISBD_NO_SLEEP_PIN
-    setLedColour(CRGB::Yellow);
-  else if (err == 12) // ISBD_NO_NETWORK
-    setLedColour(CRGB::Yellow);
-  else if (err == 13) // ISBD_MSG_TOO_LONG
-    setLedColour(CRGB::Yellow);
-}
-
-// Call user function 1
-void userFunction1()
-{
-
-}
-
-// Call user function 2
-void userFunction2()
-{
-
-}
-
-// Call user function 3
-void userFunction3()
-{
-
-}
-
-// Call user function 4
-void userFunction4()
-{
-
-}

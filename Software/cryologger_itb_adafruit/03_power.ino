@@ -41,8 +41,8 @@ void readBattery()
 void disableSerial()
 {
 #if DEBUG
-  SERIAL_PORT.end();   // Close serial port
-  USBDevice.detach();   // Safely detach USB prior to sleeping
+  SERIAL_PORT.end(); // Close serial port
+  USBDevice.detach(); // Safely detach USB prior to sleeping
 #endif
 }
 
@@ -72,14 +72,14 @@ void disableImuPower()
 // Enable power to BME280
 void enableBme280Power()
 {
-  digitalWrite(PIN_BME280_EN, HIGH);
+  digitalWrite(PIN_SENSOR_EN, HIGH);
   myDelay(500);
 }
 
 // Disable power to BME280
 void disableBme280Power()
 {
-  digitalWrite(PIN_BME280_EN, LOW); 
+  digitalWrite(PIN_SENSOR_EN, LOW); 
 }
 
 // Enable power to GPS
@@ -162,7 +162,7 @@ void blinkLed(byte ledFlashes, unsigned int ledDelay)
   digitalWrite(LED_BUILTIN, LOW);
 }
 
-// Non-blocking delay (ms: duration)
+// Non-blocking delay (milliseconds)
 // https://arduino.stackexchange.com/questions/12587/how-can-i-handle-the-millis-rollover
 void myDelay(unsigned long ms)
 {

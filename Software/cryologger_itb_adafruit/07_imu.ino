@@ -1,10 +1,10 @@
 // Configure IMU
 void configureImu()
 {
-  DEBUG_PRINT("Info: Initializing IMU...");
-
-  // Enable power to IMU GPIO pin
+  // Enable power to IMU
   enableImuPower();
+
+  DEBUG_PRINT("Info: Initializing IMU...");
 
   // Initialize LSM6DS33 accelerometer/gyroscope
   if (imu.init())
@@ -30,7 +30,6 @@ void configureImu()
     DEBUG_PRINTLN(F("Warning: Failed to initialize LIS3MDL!"));
     online.mag = false;
   }
-
 }
 
 // Returns a set of scaled magnetic readings from the LIS3MDL
@@ -75,9 +74,6 @@ void readImu()
   // Check if IMU initialized successfully
   if (online.imu && online.mag)
   {
-    // Change LED colour
-    //setLedColour(CRGB::Blue);
-
     DEBUG_PRINT("Info: Reading IMU...");
 
     vector a, m;
@@ -85,7 +81,29 @@ void readImu()
     float scl = 1.0 / 16384.0; // 1 g (0.061 / LSB) / 1000
     read_data(&m);
 
-    imu.read();
+
+    for (uint8_t i = 0; i < samplesToAverage; ++i)
+    {
+      voltage += analogRead(VBAT_PIN);
+      delay(1);
+    }
+
+    // Collect acceleromter readings
+    for (byte i = 0; i < 30; i++)
+    {
+      imu.read();
+
+      a.x += imu.a.x;
+      a.y += imu.a.y;
+      a.z += imu.a.z;
+
+      delay(1);
+    }
+
+    // Average readings
+    a.x /= 30;
+    a.y /= 30;
+    a.z /= 30;
 
     // Normalize accelerometer data
     a.x = imu.a.x * scl;
@@ -109,8 +127,8 @@ void readImu()
   {
     DEBUG_PRINTLN("Warning: LSM6DS33 and/or LIS3MDL offline!");
   }
-  
-  // Disable pin power to IMU
+
+  // Disable power to IMU
   disableImuPower();
 
   // Stop loop timer

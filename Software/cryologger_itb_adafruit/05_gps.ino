@@ -16,9 +16,6 @@ void readGps()
 
   DEBUG_PRINTLN("Info: Beginning to listen for GPS traffic...");
 
-  // Change LED colour
-  //setLedColour(CRGB::Cyan);
-
   GPS_PORT.begin(9600);
   myDelay(1000);
 
@@ -52,7 +49,6 @@ void readGps()
           if (fixCounter >= 10)
           {
             fixFound = true;
-            //setLedColour(CRGB::Green);
 
             // Convert GPS date and time to epoch time
             tm.Hour = gps.time.hour();
@@ -79,7 +75,6 @@ void readGps()
             moSbdMessage.satellites = gps.satellites.value();
             moSbdMessage.hdop = gps.hdop.value();
             moSbdMessage.altitude = gps.altitude.value();
-            //moSbdMessage.rtcDrift = rtcDrift;
 
             DEBUG_PRINT(F("Info: RTC drift ")); DEBUG_PRINT(rtcDrift); DEBUG_PRINTLN(F(" seconds"));
           }
@@ -94,7 +89,6 @@ void readGps()
     if ((millis() - loopStartTime) > 5000 && gps.charsProcessed() < 10)
     {
       DEBUG_PRINTLN(F("Warning: No GPS data received. Please check wiring."));
-      //setLedColour(CRGB::Red);
       break;
     }
   }
@@ -102,7 +96,6 @@ void readGps()
   if (!fixFound)
   {
     DEBUG_PRINTLN(F("Warning: No GPS fix found!"));
-    //setLedColour(CRGB::Red);
   }
 
   // Close GPS port

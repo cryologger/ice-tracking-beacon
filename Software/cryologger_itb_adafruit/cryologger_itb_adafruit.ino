@@ -1,6 +1,6 @@
 /*
     Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0
-    Date:     April 24, 2021
+    Date:     May 12, 2021
     Author:   Adam Garbo
 
     Description:
@@ -9,9 +9,9 @@
     Amundsen Expedition.
 
     Components:
-    - Adafruit Feather M0
+    - Adafruit Feather M0 Proto
     - Adafruit Ultimate GPS Featherwing
-    -
+    - LSM6DS33 + LISM3DL
     - Rock7 RockBLOCK 9603
     - Maxtena M1621HCT-P-SMA Iridium antenna
 */
@@ -23,7 +23,6 @@
 #include <Adafruit_BME280.h>        // https://github.com/adafruit/Adafruit_BME280_Library
 #include <Arduino.h>                // https://github.com/arduino/ArduinoCore-samd
 #include <ArduinoLowPower.h>        // https://github.com/arduino-libraries/ArduinoLowPower
-#include <FastLED.h>                // https://github.com/adafruit/Adafruit_NeoPixel
 #include <IridiumSBD.h>             // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
 #include <LIS3MDL.h>                // https://github.com/pololu/lis3mdl-arduino
 #include <LSM6.h>                   // https://github.com/pololu/lsm6-arduino
@@ -38,9 +37,9 @@
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
 // ------------------------------------------------------------------------------------------------
-#define DEBUG           true   // Output debug messages to Serial Monitor
+#define DEBUG           true  // Output debug messages to Serial Monitor
 #define DEBUG_GPS       true  // Output GPS debug information
-#define DEBUG_IRIDIUM   true   // Output Iridium debug messages to Serial Monitor
+#define DEBUG_IRIDIUM   true  // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
 #define DEBUG_PRINT(x)            SERIAL_PORT.print(x)
@@ -65,7 +64,7 @@
 // Pin definitions
 // ------------------------------------------------------------------------------------------------
 #define PIN_VBAT            A7
-#define PIN_BME280_EN       A3
+#define PIN_SENSOR_EN       A3
 #define PIN_IMU_EN          A4
 #define PIN_GPS_EN          A5
 #define PIN_LED             5
@@ -95,7 +94,6 @@ void SERCOM1_Handler()
 // Object instantiations
 // ------------------------------------------------------------------------------------------------
 Adafruit_BME280   bme280;
-CRGB              led[1];
 IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP);
 LSM6              imu;
 LIS3MDL           mag;
@@ -227,10 +225,10 @@ void setup()
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(PIN_IRIDIUM_EN, OUTPUT);
   pinMode(PIN_GPS_EN, OUTPUT);
-  pinMode(PIN_BME280_EN, OUTPUT);
+  pinMode(PIN_SENSOR_EN, OUTPUT);
   pinMode(PIN_IMU_EN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
-  digitalWrite(PIN_BME280_EN, LOW);   // Disable power to BME280
+  digitalWrite(PIN_SENSOR_EN, LOW);   // Disable power to BME280
   digitalWrite(PIN_GPS_EN, HIGH);     // Disable power to GPS
   digitalWrite(PIN_IMU_EN, LOW);      // Disable power to IMU
   digitalWrite(PIN_IRIDIUM_EN, LOW);  // Disable power to Iridium 9603
@@ -255,7 +253,6 @@ void setup()
   printLine();
 
   // Configure devices
-  //configureLed();       // Configure RGB LED
   configureRtc();       // Configure real-time clock (RTC)
   configureWdt();       // Configure Watchdog Timer (WDT)
   printSettings();      // Print configuration settings
@@ -267,8 +264,7 @@ void setup()
   {
     disableSerial();
   }
-  
-  //setLedColour(CRGB::White); // Change LED colour to indicate completion of setup
+
   blinkLed(5, 500);
 }
 

@@ -1,9 +1,11 @@
 // Configure attached sensors
 void configureSensors()
 {
-  DEBUG_PRINT("Info: Initializing BME280...");
+  // Enable power to sensor
   enableBme280Power();
 
+  DEBUG_PRINT("Info: Initializing BME280...");
+  
   if (bme280.begin())
   {
     bme280.setSampling(Adafruit_BME280::MODE_FORCED,
@@ -32,7 +34,6 @@ void readSensors()
   if (online.bme280)
   {
     DEBUG_PRINT("Info: Reading BME280...");
-    //setLedColour(CRGB::Orange); // Change LED colour
 
     // Wake sensor and return to sleep once measurement is made
     bme280.takeForcedMeasurement();
@@ -58,7 +59,7 @@ void readSensors()
   }
   // Stop the loop timer
   timer.sensors = millis() - loopStartTime;
-  
-  disableBme280Power();
 
+  // Disable power to sensor
+  disableBme280Power();
 }
