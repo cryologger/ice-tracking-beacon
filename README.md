@@ -32,7 +32,7 @@ https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/main/Archiv
 | Processor | Adafruit Feather M0 Basic Proto | $19.95 | https://www.adafruit.com/product/2772 |
 | GPS | Adafruit Ultimate GPS FeatherWing | $39.95 | https://www.adafruit.com/product/3133 |
 | IMU | Adafruit LSM6DS33 + LIS3MDL - 9 DoF IMU | $9.95 | https://www.pololu.com/product/2127 |
-| Sensor | Adafruit MS8607 Pressure Humidity Temperature PHT Sensor | $14.95 | https://www.adafruit.com/product/4716 |
+| Sensor | Adafruit DPS310 Precision Barometric Pressure Sensor | $6.95 | https://www.adafruit.com/product/4494 |
 | Voltage Regulator | Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator | $4.95 | https://www.pololu.com/product/3791 |
 | Voltage Regulator | Pololu D36V6F5 5V 600mA Step-Down Voltage Regulator | $4.95 | https://www.pololu.com/product/3792 |
 | Enclosure |  | ~$50.00 | |
