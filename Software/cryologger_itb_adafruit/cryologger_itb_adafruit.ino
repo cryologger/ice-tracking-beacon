@@ -9,11 +9,14 @@
     Amundsen Expedition.
 
     Components:
+    - Rock7 RockBLOCK 9603
+    - Maxtena M1621HCT-P-SMA antenna
     - Adafruit Feather M0 Proto
     - Adafruit Ultimate GPS Featherwing
-    - LSM6DS33 + LISM3DL
-    - Rock7 RockBLOCK 9603
-    - Maxtena M1621HCT-P-SMA Iridium antenna
+    - Adafruit LSM6DS33 + LIS3MDL - 9 DoF IMU
+    - Adafruit DPS310 Precision Barometric Pressure Sensor
+    - Pololu 3.3V, 600mA Step-Down Voltage Regulator D36V6F3
+    - Pololu 5V, 600mA Step-Down Voltage Regulator D36V6F5
 */
 
 // ------------------------------------------------------------------------------------------------
@@ -21,18 +24,18 @@
 // ------------------------------------------------------------------------------------------------
 #include <Adafruit_Sensor.h>        // https://github.com/adafruit/Adafruit_Sensor
 #include <Adafruit_BME280.h>        // https://github.com/adafruit/Adafruit_BME280_Library
+#include <Adafruit_LIS3MDL.h>       // https://github.com/adafruit/Adafruit_LIS3MDL
+#include <Adafruit_LSM6DS33.h>      // https://github.com/adafruit/Adafruit_LSM6DS
 #include <Arduino.h>                // https://github.com/arduino/ArduinoCore-samd
 #include <ArduinoLowPower.h>        // https://github.com/arduino-libraries/ArduinoLowPower
 #include <IridiumSBD.h>             // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
-#include <LIS3MDL.h>                // https://github.com/pololu/lis3mdl-arduino
-#include <LSM6.h>                   // https://github.com/pololu/lsm6-arduino
 #include <RTCZero.h>                // https://github.com/arduino-libraries/RTCZero
 #include <SAMD_AnalogCorrection.h>  // https://github.com/arduino/ArduinoCore-samd/tree/master/libraries/SAMD_AnalogCorrection
 #include <TimeLib.h>                // https://github.com/PaulStoffregen/Time
 #include <TinyGPS++.h>              // https://github.com/mikalhart/TinyGPSPlus
 #include <Wire.h>                   // https://www.arduino.cc/en/Reference/Wire
 #include <wiring_private.h>         // Required for creating new Serial instance with pinPeripheral() function 
-#include "vector.c"                 // Magnetometer tilt-compensated heading code
+//#include "vector.c"                 // Magnetometer tilt-compensated heading code
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
@@ -94,9 +97,9 @@ void SERCOM1_Handler()
 // Object instantiations
 // ------------------------------------------------------------------------------------------------
 Adafruit_BME280   bme280;
+Adafruit_LIS3MDL  lis3mdl;
+Adafruit_LSM6DS33 lsm6ds33;
 IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP);
-LSM6              imu;
-LIS3MDL           mag;
 RTCZero           rtc;
 TinyGPSPlus       gps;
 
@@ -139,13 +142,13 @@ tmElements_t  tm;                         // Variable for converting time elemen
 // Code initialization statements from magneto required to correct magnetometer distortion
 // See: https://forum.pololu.com/t/correcting-the-balboa-magnetometer/14315
 
-vector p = {1, 0, 0};
+float p[] = {1, 0, 0};  // Y marking on sensor board points toward yaw = 0
 
-char report[80];
+float M_B[3]
+{ -2979.80,  432.81, -1757.11};
 
-float B[3] { -2979.80,  432.81, -1757.11};
-
-float Ainv[3][3] {
+float M_Ainv[3][3]
+{
   {  0.28665,  0.01375,  0.00138},
   {  0.01375,  0.28350, -0.00795},
   {  0.00138, -0.00795,  0.28812}
@@ -199,8 +202,8 @@ SBD_MT_MESSAGE mtSbdMessage;
 // Structure to store device online/offline states
 struct struct_online
 {
-  bool imu = false;
-  bool mag = false;
+  bool lsm6ds33 = false;
+  bool lis3mdl = false;
   bool gnss = false;
   bool bme280 = false;
 } online;

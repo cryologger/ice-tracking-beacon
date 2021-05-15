@@ -129,10 +129,10 @@ void goToSleep()
   }
 
   // Enter deep sleep
-  LowPower.deepSleep();
+  //LowPower.deepSleep();
 
   // Sleep until next alarm match
-  //rtc.standbyMode();
+  rtc.standbyMode();
 
   /* Code sleeps here and awaits RTC or WDT interrupt */
 }
