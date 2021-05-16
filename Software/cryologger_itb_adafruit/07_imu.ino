@@ -58,24 +58,24 @@ void readLis3mdl(float Mxyz[3])
   Mxyz[0] = M_Ainv[0][0] * temp[0] + M_Ainv[0][1] * temp[1] + M_Ainv[0][2] * temp[2];
   Mxyz[1] = M_Ainv[1][0] * temp[0] + M_Ainv[1][1] * temp[1] + M_Ainv[1][2] * temp[2];
   Mxyz[2] = M_Ainv[2][0] * temp[0] + M_Ainv[2][1] * temp[1] + M_Ainv[2][2] * temp[2];
-  vector_normalize(Mxyz);
+  vectorNormalize(Mxyz);
 }
 
 // Returns a heading (in degrees) given an acceleration vector a due to gravity, a magnetic vector m, and a facing vector p (global)
-int get_heading(float acc[3], float mag[3], float p[3])
+int getHeading(float acc[3], float mag[3], float p[3])
 {
   float E[3], N[3]; // Derived direction vectors
 
   // D x M = E, cross acceleration vector Down with M (magnetic north + inclination) to produce "East"
-  vector_cross(mag, acc, E); // Accel vector is up when horizontal
-  vector_normalize(E);
+  vectorCross(mag, acc, E); // Accel vector is up when horizontal
+  vectorNormalize(E);
 
   // E x D = N, cross "East" with "Down" to produce "North" (parallel to the ground)
-  vector_cross(acc, E, N);  // Up x East
-  vector_normalize(N);
+  vectorCross(acc, E, N);  // Up x East
+  vectorNormalize(N);
 
   // Compute heading in horizontal plane. Get Y and X components of heading from E dot p and N dot p
-  int heading = round(atan2(vector_dot(E, p), vector_dot(N, p)) * 180 / M_PI);
+  int heading = round(atan2(vectorDot(E, p), vectorDot(N, p)) * 180 / M_PI);
   heading = -heading; // Conventional navigation, heading increases North to East
   heading = (heading + 720) % 360; // Apply compass wrap
   return heading;
@@ -102,11 +102,10 @@ void readImu()
     sensors_event_t accel;
     sensors_event_t gyro;
     sensors_event_t temp;
+    
     for (byte i = 0; i < samples; i++)
     {
       lsm6ds33.getEvent(&accel, &gyro, &temp);
-
-      // Read normalized accelerometer data
       Axyz[0] += accel.acceleration.x;
       Axyz[1] += accel.acceleration.y;
       Axyz[2] += accel.acceleration.z;
@@ -118,10 +117,10 @@ void readImu()
     Axyz[1] /= samples;
     Axyz[2] /= samples;
 
-    // Calculate pitch, roll and heading
+    // Calculate pitch, roll and tilt-compensated heading
     float pitch = atan2(-Axyz[0], sqrt(Axyz[1] * Axyz[1] + Axyz[2] * Axyz[2])) * 180 / PI;
     float roll = atan2(Axyz[1], Axyz[2]) * 180 / PI;
-    int heading = get_heading(Axyz, Mxyz, p);
+    int heading = getHeading(Axyz, Mxyz, p);
 
     // Write orientation data to union
     moSbdMessage.pitch = pitch * 100;
@@ -144,21 +143,21 @@ void readImu()
 }
 
 // Basic vector operations
-void vector_cross(float a[3], float b[3], float out[3])
+void vectorCross(float a[3], float b[3], float out[3])
 {
   out[0] = a[1] * b[2] - a[2] * b[1];
   out[1] = a[2] * b[0] - a[0] * b[2];
   out[2] = a[0] * b[1] - a[1] * b[0];
 }
 
-float vector_dot(float a[3], float b[3])
+float vectorDot(float a[3], float b[3])
 {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 
-void vector_normalize(float a[3])
+void vectorNormalize(float a[3])
 {
-  float mag = sqrt(vector_dot(a, a));
+  float mag = sqrt(vectorDot(a, a));
   a[0] /= mag;
   a[1] /= mag;
   a[2] /= mag;

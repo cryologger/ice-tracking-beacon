@@ -26,7 +26,7 @@
 #include <Adafruit_BME280.h>        // https://github.com/adafruit/Adafruit_BME280_Library
 #include <Adafruit_LIS3MDL.h>       // https://github.com/adafruit/Adafruit_LIS3MDL
 #include <Adafruit_LSM6DS33.h>      // https://github.com/adafruit/Adafruit_LSM6DS
-#include <Arduino.h>                // https://github.com/arduino/ArduinoCore-samd
+#include <Arduino.h>                // Required for creating new Serial instance. Must be included before <wiring_private.h>
 #include <ArduinoLowPower.h>        // https://github.com/arduino-libraries/ArduinoLowPower
 #include <IridiumSBD.h>             // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
 #include <RTCZero.h>                // https://github.com/arduino-libraries/RTCZero
@@ -34,7 +34,7 @@
 #include <TimeLib.h>                // https://github.com/PaulStoffregen/Time
 #include <TinyGPS++.h>              // https://github.com/mikalhart/TinyGPSPlus
 #include <Wire.h>                   // https://www.arduino.cc/en/Reference/Wire
-#include <wiring_private.h>         // Required for creating new Serial instance with pinPeripheral() function 
+#include <wiring_private.h>         // Required for creating new Serial instance
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
