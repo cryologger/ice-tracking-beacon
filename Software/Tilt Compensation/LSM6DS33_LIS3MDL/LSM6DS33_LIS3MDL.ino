@@ -1,14 +1,14 @@
 /*
-  Example to illustrate how to calculate pitch, roll and 
+  Example to illustrate how to calculate pitch, roll and
   tilt-compensated heading from the Adafruit LSM6DS33 + LIS3MDL IMU.
 
   Date: May 16, 2021
-  
+
   - The code assumes that the sensor board is oriented with Y pointing
   to the North, X pointing West, and Z pointing up.
   - The code compensates for tilts of up to 90 degrees away from horizontal.
   - Facing vector p is the direction of travel and allows reassigning these directions.
-  - It should be defined as pointing forward, parallel to the ground, 
+  - It should be defined as pointing forward, parallel to the ground,
   with coordinates {X, Y, Z} (in magnetometer frame of reference).
 
   Code based on Jim Remington's LSM9DS1 library: https://github.com/jremington/LSM9DS1-AHRS
@@ -39,10 +39,13 @@ float M_Ainv[3][3]
   {  0.00138, -0.00795,  0.28812}
 };
 
+byte samples = 30;
+
 void setup()
 {
   Serial.begin(115200);
   while (!Serial);
+  Serial.println("LSM6DS33 + LIS3MDL example");
 
   Wire.begin();
   if (!lis3mdl.begin_I2C())
@@ -58,7 +61,8 @@ void setup()
 
 void loop()
 {
-  float Axyz[3], Mxyz[3]; // Centered and scaled accel/mag data
+  float Axyz[3] = {};
+  float Mxyz[3] = {}; // Centered and scaled accel/mag data
 
   // Read scaled magnetometer data
   read_data(Mxyz);
@@ -67,25 +71,35 @@ void loop()
   sensors_event_t accel;
   sensors_event_t gyro;
   sensors_event_t temp;
-  lsm6ds33.getEvent(&accel, &gyro, &temp);
 
-  // Normalize accelerometer data. Offsets and scale were determined to be negligible
-  Axyz[0] = accel.acceleration.x;
-  Axyz[1] = accel.acceleration.y;
-  Axyz[2] = accel.acceleration.z;
+  // Read magnetometer
+  for (byte i = 0; i < samples; i++)   // 30 samples
+  {
+    lsm6ds33.getEvent(&accel, &gyro, &temp);
+
+    // Read normalized accelerometer data
+    Axyz[0] += accel.acceleration.x;
+    Axyz[1] += accel.acceleration.y;
+    Axyz[2] += accel.acceleration.z;
+    delay(1);
+    //Serial.print(Axyz[0]); Serial.print(", "); Serial.print(Axyz[1]); Serial.print(", "); Serial.println(Axyz[2]);
+  }
+
+  // Average readings
+  Axyz[0] /= samples;
+  Axyz[1] /= samples;
+  Axyz[2] /= samples;
+
+  //Serial.print(Axyz[0]); Serial.print(", "); Serial.print(Axyz[1]); Serial.print(", "); Serial.println(Axyz[2]);
 
   // Calculate pitch, roll and heading
   float pitch = atan2(-Axyz[0], sqrt(Axyz[1] * Axyz[1] + Axyz[2] * Axyz[2])) * 180 / PI;
   float roll = atan2(Axyz[1], Axyz[2]) * 180 / PI;
   int heading = get_heading(Axyz, Mxyz, p);
 
-  Serial.print(pitch);
-  Serial.print(", ");
-  Serial.print(roll);
-  Serial.print(", ");
-  Serial.println(heading);
+  Serial.print(pitch); Serial.print(", "); Serial.print(roll); Serial.print(", "); Serial.println(heading);
 
-  delay(100);
+  delay(50);
 }
 
 // Returns a heading (in degrees) given an acceleration vector a due to gravity, a magnetic vector m, and a facing vector p (global).
@@ -113,11 +127,25 @@ void read_data(float Mxyz[3])
 {
   byte i;
   float temp[3];
-  lis3mdl.read();
+  byte samples = 30;
 
-  Mxyz[0] = lis3mdl.x;
-  Mxyz[1] = lis3mdl.y;
-  Mxyz[2] = lis3mdl.z;
+  // Read magnetometer
+  for (byte i = 0; i < samples; i++)   // 30 samples
+  {
+    lis3mdl.read();
+    Mxyz[0] += lis3mdl.x;
+    Mxyz[1] += lis3mdl.y;
+    Mxyz[2] += lis3mdl.z;
+    delay(1);
+    //Serial.print(Mxyz[0]); Serial.print(", "); Serial.print(Mxyz[1]); Serial.print(", "); Serial.println(Mxyz[2]);
+  }
+
+  // Average readings
+  Mxyz[0] /= samples;
+  Mxyz[1] /= samples;
+  Mxyz[2] /= samples;
+
+  //Serial.print(Mxyz[0]); Serial.print(", "); Serial.print(Mxyz[1]); Serial.print(", "); Serial.println(Mxyz[2]);
 
   // Apply offsets (bias) and scale factors from Magneto
   for (int i = 0; i < 3; i++) temp[i] = (Mxyz[i] - M_B[i]);
