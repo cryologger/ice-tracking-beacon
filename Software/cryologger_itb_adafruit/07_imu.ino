@@ -31,34 +31,46 @@ void configureImu()
 }
 
 // Returns a set of scaled magnetic readings from the LIS3MDL
-void read_data(float Mxyz[3])
+void readLis3mdl(float Mxyz[3])
 {
-  byte i;
   float temp[3];
-  lis3mdl.read();
 
-  Mxyz[0] = lis3mdl.x;
-  Mxyz[1] = lis3mdl.y;
-  Mxyz[2] = lis3mdl.z;
+  // Read magnetometer
+  for (byte i = 0; i < samples; i++)   // 30 samples
+  {
+    lis3mdl.read();
+    Mxyz[0] += lis3mdl.x;
+    Mxyz[1] += lis3mdl.y;
+    Mxyz[2] += lis3mdl.z;
+    delay(1);
+  }
+
+  // Average magnetometer readings
+  Mxyz[0] /= samples;
+  Mxyz[0] /= samples;
+  Mxyz[0] /= samples;
 
   // Apply offsets (bias) and scale factors from Magneto
-  for (int i = 0; i < 3; i++) temp[i] = (Mxyz[i] - M_B[i]);
+  for (byte i = 0; i < 3; i++)
+  {
+    temp[i] = (Mxyz[i] - M_B[i]);
+  }
   Mxyz[0] = M_Ainv[0][0] * temp[0] + M_Ainv[0][1] * temp[1] + M_Ainv[0][2] * temp[2];
   Mxyz[1] = M_Ainv[1][0] * temp[0] + M_Ainv[1][1] * temp[1] + M_Ainv[1][2] * temp[2];
   Mxyz[2] = M_Ainv[2][0] * temp[0] + M_Ainv[2][1] * temp[1] + M_Ainv[2][2] * temp[2];
   vector_normalize(Mxyz);
 }
 
-// Returns a heading (in degrees) given an acceleration vector a due to gravity, a magnetic vector m, and a facing vector p (global).
+// Returns a heading (in degrees) given an acceleration vector a due to gravity, a magnetic vector m, and a facing vector p (global)
 int get_heading(float acc[3], float mag[3], float p[3])
 {
   float E[3], N[3]; // Derived direction vectors
 
-  // D X M = E, cross acceleration vector Down with M (magnetic north + inclination) to produce "East"
+  // D x M = E, cross acceleration vector Down with M (magnetic north + inclination) to produce "East"
   vector_cross(mag, acc, E); // Accel vector is up when horizontal
   vector_normalize(E);
 
-  // E X D = N, cross "East" with "Down" to produce "North" (parallel to the ground)
+  // E x D = N, cross "East" with "Down" to produce "North" (parallel to the ground)
   vector_cross(acc, E, N);  // Up x East
   vector_normalize(N);
 
@@ -74,7 +86,9 @@ void readImu()
   // Start loop timer
   unsigned long loopStartTime = millis();
 
-  float Axyz[3], Mxyz[3]; // Centered and scaled accelerometer/magnetomer data
+  // Centered and scaled accelerometer/magnetomer data initialized to zero
+  float Axyz[3] = {};
+  float Mxyz[3] = {};
 
   // Check if IMU initialized successfully
   if (online.lsm6ds33 && online.lis3mdl)
@@ -82,18 +96,27 @@ void readImu()
     DEBUG_PRINT("Info: Reading IMU...");
 
     // Read scaled magnetometer data
-    read_data(Mxyz);
+    readLis3mdl(Mxyz);
 
-    // Read accelerometer
+    // Read normalized accelerometer data
     sensors_event_t accel;
     sensors_event_t gyro;
     sensors_event_t temp;
-    lsm6ds33.getEvent(&accel, &gyro, &temp);
+    for (byte i = 0; i < samples; i++)
+    {
+      lsm6ds33.getEvent(&accel, &gyro, &temp);
 
-    // Normalized accelerometer data
-    Axyz[0] = accel.acceleration.x;
-    Axyz[1] = accel.acceleration.y;
-    Axyz[2] = accel.acceleration.z;
+      // Read normalized accelerometer data
+      Axyz[0] += accel.acceleration.x;
+      Axyz[1] += accel.acceleration.y;
+      Axyz[2] += accel.acceleration.z;
+      delay(1);
+    }
+
+    // Average accelerometer readings
+    Axyz[0] /= samples;
+    Axyz[1] /= samples;
+    Axyz[2] /= samples;
 
     // Calculate pitch, roll and heading
     float pitch = atan2(-Axyz[0], sqrt(Axyz[1] * Axyz[1] + Axyz[2] * Axyz[2])) * 180 / PI;

@@ -35,7 +35,6 @@
 #include <TinyGPS++.h>              // https://github.com/mikalhart/TinyGPSPlus
 #include <Wire.h>                   // https://www.arduino.cc/en/Reference/Wire
 #include <wiring_private.h>         // Required for creating new Serial instance with pinPeripheral() function 
-//#include "vector.c"                 // Magnetometer tilt-compensated heading code
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
@@ -72,7 +71,7 @@
 #define PIN_GPS_EN          A5
 #define PIN_LED             5
 #define PIN_IRIDIUM_EN      6
-#define PIN_IRIDIUM_RX      10 // Pin 1 RXD (Yellow wire)
+#define PIN_IRIDIUM_RX      10 // Pin 1 RXD (Yellow)
 #define PIN_IRIDIUM_TX      11 // Pin 6 TXD (Orange)
 #define PIN_IRIDIUM_SLEEP   12 // Pin 7 OnOff (Grey)
 
@@ -117,24 +116,25 @@ bool          firstTimeFlag     = true;  // Flag to determine if the program is 
 // ------------------------------------------------------------------------------------------------
 // Global variable declarations
 // ------------------------------------------------------------------------------------------------
-const float   R1                = 10000000.0; // Resistor values of voltage divider
-const float   R2                = 1000000.0;
-volatile bool alarmFlag         = false;  // Flag for alarm interrupt service routine
-volatile bool wdtFlag           = false;  // Flag for Watchdog Timer interrupt service routine
-volatile int  wdtCounter        = 0;      // Watchdog Timer interrupt counter
-bool          resetFlag         = 0;      // Flag to force system reset using Watchdog Timer
-uint8_t       moSbdBuffer[340];           // Buffer for Mobile Originated SBD (MO-SBD) message (340 bytes max)
-uint8_t       mtSbdBuffer[270];           // Buffer for Mobile Terminated SBD (MT-SBD) message (270 bytes max)
+const float   R1                = 2000000.0;  // Resistor 1 of voltage divider
+const float   R2                = 1000000.0;  // Resistor 2 of voltage divider
+volatile bool alarmFlag         = false;      // Flag for alarm interrupt service routine
+volatile bool wdtFlag           = false;      // Flag for Watchdog Timer interrupt service routine
+volatile int  wdtCounter        = 0;          // Watchdog Timer interrupt counter
+bool          resetFlag         = 0;          // Flag to force system reset using Watchdog Timer
+uint8_t       moSbdBuffer[340];               // Buffer for Mobile Originated SBD (MO-SBD) message (340 bytes max)
+uint8_t       mtSbdBuffer[270];               // Buffer for Mobile Terminated SBD (MT-SBD) message (270 bytes max)
 size_t        moSbdBufferSize;
 size_t        mtSbdBufferSize;
-unsigned int  iterationCounter  = 0;      // Counter to track total number of program iterations (zero indicates a reset)
-byte          retransmitCounter = 0;      // Counter to track Iridium 9603 transmission reattempts
-byte          transmitCounter   = 0;      // Counter to track Iridium 9603 transmission intervals
-unsigned int  failureCounter    = 0;      // Counter to track consecutive failed Iridium transmission attempts
-unsigned long previousMillis    = 0;      // Global millis() timer
-unsigned long alarmTime         = 0;      // Global epoch alarm time variable
-unsigned long unixtime          = 0;      // Global epoch time variable
-tmElements_t  tm;                         // Variable for converting time elements to time_t
+unsigned int  iterationCounter  = 0;          // Counter to track total number of program iterations (zero indicates a reset)
+byte          samples           = 30;         // Number of samples to average accelerometer and magnetometer readings
+byte          retransmitCounter = 0;          // Counter to track Iridium 9603 transmission reattempts
+byte          transmitCounter   = 0;          // Counter to track Iridium 9603 transmission intervals
+unsigned int  failureCounter    = 0;          // Counter to track consecutive failed Iridium transmission attempts
+unsigned long previousMillis    = 0;          // Global millis() timer
+unsigned long alarmTime         = 0;          // Global epoch alarm time variable
+unsigned long unixtime          = 0;          // Global epoch time variable
+tmElements_t  tm;                             // Variable for converting time elements to time_t
 
 // ------------------------------------------------------------------------------------------------
 // IMU calibration
