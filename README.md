@@ -2,9 +2,7 @@
 ![Image](https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Archive/v2.0/Images/2019_300434063392070.JPG)
 
 ## Background
-Icebergs and ice islands represent significant hazards to marine navigation and offshore infrastructure at a time when demand for access to Canada’s Arctic waters is increasing.
-
-There is a growing demand for in situ iceberg tracking data to monitor their drift trajectory and improve predictions of ice hazard occurrence and behaviour, yet the high cost of commercial tracking devices often prevents monitoring at optimal spatial and temporal resolutions.
+Icebergs and ice islands represent significant hazards to marine navigation and offshore infrastructure at a time when demand for access to Canada’s Arctic waters is increasing. There is a growing demand for in situ iceberg tracking data to monitor their drift trajectory and improve predictions of ice hazard occurrence and behaviour, yet the high cost of commercial tracking devices often prevents monitoring at optimal spatial and temporal resolutions.
 
 ## Objective
 The goal of this project is to determine if the Cryologger, a tracking beacon based on inexpensive, open-source hardware and software, can provide a reliable and cost-effective platform for monitoring the drift of icebergs and ice islands in the Canadian Arctic.
@@ -14,14 +12,8 @@ The Cryologger is based on the open-source Arduino platform (www.arduino.cc) and
 
 Planned for extended deployments in harsh Arctic conditions, the Cryologger can provide long-term measurements of GPS position, temperature, pressure, pitch, roll, tilt-compensated heading and battery voltage. Data are transmitted over the Iridium satellite network at specified intervals and can be remotely updated based on the desired sampling frequency. Collected data are made freely available and can be viewed in near-real time at https://cryologger.org.
 
-To access the project archives for Cryologger v1.0, deployed in 2018, and v2.0, deployed in 2019, please see the following links:
-#### v1.0
-https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/main/Archive/v1.0
-#### v2.0
-https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/main/Archive/v2.0
-
 ### v3.0 Prototype
-* v3.0 of the Cryologger is currently under development and will also be built using Adafruit components. It will be a simplified and improved version of v2.0, with a custom PCB to elimate the need for time consuming wiring.
+* v3.0 of the Cryologger is currently under development and will also be built using Adafruit components. It will build on the success of v2.0, with a custom PCB to greatly simplify assembly.
 
 #### Materials 
 
@@ -37,6 +29,10 @@ https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/tree/main/Archiv
 | Voltage Regulator | Pololu D36V6F5 5V 600mA Step-Down Voltage Regulator | $4.95 | https://www.pololu.com/product/3792 |
 | Enclosure |  | ~$50.00 | |
 | Battery | Tadiran | ~$150.00 | |
+
+
+#### Custom PCB
+<img width="920" alt="Screen Shot 2021-05-21 at 1 04 29 PM" src="https://user-images.githubusercontent.com/22924092/119173673-94f43f00-ba35-11eb-9bf8-35857b2f1c34.png">
 
 
 #### Measurements
