@@ -21,7 +21,7 @@ void printSettings()
   printLine();
   DEBUG_PRINTLN("Current Settings");
   printLine();
-  DEBUG_PRINT("alarmInterval: ");     printTab(1);  DEBUG_PRINTLN(alarmInterval);
+  DEBUG_PRINT("alarmInterval: ");     printTab(2);  DEBUG_PRINTLN(alarmInterval);
   DEBUG_PRINT("transmitInterval: ");  printTab(1);  DEBUG_PRINTLN(transmitInterval);
   DEBUG_PRINT("retransmitCounter: "); printTab(1);  DEBUG_PRINTLN(retransmitCounter);
   DEBUG_PRINT("retransmitLimit: ");   printTab(1);  DEBUG_PRINTLN(retransmitLimit);
@@ -53,17 +53,17 @@ void printMoSbd()
   DEBUG_PRINT("unixtime:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.unixtime);
   DEBUG_PRINT("temperature:");      printTab(2);  DEBUG_PRINTLN(moSbdMessage.temperature);
   DEBUG_PRINT("pressure:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.pressure);
-  DEBUG_PRINT("pitch:");            printTab(2);  DEBUG_PRINTLN(moSbdMessage.pitch);
-  DEBUG_PRINT("roll:");             printTab(2);  DEBUG_PRINTLN(moSbdMessage.roll);
+  DEBUG_PRINT("pitch:");            printTab(3);  DEBUG_PRINTLN(moSbdMessage.pitch);
+  DEBUG_PRINT("roll:");             printTab(3);  DEBUG_PRINTLN(moSbdMessage.roll);
   DEBUG_PRINT("heading:");          printTab(2);  DEBUG_PRINTLN(moSbdMessage.heading);
   DEBUG_PRINT("latitude:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.latitude);
   DEBUG_PRINT("longitude:");        printTab(2);  DEBUG_PRINTLN(moSbdMessage.longitude);
   DEBUG_PRINT("satellites:");       printTab(2);  DEBUG_PRINTLN(moSbdMessage.satellites);
-  DEBUG_PRINT("hdop:");             printTab(2);  DEBUG_PRINTLN(moSbdMessage.hdop);
+  DEBUG_PRINT("hdop:");             printTab(3);  DEBUG_PRINTLN(moSbdMessage.hdop);
   DEBUG_PRINT("altitude:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.altitude);
   DEBUG_PRINT("voltage:");          printTab(2);  DEBUG_PRINTLN(moSbdMessage.voltage);
   DEBUG_PRINT("transmitDuration:"); printTab(1);  DEBUG_PRINTLN(moSbdMessage.transmitDuration);
-  DEBUG_PRINT("transmitStatus:");   printTab(1);  DEBUG_PRINTLN(moSbdMessage.transmitStatus);
+  DEBUG_PRINT("transmitStatus:");   printTab(2);  DEBUG_PRINTLN(moSbdMessage.transmitStatus);
   DEBUG_PRINT("iterationCounter:"); printTab(1);  DEBUG_PRINTLN(moSbdMessage.iterationCounter);
   printLine();
 }
