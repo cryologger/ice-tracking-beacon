@@ -34,8 +34,9 @@ void readSensors()
 
     sensors_event_t temp_event, pressure_event;
 
-    while (!dps310.temperatureAvailable() || !dps310.pressureAvailable()) {
-      return; // wait until there's something to read
+    while ((!dps310.temperatureAvailable() || !dps310.pressureAvailable()) && millis() - loopStartTime < 5000UL)
+    {
+      return; // Wait until there's something to read
     }
 
     dps310.getEvents(&temp_event, &pressure_event);
@@ -44,9 +45,14 @@ void readSensors()
     float temperature = temp_event.temperature;
     float pressure = pressure_event.pressure;
 
+    Serial.print(temperature); Serial.print(","); Serial.println(pressure);
+
+    // 1025.75 * 100 = 102575
+    // 1025.75 - 850 = 175.75 * 100 = 17575
+
     // Write data to union
     moSbdMessage.temperature = temperature * 100;
-    moSbdMessage.pressure = pressure / 10;
+    moSbdMessage.pressure = (pressure - 850) * 100;
 
     DEBUG_PRINTLN("done.");
   }

@@ -95,9 +95,9 @@ void SERCOM1_Handler()
 // ------------------------------------------------------------------------------------------------
 // Object instantiations
 // ------------------------------------------------------------------------------------------------
-Adafruit_DPS310   dps310;
-Adafruit_LIS3MDL  lis3mdl;
-Adafruit_LSM6DS33 lsm6ds33;
+Adafruit_DPS310   dps310;   // I2C address: 0x77
+Adafruit_LIS3MDL  lis3mdl;  // I2C address: 0x1C
+Adafruit_LSM6DS33 lsm6ds33; // I2C address: 0x6A
 IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP);
 RTCZero           rtc;
 TinyGPSPlus       gps;
@@ -106,18 +106,18 @@ TinyGPSPlus       gps;
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
 
-unsigned long alarmInterval     = 300;  // Sleep duration in seconds
+unsigned long alarmInterval     = 900;  // Sleep duration in seconds
 unsigned int  transmitInterval  = 1;     // Messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitLimit   = 5;     // Failed data transmission reattempt (340 byte limit)
-unsigned int  gpsTimeout        = 10;   // Timeout for GPS signal acquisition
-unsigned int  iridiumTimeout    = 10;   // Timeout for Iridium transmission (s)
+unsigned int  retransmitLimit   = 4;     // Failed data transmission reattempt (340 byte limit)
+unsigned int  gpsTimeout        = 120;   // Timeout for GPS signal acquisition
+unsigned int  iridiumTimeout    = 180;   // Timeout for Iridium transmission (s)
 bool          firstTimeFlag     = true;  // Flag to determine if the program is running for the first time
 
 // ------------------------------------------------------------------------------------------------
 // Global variable declarations
 // ------------------------------------------------------------------------------------------------
-const float   R1                = 2000000.0;  // Resistor 1 of voltage divider
-const float   R2                = 1000000.0;  // Resistor 2 of voltage divider
+const float   R1                = 1986500.0;  // Resistor 1 of voltage divider 1.9865
+const float   R2                = 994800.0;  // Resistor 2 of voltage divider
 volatile bool alarmFlag         = false;      // Flag for alarm interrupt service routine
 volatile bool wdtFlag           = false;      // Flag for Watchdog Timer interrupt service routine
 volatile int  wdtCounter        = 0;          // Watchdog Timer interrupt counter
@@ -163,22 +163,22 @@ typedef union
   struct
   {
     uint32_t  unixtime;         // UNIX Epoch time                (4 bytes)
-    int16_t   temperature;      // Temperature (°C)               (2 bytes)
-    uint16_t  pressure;         // Pressure (Pa)                  (2 bytes)
-    int16_t   pitch;            // LSM303D pitch (°)              (2 bytes)
-    int16_t   roll;             // LSM303D roll (°)               (2 bytes)
+    int16_t   temperature;      // Temperature (°C)               (2 bytes)   * 100
+    uint16_t  pressure;         // Pressure (hPa)                 (2 bytes)   - 850 * 100
+    int16_t   pitch;            // LSM303D pitch (°)              (2 bytes)   * 100
+    int16_t   roll;             // LSM303D roll (°)               (2 bytes)   * 100
     uint16_t  heading;          // LSM303D heading (°)            (2 bytes)
-    int32_t   latitude;         // Latitude (DD)                  (4 bytes)
-    int32_t   longitude;        // Longitude (DD)                 (4 bytes)
+    int32_t   latitude;         // Latitude (DD)                  (4 bytes)   * 1000000
+    int32_t   longitude;        // Longitude (DD)                 (4 bytes)   * 1000000
     uint8_t   satellites;       // # of satellites                (1 byte)
     uint16_t  hdop;             // PDOP                           (2 bytes)
-    int32_t   altitude;         // Altitude                       (2 bytes)
+    int32_t   altitude;         // Altitude                       (4 bytes)
     uint16_t  voltage;          // Battery voltage (V)            (2 bytes)
     uint16_t  transmitDuration; // Previous transmission duration (2 bytes)
-    byte      transmitStatus;   // Iridium return code            (1 byte)
+    uint8_t   transmitStatus;   // Iridium return code            (1 byte)
     uint16_t  iterationCounter; // Message counter                (2 bytes)
-  } __attribute__((packed));                            // Total: (34 bytes)
-  uint8_t bytes[34];
+  } __attribute__((packed));                            // Total: (36 bytes)
+  uint8_t bytes[36];
 } SBD_MO_MESSAGE;
 
 SBD_MO_MESSAGE moSbdMessage;
@@ -267,7 +267,7 @@ void setup()
     disableSerial();
   }
 
-  blinkLed(5, 500);
+  blinkLed(10, 100);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -290,9 +290,9 @@ void loop()
     DEBUG_PRINT("Info: Alarm trigger "); printDateTime();
 
     // Reconfigure devices
-    configureSensors();
     configureImu();
-
+    configureSensors();
+    
     // Perform measurements
     petDog();         // Reset the Watchdog Timer
     readBattery();    // Read the battery voltage

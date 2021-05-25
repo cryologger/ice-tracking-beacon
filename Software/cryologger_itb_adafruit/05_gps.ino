@@ -77,6 +77,7 @@ void readGps()
             moSbdMessage.altitude = gps.altitude.value();
 
             DEBUG_PRINT(F("Info: RTC drift ")); DEBUG_PRINT(rtcDrift); DEBUG_PRINTLN(F(" seconds"));
+            blinkLed(5, 250);
           }
         }
       }

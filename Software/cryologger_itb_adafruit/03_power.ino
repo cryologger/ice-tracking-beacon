@@ -9,15 +9,15 @@ void readBattery()
 
   for (byte i = 0; i < samples; ++i)
   {
-    reading += analogRead(PIN_VBAT); // Read VIN across a 1/10 MΩ resistor divider
+    reading += analogRead(PIN_VBAT); // Read VIN across a 2/1 MΩ resistor divider
     myDelay(1);
   }
 
   // External battery
-  //float voltage = (float)reading / samples * 3.3 * ((R2 + R1) / R2) / 4096.0; // Convert 1/10 VIN to VIN (12-bit resolution)
+  float voltage = (float)reading / samples * 3.3 * ((R2 + R1) / R2) / 4096.0; // Convert 1/10 VIN to VIN (12-bit resolution)
 
   // LiPo
-  float voltage = (float)reading / samples * 3.3 * 2 / 4096.0; 
+  //float voltage = (float)reading / samples * 3.3 * 2 / 4096.0;
 
 
   // Write data to union
@@ -66,7 +66,7 @@ void enableImuPower()
 // Disable power to IMU
 void disableImuPower()
 {
-  digitalWrite(PIN_IMU_EN, LOW); 
+  digitalWrite(PIN_IMU_EN, LOW);
 }
 
 // Enable power to sensors
@@ -79,7 +79,7 @@ void enableSensorPower()
 // Disable power to sensors
 void disableSensorPower()
 {
-  digitalWrite(PIN_SENSOR_EN, LOW); 
+  digitalWrite(PIN_SENSOR_EN, LOW);
 }
 
 // Enable power to GPS
@@ -106,7 +106,7 @@ void disableIridiumPower()
   digitalWrite(PIN_IRIDIUM_EN, LOW);
 }
 
-// 
+//
 void prepareForSleep()
 {
   // Disable serial
@@ -128,11 +128,15 @@ void goToSleep()
     firstTimeFlag = false;
   }
 
+  //disableGpsPower();
+  //disableSensorPower();
+  disableImuPower();
+
   // Enter deep sleep
-  //LowPower.deepSleep();
+  LowPower.deepSleep();
 
   // Sleep until next alarm match
-  rtc.standbyMode();
+  //rtc.standbyMode();
 
   /* Code sleeps here and awaits RTC or WDT interrupt */
 }
