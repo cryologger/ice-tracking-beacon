@@ -69,15 +69,15 @@ void disableImuPower()
   digitalWrite(PIN_IMU_EN, LOW); 
 }
 
-// Enable power to BME280
-void enableBme280Power()
+// Enable power to sensors
+void enableSensorPower()
 {
   digitalWrite(PIN_SENSOR_EN, HIGH);
   myDelay(500);
 }
 
-// Disable power to BME280
-void disableBme280Power()
+// Disable power to sensors
+void disableSensorPower()
 {
   digitalWrite(PIN_SENSOR_EN, LOW); 
 }

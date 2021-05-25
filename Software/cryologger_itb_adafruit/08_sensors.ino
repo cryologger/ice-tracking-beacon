@@ -2,24 +2,21 @@
 void configureSensors()
 {
   // Enable power to sensor
-  enableBme280Power();
+  enableSensorPower();
 
-  DEBUG_PRINT("Info: Initializing BME280...");
-  
-  if (bme280.begin())
+  DEBUG_PRINT("Info: Initializing DPS310...");
+
+  if (dps310.begin_I2C())
   {
-    bme280.setSampling(Adafruit_BME280::MODE_FORCED,
-                       Adafruit_BME280::SAMPLING_X1, // Temperature
-                       Adafruit_BME280::SAMPLING_X1, // Pressure
-                       Adafruit_BME280::SAMPLING_X1, // Humidity
-                       Adafruit_BME280::FILTER_OFF);
-    online.bme280 = true;
+    dps310.configurePressure(DPS310_64HZ, DPS310_64SAMPLES);
+    dps310.configureTemperature(DPS310_64HZ, DPS310_64SAMPLES);
+    online.dps310 = true;
     DEBUG_PRINTLN("success!");
   }
   else
   {
     DEBUG_PRINTLN("failed!");
-    online.bme280 = false;
+    online.dps310 = false;
     blinkLed(5, 1000);
   }
 }
@@ -31,35 +28,35 @@ void readSensors()
   unsigned long loopStartTime = millis();
 
   // Check if sensor(s) online
-  if (online.bme280)
+  if (online.dps310)
   {
-    DEBUG_PRINT("Info: Reading BME280...");
+    DEBUG_PRINT("Info: Reading DPS310...");
 
-    // Wake sensor and return to sleep once measurement is made
-    bme280.takeForcedMeasurement();
+    sensors_event_t temp_event, pressure_event;
 
-    // Delay required to allow sensor to perform the measurement
-    myDelay(1000);
+    while (!dps310.temperatureAvailable() || !dps310.pressureAvailable()) {
+      return; // wait until there's something to read
+    }
+
+    dps310.getEvents(&temp_event, &pressure_event);
 
     // Record measurements
-    float temperature = bme280.readTemperature();
-    float humidity = bme280.readHumidity();
-    float pressure = bme280.readPressure();
+    float temperature = temp_event.temperature;
+    float pressure = pressure_event.pressure;
 
     // Write data to union
     moSbdMessage.temperature = temperature * 100;
-    moSbdMessage.humidity = humidity * 100;
     moSbdMessage.pressure = pressure / 10;
 
     DEBUG_PRINTLN("done.");
   }
   else
   {
-    DEBUG_PRINTLN("Warning: BME280 offline!");
+    DEBUG_PRINTLN("Warning: DPS310 offline!");
   }
   // Stop the loop timer
   timer.sensors = millis() - loopStartTime;
 
   // Disable power to sensor
-  disableBme280Power();
+  disableSensorPower();
 }

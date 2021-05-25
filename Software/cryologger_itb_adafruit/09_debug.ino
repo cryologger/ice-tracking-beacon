@@ -52,7 +52,6 @@ void printMoSbd()
   printLine();
   DEBUG_PRINT("unixtime:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.unixtime);
   DEBUG_PRINT("temperature:");      printTab(2);  DEBUG_PRINTLN(moSbdMessage.temperature);
-  DEBUG_PRINT("humidity:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.humidity);
   DEBUG_PRINT("pressure:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.pressure);
   DEBUG_PRINT("pitch:");            printTab(3);  DEBUG_PRINTLN(moSbdMessage.pitch);
   DEBUG_PRINT("roll:");             printTab(3);  DEBUG_PRINTLN(moSbdMessage.roll);

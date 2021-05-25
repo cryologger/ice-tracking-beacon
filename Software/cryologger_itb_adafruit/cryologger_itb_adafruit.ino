@@ -1,6 +1,6 @@
 /*
     Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0
-    Date:     May 12, 2021
+    Date:     May 24, 2021
     Author:   Adam Garbo
 
     Description:
@@ -23,7 +23,7 @@
 // Libraries
 // ------------------------------------------------------------------------------------------------
 #include <Adafruit_Sensor.h>        // https://github.com/adafruit/Adafruit_Sensor
-#include <Adafruit_BME280.h>        // https://github.com/adafruit/Adafruit_BME280_Library
+#include <Adafruit_DPS310.h>        // https://github.com/adafruit/Adafruit_DPS310
 #include <Adafruit_LIS3MDL.h>       // https://github.com/adafruit/Adafruit_LIS3MDL
 #include <Adafruit_LSM6DS33.h>      // https://github.com/adafruit/Adafruit_LSM6DS
 #include <Arduino.h>                // Required for creating new Serial instance. Must be included before <wiring_private.h>
@@ -95,7 +95,7 @@ void SERCOM1_Handler()
 // ------------------------------------------------------------------------------------------------
 // Object instantiations
 // ------------------------------------------------------------------------------------------------
-Adafruit_BME280   bme280;
+Adafruit_DPS310   dps310;
 Adafruit_LIS3MDL  lis3mdl;
 Adafruit_LSM6DS33 lsm6ds33;
 IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP);
@@ -106,11 +106,11 @@ TinyGPSPlus       gps;
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
 
-unsigned long alarmInterval     = 3600;  // Sleep duration in seconds
+unsigned long alarmInterval     = 300;  // Sleep duration in seconds
 unsigned int  transmitInterval  = 1;     // Messages to transmit in each Iridium transmission (340 byte limit)
 unsigned int  retransmitLimit   = 5;     // Failed data transmission reattempt (340 byte limit)
-unsigned int  gpsTimeout        = 180;   // Timeout for GPS signal acquisition
-unsigned int  iridiumTimeout    = 180;   // Timeout for Iridium transmission (s)
+unsigned int  gpsTimeout        = 10;   // Timeout for GPS signal acquisition
+unsigned int  iridiumTimeout    = 10;   // Timeout for Iridium transmission (s)
 bool          firstTimeFlag     = true;  // Flag to determine if the program is running for the first time
 
 // ------------------------------------------------------------------------------------------------
@@ -164,7 +164,6 @@ typedef union
   {
     uint32_t  unixtime;         // UNIX Epoch time                (4 bytes)
     int16_t   temperature;      // Temperature (°C)               (2 bytes)
-    uint16_t  humidity;         // Humidity (%)                   (2 bytes)
     uint16_t  pressure;         // Pressure (Pa)                  (2 bytes)
     int16_t   pitch;            // LSM303D pitch (°)              (2 bytes)
     int16_t   roll;             // LSM303D roll (°)               (2 bytes)
@@ -178,8 +177,8 @@ typedef union
     uint16_t  transmitDuration; // Previous transmission duration (2 bytes)
     byte      transmitStatus;   // Iridium return code            (1 byte)
     uint16_t  iterationCounter; // Message counter                (2 bytes)
-  } __attribute__((packed));                            // Total: (36 bytes)
-  uint8_t bytes[38];
+  } __attribute__((packed));                            // Total: (34 bytes)
+  uint8_t bytes[34];
 } SBD_MO_MESSAGE;
 
 SBD_MO_MESSAGE moSbdMessage;
@@ -205,7 +204,7 @@ struct struct_online
   bool lsm6ds33 = false;
   bool lis3mdl = false;
   bool gnss = false;
-  bool bme280 = false;
+  bool dps310 = false;
 } online;
 
 // Union to store loop timers`
@@ -231,7 +230,7 @@ void setup()
   pinMode(PIN_SENSOR_EN, OUTPUT);
   pinMode(PIN_IMU_EN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
-  digitalWrite(PIN_SENSOR_EN, LOW);   // Disable power to BME280
+  digitalWrite(PIN_SENSOR_EN, LOW);   // Disable power to sensors
   digitalWrite(PIN_GPS_EN, HIGH);     // Disable power to GPS
   digitalWrite(PIN_IMU_EN, LOW);      // Disable power to IMU
   digitalWrite(PIN_IRIDIUM_EN, LOW);  // Disable power to Iridium 9603
