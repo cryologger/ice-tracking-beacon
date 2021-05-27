@@ -106,7 +106,7 @@ TinyGPSPlus       gps;
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
 
-unsigned long alarmInterval     = 900;  // Sleep duration in seconds
+unsigned long alarmInterval     = 1800;  // Sleep duration in seconds
 unsigned int  transmitInterval  = 1;     // Messages to transmit in each Iridium transmission (340 byte limit)
 unsigned int  retransmitLimit   = 4;     // Failed data transmission reattempt (340 byte limit)
 unsigned int  gpsTimeout        = 120;   // Timeout for GPS signal acquisition
@@ -145,13 +145,13 @@ tmElements_t  tm;                             // Variable for converting time el
 float p[] = {1, 0, 0};  // Y marking on sensor board points toward yaw = 0
 
 float M_B[3]
-{ -2979.80,  432.81, -1757.11};
+{ -2956.76, 343.61, -1019.84};
 
 float M_Ainv[3][3]
 {
-  {  0.28665,  0.01375,  0.00138},
-  {  0.01375,  0.28350, -0.00795},
-  {  0.00138, -0.00795,  0.28812}
+  {  1.41050,  0.05847, -0.00925},
+  {  0.05847,  1.40344,  0.00380},
+  { -0.00925,  0.00380,  1.34955}
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -235,11 +235,7 @@ void setup()
   digitalWrite(PIN_IMU_EN, LOW);      // Disable power to IMU
   digitalWrite(PIN_IRIDIUM_EN, LOW);  // Disable power to Iridium 9603
 
-  // Set analog resolution to 12-bits
-  analogReadResolution(12);
-
-  // Apply ADC gain and offset error calibration correction
-  analogReadCorrection(12, 2059);
+configureAdc();
 
   Wire.begin(); // Initialize I2C
   Wire.setClock(400000); // Set I2C clock speed to 400 kHz
@@ -289,10 +285,6 @@ void loop()
 
     DEBUG_PRINT("Info: Alarm trigger "); printDateTime();
 
-    // Reconfigure devices
-    configureImu();
-    configureSensors();
-    
     // Perform measurements
     petDog();         // Reset the Watchdog Timer
     readBattery();    // Read the battery voltage

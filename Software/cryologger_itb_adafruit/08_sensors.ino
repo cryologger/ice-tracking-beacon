@@ -17,7 +17,7 @@ void configureSensors()
   {
     DEBUG_PRINTLN("failed!");
     online.dps310 = false;
-    blinkLed(5, 1000);
+    //blinkLed(5, 1000);
   }
 }
 
@@ -26,6 +26,9 @@ void readSensors()
 {
   // Start the loop timer
   unsigned long loopStartTime = millis();
+
+  // Initialize sensor(s)
+  configureSensors();
 
   // Check if sensor(s) online
   if (online.dps310)

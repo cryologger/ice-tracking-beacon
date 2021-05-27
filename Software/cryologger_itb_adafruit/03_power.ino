@@ -1,24 +1,36 @@
+void configureAdc()
+{
+  // Set analog resolution to 12-bits
+  //analogReadResolution(12);
+
+  // Configure ADC
+  ADC->CTRLA.bit.ENABLE = 0;                      // Disable ADC
+  ADC->CTRLB.reg = ADC_CTRLB_PRESCALER_DIV512 |   // Divide Clock ADC GCLK by 512 (48MHz/512 = 93.7kHz)
+                   ADC_CTRLB_RESSEL_12BIT;        // Set ADC resolution to 12 bits
+  ADC->SAMPCTRL.reg = ADC_SAMPCTRL_SAMPLEN(63);   // Set max Sampling Time Length to maximum ADC clock pulse (XXXus)
+  ADC->AVGCTRL.reg = ADC_AVGCTRL_SAMPLENUM_256 |  // Configure multisampling
+                     ADC_AVGCTRL_ADJRES(4);       // Configure averaging
+  ADC->CTRLB.reg |= ADC_CTRLB_RESSEL_16BIT;       // Set RESSEL part pf CTRLB must be set to 16-bit,
+  ADC->CTRLA.bit.ENABLE = 1;                      // Enable ADC
+  while (ADC->STATUS.bit.SYNCBUSY);               // Wait for synchronization
+
+  // Apply ADC gain and offset error calibration correction
+  analogReadCorrection(12, 2059);
+}
+
 // Read battery voltage from voltage divider
 void readBattery()
 {
   // Start loop timer
   unsigned long loopStartTime = millis();
 
-  int reading = 0;
-  byte samples = 10;
-
-  for (byte i = 0; i < samples; ++i)
-  {
-    reading += analogRead(PIN_VBAT); // Read VIN across a 2/1 MΩ resistor divider
-    myDelay(1);
-  }
+  int reading = analogRead(PIN_VBAT); // Read VIN across a 2/1 MΩ resistor divider
 
   // External battery
-  float voltage = (float)reading / samples * 3.3 * ((R2 + R1) / R2) / 4096.0; // Convert 1/10 VIN to VIN (12-bit resolution)
+  float voltage = reading * 3.3 * ((R2 + R1) / R2) / 4096.0; // Convert 1/10 VIN to VIN (12-bit resolution)
 
   // LiPo
   //float voltage = (float)reading / samples * 3.3 * 2 / 4096.0;
-
 
   // Write data to union
   moSbdMessage.voltage = voltage * 1000;

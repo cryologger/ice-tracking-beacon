@@ -36,19 +36,10 @@ void readLis3mdl(float Mxyz[3])
   float temp[3];
 
   // Read magnetometer
-  for (byte i = 0; i < samples; i++)   // 30 samples
-  {
-    lis3mdl.read();
-    Mxyz[0] += lis3mdl.x;
-    Mxyz[1] += lis3mdl.y;
-    Mxyz[2] += lis3mdl.z;
-    delay(1);
-  }
-
-  // Average magnetometer readings
-  Mxyz[0] /= samples;
-  Mxyz[0] /= samples;
-  Mxyz[0] /= samples;
+  lis3mdl.read();
+  Mxyz[0] += lis3mdl.x;
+  Mxyz[1] += lis3mdl.y;
+  Mxyz[2] += lis3mdl.z;
 
   // Apply offsets (bias) and scale factors from Magneto
   for (byte i = 0; i < 3; i++)
@@ -83,12 +74,17 @@ int getHeading(float acc[3], float mag[3], float p[3])
 
 void readImu()
 {
+
   // Start loop timer
   unsigned long loopStartTime = millis();
+
+  // Initialize IMU
+  configureImu();
 
   // Centered and scaled accelerometer/magnetomer data initialized to zero
   float Axyz[3] = {};
   float Mxyz[3] = {};
+  int heading = 0;
 
   // Check if IMU initialized successfully
   if (online.lsm6ds33 && online.lis3mdl)
@@ -102,25 +98,21 @@ void readImu()
     sensors_event_t accel;
     sensors_event_t gyro;
     sensors_event_t temp;
-    
-    for (byte i = 0; i < samples; i++)
-    {
-      lsm6ds33.getEvent(&accel, &gyro, &temp);
-      Axyz[0] += accel.acceleration.x;
-      Axyz[1] += accel.acceleration.y;
-      Axyz[2] += accel.acceleration.z;
-      delay(1);
-    }
 
-    // Average accelerometer readings
-    Axyz[0] /= samples;
-    Axyz[1] /= samples;
-    Axyz[2] /= samples;
+    lsm6ds33.getEvent(&accel, &gyro, &temp);
+    Axyz[0] += accel.acceleration.x;
+    Axyz[1] += accel.acceleration.y;
+    Axyz[2] += accel.acceleration.z;
 
     // Calculate pitch, roll and tilt-compensated heading
     float pitch = atan2(-Axyz[0], sqrt(Axyz[1] * Axyz[1] + Axyz[2] * Axyz[2])) * 180 / PI;
     float roll = atan2(Axyz[1], Axyz[2]) * 180 / PI;
-    int heading = getHeading(Axyz, Mxyz, p);
+
+    for (byte i = 0; i < 3; i++)
+    {
+      heading = getHeading(Axyz, Mxyz, p);
+      myDelay(100);
+    }
 
     // Write orientation data to union
     moSbdMessage.pitch = pitch * 100;
