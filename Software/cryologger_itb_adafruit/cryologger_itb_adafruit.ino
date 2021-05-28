@@ -171,7 +171,7 @@ typedef union
     int32_t   latitude;         // Latitude (DD)                  (4 bytes)   * 1000000
     int32_t   longitude;        // Longitude (DD)                 (4 bytes)   * 1000000
     uint8_t   satellites;       // # of satellites                (1 byte)
-    uint16_t  hdop;             // PDOP                           (2 bytes)
+    uint16_t  hdop;             // HDOP                           (2 bytes)
     int32_t   altitude;         // Altitude                       (4 bytes)
     uint16_t  voltage;          // Battery voltage (V)            (2 bytes)
     uint16_t  transmitDuration; // Previous transmission duration (2 bytes)

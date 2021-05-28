@@ -1,3 +1,4 @@
+// Configure analog-to-digital converter (ADC)
 void configureAdc()
 {
   // Set analog resolution to 12-bits
@@ -7,10 +8,10 @@ void configureAdc()
   ADC->CTRLA.bit.ENABLE = 0;                      // Disable ADC
   ADC->CTRLB.reg = ADC_CTRLB_PRESCALER_DIV512 |   // Divide Clock ADC GCLK by 512 (48MHz/512 = 93.7kHz)
                    ADC_CTRLB_RESSEL_12BIT;        // Set ADC resolution to 12 bits
-  ADC->SAMPCTRL.reg = ADC_SAMPCTRL_SAMPLEN(63);   // Set max Sampling Time Length to maximum ADC clock pulse (XXXus)
+  ADC->SAMPCTRL.reg = ADC_SAMPCTRL_SAMPLEN(63);   // Set Sampling Time Length (341.33 us)
   ADC->AVGCTRL.reg = ADC_AVGCTRL_SAMPLENUM_256 |  // Configure multisampling
                      ADC_AVGCTRL_ADJRES(4);       // Configure averaging
-  ADC->CTRLB.reg |= ADC_CTRLB_RESSEL_16BIT;       // Set RESSEL part pf CTRLB must be set to 16-bit,
+  ADC->CTRLB.reg |= ADC_CTRLB_RESSEL_16BIT;       // Set RESSEL to 16-bit
   ADC->CTRLA.bit.ENABLE = 1;                      // Enable ADC
   while (ADC->STATUS.bit.SYNCBUSY);               // Wait for synchronization
 
