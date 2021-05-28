@@ -23,7 +23,7 @@ void readGps()
   GPS_PORT.println("$PMTK220,1000*1F"); // Set NMEA update rate to 1 Hz
   myDelay(100);
   GPS_PORT.println("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28"); // Set NMEA sentence output frequencies to GGA and RMC
-  //delay(100);
+  //myDelay(100);
   //GPS_PORT.println("$PGCMD,33,1*6C"); // Enable antenna updates
   //GPS_PORT.println("$PGCMD,33,0*6D"); // Disable antenna updates
 

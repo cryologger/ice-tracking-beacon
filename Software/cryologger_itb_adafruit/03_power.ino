@@ -1,17 +1,14 @@
 // Configure analog-to-digital converter (ADC)
 void configureAdc()
 {
-  // Set analog resolution to 12-bits
-  //analogReadResolution(12);
-
-  // Configure ADC
   ADC->CTRLA.bit.ENABLE = 0;                      // Disable ADC
   ADC->CTRLB.reg = ADC_CTRLB_PRESCALER_DIV512 |   // Divide Clock ADC GCLK by 512 (48MHz/512 = 93.7kHz)
-                   ADC_CTRLB_RESSEL_12BIT;        // Set ADC resolution to 12 bits
-  ADC->SAMPCTRL.reg = ADC_SAMPCTRL_SAMPLEN(63);   // Set Sampling Time Length (341.33 us)
+                   ADC_CTRLB_RESSEL_16BIT;        // Set ADC resolution to 12 bits
+  while (ADC->STATUS.bit.SYNCBUSY);               // Wait for synchronization
+  ADC->SAMPCTRL.reg = ADC_SAMPCTRL_SAMPLEN(32);   // Set Sampling Time Length (341.33 us)
   ADC->AVGCTRL.reg = ADC_AVGCTRL_SAMPLENUM_256 |  // Configure multisampling
                      ADC_AVGCTRL_ADJRES(4);       // Configure averaging
-  ADC->CTRLB.reg |= ADC_CTRLB_RESSEL_16BIT;       // Set RESSEL to 16-bit
+  while (ADC->STATUS.bit.SYNCBUSY);               // Wait for synchronization
   ADC->CTRLA.bit.ENABLE = 1;                      // Enable ADC
   while (ADC->STATUS.bit.SYNCBUSY);               // Wait for synchronization
 
@@ -25,10 +22,10 @@ void readBattery()
   // Start loop timer
   unsigned long loopStartTime = millis();
 
-  int reading = analogRead(PIN_VBAT); // Read VIN across a 2/1 MΩ resistor divider
+  int reading = analogRead(PIN_VBAT); // Read VIN across 2/1 MΩ resistor divider (1/3 divider)
 
   // External battery
-  float voltage = reading * 3.3 * ((R2 + R1) / R2) / 4096.0; // Convert 1/10 VIN to VIN (12-bit resolution)
+  float voltage = reading * 3.3 * 3 / 4096.0; // Convert analog reading to voltage measurement
 
   // LiPo
   //float voltage = (float)reading / samples * 3.3 * 2 / 4096.0;
@@ -37,14 +34,14 @@ void readBattery()
   moSbdMessage.voltage = voltage * 1000;
 
   /*
-      // Write minimum battery voltage value to union
-      if (moSbdMessage.voltage == 0)
-      {
-      moSbdMessage.voltage = voltage * 1000;
-      } else if ((voltage * 1000) < moSbdMessage.voltage)
-      {
-      moSbdMessage.voltage = voltage * 1000;
-      }
+    // Write minimum battery voltage value to union
+    if (moSbdMessage.voltage == 0)
+    {
+    moSbdMessage.voltage = voltage * 1000;
+    } else if ((voltage * 1000) < moSbdMessage.voltage)
+    {
+    moSbdMessage.voltage = voltage * 1000;
+    }
   */
   // Stop loop timer
   timer.battery = millis() - loopStartTime;

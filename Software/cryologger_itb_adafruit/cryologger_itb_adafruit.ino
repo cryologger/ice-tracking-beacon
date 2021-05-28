@@ -116,8 +116,6 @@ bool          firstTimeFlag     = true;  // Flag to determine if the program is 
 // ------------------------------------------------------------------------------------------------
 // Global variable declarations
 // ------------------------------------------------------------------------------------------------
-const float   R1                = 1986500.0;  // Resistor 1 of voltage divider 1.9865
-const float   R2                = 994800.0;  // Resistor 2 of voltage divider
 volatile bool alarmFlag         = false;      // Flag for alarm interrupt service routine
 volatile bool wdtFlag           = false;      // Flag for Watchdog Timer interrupt service routine
 volatile int  wdtCounter        = 0;          // Watchdog Timer interrupt counter

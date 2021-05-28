@@ -199,7 +199,7 @@ bool ISBDCallback()
   {
     previousMillis = currentMillis;
     petDog(); // Reset the Watchdog Timer
-    readBattery(); // Measure battery voltage during Iridium transmission
+    //readBattery(); // Measure battery voltage during Iridium transmission
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN)); // Blink LED
   }
   return true;
