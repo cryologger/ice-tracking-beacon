@@ -17,7 +17,6 @@ void configureSensors()
   {
     DEBUG_PRINTLN("failed!");
     online.dps310 = false;
-    //blinkLed(5, 1000);
   }
 }
 
@@ -49,9 +48,6 @@ void readSensors()
     float pressure = pressure_event.pressure;
 
     Serial.print(temperature); Serial.print(","); Serial.println(pressure);
-
-    // 1025.75 * 100 = 102575
-    // 1025.75 - 850 = 175.75 * 100 = 17575
 
     // Write data to union
     moSbdMessage.temperature = temperature * 100;

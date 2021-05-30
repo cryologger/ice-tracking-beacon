@@ -74,7 +74,6 @@ void readGps()
             moSbdMessage.longitude = gps.location.lng() * 1000000;
             moSbdMessage.satellites = gps.satellites.value();
             moSbdMessage.hdop = gps.hdop.value();
-            moSbdMessage.altitude = gps.altitude.value();
 
             DEBUG_PRINT(F("Info: RTC drift ")); DEBUG_PRINT(rtcDrift); DEBUG_PRINTLN(F(" seconds"));
             blinkLed(5, 250);

@@ -13,7 +13,9 @@ void configureAdc()
   while (ADC->STATUS.bit.SYNCBUSY);               // Wait for synchronization
 
   // Apply ADC gain and offset error calibration correction
-  analogReadCorrection(12, 2059);
+  //analogReadCorrection(12, 2059); // Test unit
+
+  analogReadCorrection(23, 2060); // # 1
 }
 
 // Read battery voltage from voltage divider
@@ -31,7 +33,7 @@ void readBattery()
   //float voltage = (float)reading / samples * 3.3 * 2 / 4096.0;
 
   // Write data to union
-  moSbdMessage.voltage = voltage * 1000;
+  moSbdMessage.voltage = voltage * 100;
 
   /*
     // Write minimum battery voltage value to union

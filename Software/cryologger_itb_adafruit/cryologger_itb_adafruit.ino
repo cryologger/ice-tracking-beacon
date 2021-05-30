@@ -1,6 +1,6 @@
 /*
     Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0
-    Date:     May 24, 2021
+    Date:     May 28, 2021
     Author:   Adam Garbo
 
     Description:
@@ -106,11 +106,11 @@ TinyGPSPlus       gps;
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
 
-unsigned long alarmInterval     = 1800;  // Sleep duration in seconds
-unsigned int  transmitInterval  = 1;     // Messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitLimit   = 4;     // Failed data transmission reattempt (340 byte limit)
-unsigned int  gpsTimeout        = 120;   // Timeout for GPS signal acquisition
-unsigned int  iridiumTimeout    = 180;   // Timeout for Iridium transmission (s)
+unsigned long alarmInterval     = 3600;  // Sleep duration in seconds
+unsigned int  transmitInterval  = 3;     // Messages to transmit in each Iridium transmission (340 byte limit)
+unsigned int  retransmitLimit   = 2;     // Failed data transmission reattempt (340 byte limit)
+unsigned int  gpsTimeout        = 10;   // Timeout for GPS signal acquisition
+unsigned int  iridiumTimeout    = 10;   // Timeout for Iridium transmission (s)
 bool          firstTimeFlag     = true;  // Flag to determine if the program is running for the first time
 
 // ------------------------------------------------------------------------------------------------
@@ -170,13 +170,12 @@ typedef union
     int32_t   longitude;        // Longitude (DD)                 (4 bytes)   * 1000000
     uint8_t   satellites;       // # of satellites                (1 byte)
     uint16_t  hdop;             // HDOP                           (2 bytes)
-    int32_t   altitude;         // Altitude                       (4 bytes)
-    uint16_t  voltage;          // Battery voltage (V)            (2 bytes)
+    uint16_t  voltage;          // Battery voltage (V)            (2 bytes)   * 100
     uint16_t  transmitDuration; // Previous transmission duration (2 bytes)
     uint8_t   transmitStatus;   // Iridium return code            (1 byte)
     uint16_t  iterationCounter; // Message counter                (2 bytes)
-  } __attribute__((packed));                            // Total: (36 bytes)
-  uint8_t bytes[36];
+  } __attribute__((packed));                            // Total: (32 bytes)
+  uint8_t bytes[32];
 } SBD_MO_MESSAGE;
 
 SBD_MO_MESSAGE moSbdMessage;
@@ -288,7 +287,7 @@ void loop()
     readBattery();    // Read the battery voltage
     readGps();        // Read the GPS
     readImu();        // Read the IMU
-    readSensors();    // Read sensors
+    readSensors();    // Read sensor(s)
     writeBuffer();    // Write the data to transmit buffer
     transmitData();   // Transmit data via Iridium transceiver
     printTimers();    // Print function execution timers
@@ -297,7 +296,7 @@ void loop()
     DEBUG_PRINTLN("Info: Entering deep sleep...");
     DEBUG_PRINTLN();
 
-    // Prepare system for sleep
+    // Prepare for sleep
     prepareForSleep();
   }
 

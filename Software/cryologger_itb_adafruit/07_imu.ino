@@ -128,7 +128,7 @@ void readImu()
   }
 
   // Disable power to IMU
-  //disableImuPower();
+  disableImuPower();
 
   // Stop loop timer
   timer.imu = millis() - loopStartTime;
