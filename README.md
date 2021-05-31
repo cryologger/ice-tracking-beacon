@@ -16,11 +16,12 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 Version 3.0 of the Cryologger iceberg tracking beacon builds on the success of v2.0 and will also be based on the Adafruit ecosystem of components. 
 
 **Major changes include:**
-* 3.3 V power is now provided directly from a Pololu 3.3 V step-down voltage regulator, bypassing the onboard AP2112 LDO regulator completely.
+* 3.3 V power is now provided directly from a Pololu 3.3 V step-down voltage regulator, bypassing the onboard AP2112 LDO regulator completely (-55 μA).
 * A dedicated 5 V step-down voltage regulator is also provided for the RockBLOCK Iridium transceiver.
 * After extensive testing, the DS3231 real-time clock (RTC) was removed in favour of using the SAMD21's internal RTC and periodic time synchronizations with the GPS for all timekeeping and alarm functionality.
 * Due to the sensor reaching its end-of-life (EOL),tThe LSM303 accelerometer/magnetometer was replaced with the LSM6DS33 + LIS3MDL IMU.
 * The temperature/pressure and IMU sensors are now powered directly by SAMD21 GPIO pins, which allows power to the sensors to be removed completely during sleep.
+* A 2MΩ + 1 MΩ resistor divider is now used to measured the battery voltage (+2.4 μA).
 
 #### Materials 
 
