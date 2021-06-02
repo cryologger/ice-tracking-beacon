@@ -1,0 +1,812 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Cryologger:Adafruit_Feather_Header U3
+U 1 1 607B8914
+P 1700 2250
+F 0 "U3" H 1725 3365 50  0000 C CNN
+F 1 "Adafruit_Feather_Header" H 1725 3274 50  0000 C CNN
+F 2 "Cryologger:Adafruit_Feather_Header_Double" H 1700 2250 50  0001 C CNN
+F 3 "" H 1700 2250 50  0001 C CNN
+	1    1700 2250
+	1    0    0    -1  
+$EndComp
+$Comp
+L Cryologger:Adafruit_Feather_Header U4
+U 1 1 607C34F6
+P 4250 2250
+F 0 "U4" H 4275 3365 50  0000 C CNN
+F 1 "Adafruit_Feather_Header" H 4275 3274 50  0000 C CNN
+F 2 "Cryologger:Adafruit_Feather_Header_Double" H 4250 2250 50  0001 C CNN
+F 3 "" H 4250 2250 50  0001 C CNN
+	1    4250 2250
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole_Pad H1
+U 1 1 607C42B3
+P 10850 5500
+F 0 "H1" V 10896 5649 50  0000 L CNN
+F 1 "MountingHole_Pad" V 10805 5649 50  0000 L CNN
+F 2 "MountingHole:MountingHole_3mm_Pad" H 10850 5500 50  0001 C CNN
+F 3 "~" H 10850 5500 50  0001 C CNN
+	1    10850 5500
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Mechanical:MountingHole_Pad H2
+U 1 1 607C61C0
+P 10850 5700
+F 0 "H2" V 10896 5849 50  0000 L CNN
+F 1 "MountingHole_Pad" V 10805 5849 50  0000 L CNN
+F 2 "MountingHole:MountingHole_3mm_Pad" H 10850 5700 50  0001 C CNN
+F 3 "~" H 10850 5700 50  0001 C CNN
+	1    10850 5700
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Mechanical:MountingHole_Pad H3
+U 1 1 607C6932
+P 10850 5900
+F 0 "H3" V 10896 6049 50  0000 L CNN
+F 1 "MountingHole_Pad" V 10805 6049 50  0000 L CNN
+F 2 "MountingHole:MountingHole_3mm_Pad" H 10850 5900 50  0001 C CNN
+F 3 "~" H 10850 5900 50  0001 C CNN
+	1    10850 5900
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	900  1400 1150 1400
+Wire Wire Line
+	1150 1600 900  1600
+Text Label 900  1400 0    50   ~ 0
+RST
+Wire Wire Line
+	1150 1700 1100 1700
+Wire Wire Line
+	1150 1800 900  1800
+Wire Wire Line
+	1150 1900 900  1900
+Text Label 900  1600 0    50   ~ 0
+AREF
+Text Label 900  1800 0    50   ~ 0
+A0
+Text Label 900  1900 0    50   ~ 0
+A1
+Wire Wire Line
+	1150 2000 900  2000
+Wire Wire Line
+	1150 2100 900  2100
+Wire Wire Line
+	1150 2200 900  2200
+Wire Wire Line
+	1150 2300 900  2300
+Wire Wire Line
+	1150 2400 900  2400
+Wire Wire Line
+	1150 2500 900  2500
+Wire Wire Line
+	1150 2600 900  2600
+Wire Wire Line
+	1150 2700 900  2700
+Wire Wire Line
+	1150 2800 900  2800
+Wire Wire Line
+	1150 2900 1100 2900
+Wire Wire Line
+	2550 2000 2300 2000
+Wire Wire Line
+	2550 2100 2300 2100
+Wire Wire Line
+	2550 2200 2300 2200
+Wire Wire Line
+	2550 2300 2300 2300
+Wire Wire Line
+	2550 2400 2300 2400
+Wire Wire Line
+	2550 2500 2300 2500
+Wire Wire Line
+	2550 2600 2300 2600
+Wire Wire Line
+	2550 2700 2300 2700
+Wire Wire Line
+	2550 2800 2300 2800
+Wire Wire Line
+	2550 2900 2300 2900
+Wire Wire Line
+	2550 1800 2300 1800
+Wire Wire Line
+	2550 1900 2300 1900
+Text Label 900  2000 0    50   ~ 0
+A2
+Text Label 900  2100 0    50   ~ 0
+A3
+Text Label 900  2200 0    50   ~ 0
+A4
+Text Label 900  2300 0    50   ~ 0
+A5
+Text Label 900  2400 0    50   ~ 0
+SCK
+Text Label 900  2500 0    50   ~ 0
+MOSI
+Text Label 900  2600 0    50   ~ 0
+MISO
+Text Label 900  2700 0    50   ~ 0
+RX0
+Text Label 900  2800 0    50   ~ 0
+TX1
+Text Label 2550 1800 2    50   ~ 0
+BAT
+Text Label 2550 1900 2    50   ~ 0
+EN
+Text Label 2550 2000 2    50   ~ 0
+USB
+Text Label 2550 2100 2    50   ~ 0
+D13
+Text Label 2550 2200 2    50   ~ 0
+D12
+Text Label 2550 2300 2    50   ~ 0
+D11
+Text Label 2550 2400 2    50   ~ 0
+D10
+Text Label 2550 2500 2    50   ~ 0
+D9
+Text Label 2550 2600 2    50   ~ 0
+D6
+Text Label 2550 2700 2    50   ~ 0
+D5
+Text Label 2550 2800 2    50   ~ 0
+SCL
+Text Label 2550 2900 2    50   ~ 0
+SDA
+Wire Wire Line
+	3450 1400 3700 1400
+Wire Wire Line
+	3700 1600 3450 1600
+Text Label 3450 1400 0    50   ~ 0
+RST
+Wire Wire Line
+	3700 1700 3650 1700
+Wire Wire Line
+	3700 1800 3450 1800
+Wire Wire Line
+	3700 1900 3450 1900
+Text Label 3450 1600 0    50   ~ 0
+AREF
+Text Label 3450 1800 0    50   ~ 0
+A0
+Text Label 3450 1900 0    50   ~ 0
+A1
+Wire Wire Line
+	3700 2000 3450 2000
+Wire Wire Line
+	3700 2100 3450 2100
+Wire Wire Line
+	3700 2200 3450 2200
+Wire Wire Line
+	3700 2300 3450 2300
+Wire Wire Line
+	3700 2400 3450 2400
+Wire Wire Line
+	3700 2500 3450 2500
+Wire Wire Line
+	3700 2600 3450 2600
+Wire Wire Line
+	3700 2700 3450 2700
+Wire Wire Line
+	3700 2800 3450 2800
+Wire Wire Line
+	3700 2900 3650 2900
+Text Label 3450 2000 0    50   ~ 0
+A2
+Text Label 3450 2100 0    50   ~ 0
+A3
+Text Label 3450 2200 0    50   ~ 0
+A4
+Text Label 3450 2300 0    50   ~ 0
+A5
+Text Label 3450 2400 0    50   ~ 0
+SCK
+Text Label 3450 2500 0    50   ~ 0
+MOSI
+Text Label 3450 2600 0    50   ~ 0
+MISO
+Text Label 3450 2700 0    50   ~ 0
+RX0
+Text Label 3450 2800 0    50   ~ 0
+TX1
+$Comp
+L Cryologger:ROCKBLOCK_9603 U5
+U 1 1 60806988
+P 1250 4650
+F 0 "U5" H 1250 5115 50  0000 C CNN
+F 1 "ROCKBLOCK_9603" H 1250 5024 50  0000 C CNN
+F 2 "Connector_Molex:Molex_PicoBlade_53047-1010_1x10_P1.25mm_Vertical" H 1200 4400 50  0001 C CNN
+F 3 "" H 1200 4400 50  0001 C CNN
+	1    1250 4650
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector:Screw_Terminal_01x02 J1
+U 1 1 607DBE07
+P 1600 6800
+F 0 "J1" H 1680 6792 50  0000 L CNN
+F 1 "Screw_Terminal_01x02" H 1680 6701 50  0000 L CNN
+F 2 "Connector_Phoenix_MSTB:PhoenixContact_MSTBA_2,5_2-G-5,08_1x02_P5.08mm_Horizontal" H 1600 6800 50  0001 C CNN
+F 3 "~" H 1600 6800 50  0001 C CNN
+	1    1600 6800
+	-1   0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR010
+U 1 1 607CEE8E
+P 1750 5050
+F 0 "#PWR010" H 1750 4800 50  0001 C CNN
+F 1 "GND" H 1755 4877 50  0000 C CNN
+F 2 "" H 1750 5050 50  0001 C CNN
+F 3 "" H 1750 5050 50  0001 C CNN
+	1    1750 5050
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR016
+U 1 1 607D6879
+P 1900 7000
+F 0 "#PWR016" H 1900 6750 50  0001 C CNN
+F 1 "GND" H 1905 6827 50  0000 C CNN
+F 2 "" H 1900 7000 50  0001 C CNN
+F 3 "" H 1900 7000 50  0001 C CNN
+	1    1900 7000
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR013
+U 1 1 607D7B69
+P 10950 6200
+F 0 "#PWR013" H 10950 5950 50  0001 C CNN
+F 1 "GND" H 10955 6027 50  0000 C CNN
+F 2 "" H 10950 6200 50  0001 C CNN
+F 3 "" H 10950 6200 50  0001 C CNN
+	1    10950 6200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	10950 5700 10950 5900
+Connection ~ 10950 5700
+Wire Wire Line
+	10950 5500 10950 5700
+Connection ~ 10950 5900
+Wire Wire Line
+	10950 5900 10950 6100
+Connection ~ 10950 6100
+$Comp
+L Mechanical:MountingHole_Pad H4
+U 1 1 607C7099
+P 10850 6100
+F 0 "H4" V 10896 6249 50  0000 L CNN
+F 1 "MountingHole_Pad" V 10805 6249 50  0000 L CNN
+F 2 "MountingHole:MountingHole_3mm_Pad" H 10850 6100 50  0001 C CNN
+F 3 "~" H 10850 6100 50  0001 C CNN
+	1    10850 6100
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	10950 6100 10950 6200
+Wire Wire Line
+	1650 4650 1850 4650
+Wire Wire Line
+	1650 4850 1750 4850
+Wire Wire Line
+	1750 4850 1750 5050
+Wire Wire Line
+	1650 4550 1850 4550
+Wire Wire Line
+	1650 4450 1850 4450
+Wire Wire Line
+	850  4450 650  4450
+Text Label 1850 4650 2    50   ~ 0
+5V
+Text Label 1850 4550 2    50   ~ 0
+D12
+Text Label 1850 4450 2    50   ~ 0
+D11
+Text Label 650  4450 0    50   ~ 0
+D10
+$Comp
+L power:+BATT #PWR015
+U 1 1 60889E30
+P 1850 6650
+F 0 "#PWR015" H 1850 6500 50  0001 C CNN
+F 1 "+BATT" H 1865 6823 50  0000 C CNN
+F 2 "" H 1850 6650 50  0001 C CNN
+F 3 "" H 1850 6650 50  0001 C CNN
+	1    1850 6650
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5100 2000 4850 2000
+Wire Wire Line
+	5100 2100 4850 2100
+Wire Wire Line
+	5100 2200 4850 2200
+Wire Wire Line
+	5100 2300 4850 2300
+Wire Wire Line
+	5100 2400 4850 2400
+Wire Wire Line
+	5100 2500 4850 2500
+Wire Wire Line
+	5100 2600 4850 2600
+Wire Wire Line
+	5100 2700 4850 2700
+Wire Wire Line
+	5100 2800 4850 2800
+Wire Wire Line
+	5100 2900 4850 2900
+Wire Wire Line
+	5100 1800 4850 1800
+Wire Wire Line
+	5100 1900 4850 1900
+Text Label 5100 1800 2    50   ~ 0
+BAT
+Text Label 5100 1900 2    50   ~ 0
+EN
+Text Label 5100 2000 2    50   ~ 0
+USB
+Text Label 5100 2100 2    50   ~ 0
+D13
+Text Label 5100 2200 2    50   ~ 0
+D12
+Text Label 5100 2300 2    50   ~ 0
+D11
+Text Label 5100 2400 2    50   ~ 0
+D10
+Text Label 5100 2500 2    50   ~ 0
+D9
+Text Label 5100 2600 2    50   ~ 0
+D6
+Text Label 5100 2700 2    50   ~ 0
+D5
+Text Label 5100 2800 2    50   ~ 0
+SCL
+Text Label 5100 2900 2    50   ~ 0
+SDA
+Wire Wire Line
+	1800 6900 1850 6900
+Wire Wire Line
+	1850 6900 1850 6650
+Wire Wire Line
+	1800 6800 1900 6800
+Wire Wire Line
+	1900 6800 1900 7000
+$Comp
+L Cryologger:Adafruit_LSM303AGR U1
+U 1 1 607FEB0B
+P 9400 1700
+F 0 "U1" H 9072 1771 50  0000 R CNN
+F 1 "Adafruit_LSM303AGR" H 9072 1680 50  0000 R CNN
+F 2 "Cryologger:Adafruit_LSM303AGR" H 9550 1500 50  0001 C CNN
+F 3 "" H 9550 1500 50  0001 C CNN
+	1    9400 1700
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR03
+U 1 1 6080EF6F
+P 9400 2050
+F 0 "#PWR03" H 9400 1800 50  0001 C CNN
+F 1 "GND" H 9405 1877 50  0000 C CNN
+F 2 "" H 9400 2050 50  0001 C CNN
+F 3 "" H 9400 2050 50  0001 C CNN
+	1    9400 2050
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3V3 #PWR01
+U 1 1 608199CB
+P 1100 1300
+F 0 "#PWR01" H 1100 1150 50  0001 C CNN
+F 1 "+3V3" H 1115 1473 50  0000 C CNN
+F 2 "" H 1100 1300 50  0001 C CNN
+F 3 "" H 1100 1300 50  0001 C CNN
+	1    1100 1300
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3V3 #PWR02
+U 1 1 6081C74B
+P 3650 1300
+F 0 "#PWR02" H 3650 1150 50  0001 C CNN
+F 1 "+3V3" H 3665 1473 50  0000 C CNN
+F 2 "" H 3650 1300 50  0001 C CNN
+F 3 "" H 3650 1300 50  0001 C CNN
+	1    3650 1300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3650 1500 3650 1300
+Wire Wire Line
+	3650 1500 3700 1500
+Wire Wire Line
+	1100 1500 1100 1300
+Wire Wire Line
+	1100 1500 1150 1500
+$Comp
+L power:GND #PWR06
+U 1 1 6083236E
+P 1100 3050
+F 0 "#PWR06" H 1100 2800 50  0001 C CNN
+F 1 "GND" H 1105 2877 50  0000 C CNN
+F 2 "" H 1100 3050 50  0001 C CNN
+F 3 "" H 1100 3050 50  0001 C CNN
+	1    1100 3050
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR05
+U 1 1 60834FF1
+P 3650 3000
+F 0 "#PWR05" H 3650 2750 50  0001 C CNN
+F 1 "GND" H 3655 2827 50  0000 C CNN
+F 2 "" H 3650 3000 50  0001 C CNN
+F 3 "" H 3650 3000 50  0001 C CNN
+	1    3650 3000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3650 1700 3650 2900
+Connection ~ 3650 2900
+Wire Wire Line
+	3650 2900 3650 3000
+Wire Wire Line
+	1100 1700 1100 2900
+Wire Wire Line
+	1100 3050 1100 2900
+Connection ~ 1100 2900
+Wire Wire Line
+	9800 1650 10050 1650
+Wire Wire Line
+	9800 1750 10050 1750
+Text Label 10050 1650 2    50   ~ 0
+SDA
+Text Label 10050 1750 2    50   ~ 0
+SCL
+Wire Wire Line
+	9350 1300 9350 1100
+Text Label 9350 1100 3    50   ~ 0
+A4
+Wire Notes Line
+	550  3500 2950 3500
+Wire Notes Line
+	550  550  550  3500
+Text Notes 1150 850  0    100  ~ 20
+Microcontroller
+Wire Notes Line
+	2950 550  2950 3500
+Wire Notes Line
+	550  550  2950 550 
+Wire Notes Line
+	3050 3500 5450 3500
+Wire Notes Line
+	5450 550  5450 3500
+Text Notes 4150 900  0    100  ~ 20
+GPS
+Wire Notes Line
+	3050 3500 3050 550 
+Wire Notes Line
+	3050 550  5450 550 
+Text Notes 5850 1000 0    100  ~ 20
+Temperature/Pressure/\nRelative Humidity\n
+Text Notes 1500 3900 0    100  ~ 20
+Iridium
+Text Notes 9200 850  0    100  ~ 20
+IMU
+Text Notes 3600 3900 0    100  ~ 20
+Power Regulation
+Wire Wire Line
+	4050 4950 4050 4500
+$Comp
+L power:+3V3 #PWR08
+U 1 1 6081EEBC
+P 4050 4500
+F 0 "#PWR08" H 4050 4350 50  0001 C CNN
+F 1 "+3V3" H 4065 4673 50  0000 C CNN
+F 2 "" H 4050 4500 50  0001 C CNN
+F 3 "" H 4050 4500 50  0001 C CNN
+	1    4050 4500
+	1    0    0    -1  
+$EndComp
+Text Label 5150 4650 2    50   ~ 0
+D6
+Wire Wire Line
+	4850 4650 5150 4650
+Text Label 5150 4950 2    50   ~ 0
+5V
+Wire Wire Line
+	4850 4950 5150 4950
+Wire Wire Line
+	4950 4750 4950 4500
+Wire Wire Line
+	4850 4750 4950 4750
+$Comp
+L power:+BATT #PWR09
+U 1 1 608420A9
+P 4950 4500
+F 0 "#PWR09" H 4950 4350 50  0001 C CNN
+F 1 "+BATT" H 4965 4673 50  0000 C CNN
+F 2 "" H 4950 4500 50  0001 C CNN
+F 3 "" H 4950 4500 50  0001 C CNN
+	1    4950 4500
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+BATT #PWR07
+U 1 1 6083FB56
+P 3850 4500
+F 0 "#PWR07" H 3850 4350 50  0001 C CNN
+F 1 "+BATT" H 3865 4673 50  0000 C CNN
+F 2 "" H 3850 4500 50  0001 C CNN
+F 3 "" H 3850 4500 50  0001 C CNN
+	1    3850 4500
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3800 4950 4050 4950
+Wire Wire Line
+	3850 4750 3850 4500
+Wire Wire Line
+	3800 4750 3850 4750
+Wire Wire Line
+	4950 4850 4950 5050
+Wire Wire Line
+	4850 4850 4950 4850
+Wire Wire Line
+	3850 4850 3850 5050
+Wire Wire Line
+	3800 4850 3850 4850
+$Comp
+L power:GND #PWR012
+U 1 1 607D3CBB
+P 4950 5050
+F 0 "#PWR012" H 4950 4800 50  0001 C CNN
+F 1 "GND" H 4955 4877 50  0000 C CNN
+F 2 "" H 4950 5050 50  0001 C CNN
+F 3 "" H 4950 5050 50  0001 C CNN
+	1    4950 5050
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR011
+U 1 1 607D2701
+P 3850 5050
+F 0 "#PWR011" H 3850 4800 50  0001 C CNN
+F 1 "GND" H 3855 4877 50  0000 C CNN
+F 2 "" H 3850 5050 50  0001 C CNN
+F 3 "" H 3850 5050 50  0001 C CNN
+	1    3850 5050
+	1    0    0    -1  
+$EndComp
+$Comp
+L Cryologger:Pololu_D36V6 U7
+U 1 1 607CAB90
+P 4500 4800
+F 0 "U7" H 4558 5215 50  0000 C CNN
+F 1 "Pololu_D36V6" H 4558 5124 50  0000 C CNN
+F 2 "Cryologger:Pololu_D36V6_Vertical" H 4600 4700 50  0001 C CNN
+F 3 "" H 4600 4700 50  0001 C CNN
+	1    4500 4800
+	1    0    0    -1  
+$EndComp
+$Comp
+L Cryologger:Pololu_D36V6 U6
+U 1 1 607C9F9C
+P 3450 4800
+F 0 "U6" H 3508 5215 50  0000 C CNN
+F 1 "Pololu_D36V6" H 3508 5124 50  0000 C CNN
+F 2 "Cryologger:Pololu_D36V6_Vertical" H 3550 4700 50  0001 C CNN
+F 3 "" H 3550 4700 50  0001 C CNN
+	1    3450 4800
+	1    0    0    -1  
+$EndComp
+Wire Notes Line
+	5550 550  5550 2450
+Wire Notes Line
+	5550 2450 7950 2450
+Wire Notes Line
+	7950 2450 7950 550 
+Wire Notes Line
+	7950 550  5550 550 
+Wire Wire Line
+	7100 1800 7350 1800
+Wire Wire Line
+	7100 1600 7350 1600
+Text Label 7350 1800 2    50   ~ 0
+SDA
+Text Label 7350 1600 2    50   ~ 0
+SCL
+Wire Wire Line
+	6650 1350 6650 1150
+Text Label 6650 1150 3    50   ~ 0
+A3
+$Comp
+L power:GND #PWR04
+U 1 1 608D0BDE
+P 6700 2100
+F 0 "#PWR04" H 6700 1850 50  0001 C CNN
+F 1 "GND" H 6705 1927 50  0000 C CNN
+F 2 "" H 6700 2100 50  0001 C CNN
+F 3 "" H 6700 2100 50  0001 C CNN
+	1    6700 2100
+	1    0    0    -1  
+$EndComp
+Wire Notes Line
+	8100 2450 10500 2450
+Wire Notes Line
+	10500 2450 10500 550 
+Wire Notes Line
+	8100 2450 8100 550 
+Wire Notes Line
+	8100 550  10500 550 
+Wire Notes Line
+	550  3600 2950 3600
+Wire Notes Line
+	2950 3600 2950 5500
+Wire Notes Line
+	2950 5500 550  5500
+Wire Notes Line
+	550  5500 550  3600
+Wire Notes Line
+	3050 3600 5450 3600
+Wire Notes Line
+	5450 3600 5450 5500
+Wire Notes Line
+	3050 3600 3050 5500
+Wire Notes Line
+	3050 5500 5450 5500
+Wire Notes Line
+	550  5600 2950 5600
+Wire Notes Line
+	550  7500 550  5600
+Text Notes 1000 5900 0    100  ~ 20
+Battery Connection
+Wire Notes Line
+	2950 5600 2950 7500
+Wire Notes Line
+	2950 7500 550  7500
+Wire Notes Line
+	3050 5600 5450 5600
+Wire Notes Line
+	3050 7500 3050 5600
+Wire Notes Line
+	5450 5600 5450 7500
+Wire Notes Line
+	5450 7500 3050 7500
+Text Notes 3650 5900 0    100  ~ 20
+Voltage Divider
+Wire Notes Line
+	11150 4900 11150 6450
+Wire Notes Line
+	11150 6450 9800 6450
+Wire Notes Line
+	9800 4900 11150 4900
+Wire Notes Line
+	9800 6450 9800 4900
+Text Notes 9900 5200 0    100  ~ 20
+Mounting Holes
+$Comp
+L Cryologger:RockBLOCK_Footprint U8
+U 1 1 60964211
+P 1050 5300
+F 0 "U8" H 1178 5346 50  0000 L CNN
+F 1 "RockBLOCK_Footprint" H 1178 5255 50  0000 L CNN
+F 2 "Cryologger:RockBLOCK_9603_Footprint" H 1150 5200 50  0001 C CNN
+F 3 "" H 1150 5200 50  0001 C CNN
+	1    1050 5300
+	1    0    0    -1  
+$EndComp
+$Comp
+L Cryologger:Adafruit_DPS310 U2
+U 1 1 609658FB
+P 6700 1700
+F 0 "U2" H 6373 1721 50  0000 R CNN
+F 1 "Adafruit_DPS310" H 6373 1630 50  0000 R CNN
+F 2 "Cryologger:Adafruit_DPS310" H 6700 1650 50  0001 C CNN
+F 3 "" H 6700 1650 50  0001 C CNN
+	1    6700 1700
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+BATT #PWR014
+U 1 1 60867FDA
+P 4250 6200
+F 0 "#PWR014" H 4250 6050 50  0001 C CNN
+F 1 "+BATT" H 4265 6373 50  0000 C CNN
+F 2 "" H 4250 6200 50  0001 C CNN
+F 3 "" H 4250 6200 50  0001 C CNN
+	1    4250 6200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4100 7000 3950 7000
+Connection ~ 4100 7000
+Wire Wire Line
+	4100 7050 4100 7000
+Wire Wire Line
+	3950 7000 3950 6950
+Wire Wire Line
+	4250 7000 4100 7000
+Wire Wire Line
+	4250 6950 4250 7000
+Text Label 4500 6600 2    50   ~ 0
+A0
+Wire Wire Line
+	4250 6250 4250 6200
+Wire Wire Line
+	4250 6600 4500 6600
+Wire Wire Line
+	4250 6600 4250 6550
+Connection ~ 4250 6600
+Wire Wire Line
+	3950 6600 4250 6600
+Wire Wire Line
+	3950 6650 3950 6600
+Wire Wire Line
+	4250 6650 4250 6600
+$Comp
+L power:GND #PWR017
+U 1 1 60821400
+P 4100 7050
+F 0 "#PWR017" H 4100 6800 50  0001 C CNN
+F 1 "GND" H 4105 6877 50  0000 C CNN
+F 2 "" H 4100 7050 50  0001 C CNN
+F 3 "" H 4100 7050 50  0001 C CNN
+	1    4100 7050
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:C C1
+U 1 1 6081E600
+P 3950 6800
+F 0 "C1" H 4065 6846 50  0000 L CNN
+F 1 "C" H 4065 6755 50  0000 L CNN
+F 2 "Capacitor_THT:C_Disc_D3.8mm_W2.6mm_P2.50mm" H 3988 6650 50  0001 C CNN
+F 3 "~" H 3950 6800 50  0001 C CNN
+	1    3950 6800
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R_US R2
+U 1 1 6081B25D
+P 4250 6800
+F 0 "R2" H 4318 6846 50  0000 L CNN
+F 1 "R_US" H 4318 6755 50  0000 L CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 4290 6790 50  0001 C CNN
+F 3 "~" H 4250 6800 50  0001 C CNN
+	1    4250 6800
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R_US R1
+U 1 1 6081A121
+P 4250 6400
+F 0 "R1" H 4318 6446 50  0000 L CNN
+F 1 "R_US" H 4318 6355 50  0000 L CNN
+F 2 "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal" V 4290 6390 50  0001 C CNN
+F 3 "~" H 4250 6400 50  0001 C CNN
+	1    4250 6400
+	1    0    0    -1  
+$EndComp
+$EndSCHEMATC

@@ -1,6 +1,6 @@
 /*
     Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0
-    Date:     May 28, 2021
+    Date:     May 31, 2021
     Author:   Adam Garbo
 
     Description:
@@ -35,6 +35,11 @@
 #include <TinyGPS++.h>              // https://github.com/mikalhart/TinyGPSPlus
 #include <Wire.h>                   // https://www.arduino.cc/en/Reference/Wire
 #include <wiring_private.h>         // Required for creating new Serial instance
+
+// ------------------------------------------------------------------------------------------------
+// Beacon
+// ------------------------------------------------------------------------------------------------
+#define BEACON 1
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
@@ -142,6 +147,17 @@ tmElements_t  tm;                             // Variable for converting time el
 
 float p[] = {1, 0, 0};  // Y marking on sensor board points toward yaw = 0
 
+/*
+float M_B[3]
+{ -2956.76, 343.61, -1019.84};
+
+float M_Ainv[3][3]
+{
+  {  1.41050,  0.05847, -0.00925},
+  {  0.05847,  1.40344,  0.00380},
+  { -0.00925,  0.00380,  1.34955}
+};
+*/
 float M_B[3]
 { -2956.76, 343.61, -1019.84};
 
@@ -232,7 +248,7 @@ void setup()
   digitalWrite(PIN_IMU_EN, LOW);      // Disable power to IMU
   digitalWrite(PIN_IRIDIUM_EN, LOW);  // Disable power to Iridium 9603
 
-configureAdc();
+  configureAdc();
 
   Wire.begin(); // Initialize I2C
   Wire.setClock(400000); // Set I2C clock speed to 400 kHz
