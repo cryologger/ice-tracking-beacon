@@ -12,8 +12,16 @@ The Cryologger is based on the open-source Arduino platform (www.arduino.cc) and
 
 Planned for extended deployments in harsh Arctic conditions, the Cryologger can provide long-term measurements of GPS position, temperature, pressure, pitch, roll, tilt-compensated heading and battery voltage. Data are transmitted over the Iridium satellite network at specified intervals and can be remotely updated based on the desired sampling frequency. Collected data are made freely available and can be viewed in near-real time at https://cryologger.org.
 
-### v3.0 Prototype
-* v3.0 of the Cryologger is currently under development and will also be built using Adafruit components. It will build on the success of v2.0, with a custom PCB to greatly simplify assembly.
+### Version 3.0
+Version 3.0 of the Cryologger iceberg tracking beacon builds on the success of v2.0 and will is also based on the Adafruit ecosystem of components. 
+
+**Major changes include:**
+* 3.3 V power is now provided directly from a Pololu 3.3 V step-down voltage regulator, bypassing the onboard AP2112 LDO regulator completely (-55 μA).
+* A dedicated 5 V step-down voltage regulator is also provided for the RockBLOCK Iridium transceiver.
+* After extensive testing, the DS3231 real-time clock (RTC) was removed in favour of using the SAMD21's internal RTC and periodic time synchronizations with the GPS for all timekeeping and alarm functionality.
+* Due to the sensor reaching its end-of-life (EOL),tThe LSM303 accelerometer/magnetometer was replaced with the LSM6DS33 + LIS3MDL IMU.
+* The temperature/pressure and IMU sensors are now powered directly by SAMD21 GPIO pins, which allows power to the sensors to be removed completely during sleep.
+* A 2MΩ + 1 MΩ resistor divider is now used to measured the battery voltage (+2.4 μA).
 
 #### Materials 
 
@@ -32,8 +40,9 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger can 
 
 
 #### Custom PCB
-<img width="920" alt="Screen Shot 2021-05-21 at 1 04 29 PM" src="https://user-images.githubusercontent.com/22924092/119173673-94f43f00-ba35-11eb-9bf8-35857b2f1c34.png">
+A custom carrier board PCB was designed to eliminate the need for cutting, stripping and soldering of juper wires, which greatly simplifies the assembly process.
 
+<img width="720" alt="Screen Shot 2021-05-21 at 1 04 29 PM" src="https://user-images.githubusercontent.com/22924092/119173673-94f43f00-ba35-11eb-9bf8-35857b2f1c34.png">
 
 #### Measurements
 | Variable | Unit | Comments |
