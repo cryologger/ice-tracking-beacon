@@ -25,18 +25,18 @@ Version 3.0 of the Cryologger iceberg tracking beacon builds on the success of v
 
 #### Materials 
 
-| Component | Product | Cost (USD) | URL |
-| --- | --- | :---: |  --- |
-| Satellite transceiver | Rock7 RockBLOCK 9603 | $249.95 | http://www.rock7mobile.com/products-rockblock-9603 |
-| Satellite antenna | Maxtena M1621HCT-P-SMA | $50.00 | https://www.richardsonrfpd.com/Products/Product/M1621HCT-P-SMA |
-| Processor | Adafruit Feather M0 Basic Proto | $19.95 | https://www.adafruit.com/product/2772 |
-| GPS | Adafruit Ultimate GPS FeatherWing | $39.95 | https://www.adafruit.com/product/3133 |
-| IMU | Adafruit LSM6DS33 + LIS3MDL - 9 DoF IMU | $9.95 | https://www.adafruit.com/product/4485 |
-| Sensor | Adafruit DPS310 Precision Barometric Pressure Sensor | $6.95 | https://www.adafruit.com/product/4494 |
-| Voltage Regulator | Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator | $4.95 | https://www.pololu.com/product/3791 |
-| Voltage Regulator | Pololu D36V6F5 5V 600mA Step-Down Voltage Regulator | $4.95 | https://www.pololu.com/product/3792 |
-| Enclosure |  | ~$50.00 | |
-| Battery | Tadiran | ~$150.00 | |
+| Component | Product | Cost (USD) |
+| --- | --- | :---: |
+| Satellite transceiver | [Rock7 RockBLOCK 9603](http://www.rock7mobile.com/products-rockblock-9603) | $249.95 |
+| Satellite antenna | [Maxtena M1621HCT-P-SMA](https://www.richardsonrfpd.com/Products/Product/M1621HCT-P-SMA) | $50.00 |
+| Processor | [Adafruit Feather M0 Basic Proto](https://www.adafruit.com/product/2772) | $19.95 |
+| GPS | [Adafruit Ultimate GPS FeatherWing](https://www.adafruit.com/product/3133) | $39.95 |
+| IMU | [Adafruit LSM6DS33 + LIS3MDL - 9 DoF IMU](https://www.adafruit.com/product/4485) | $9.95 |
+| Sensor | [Adafruit DPS310 Precision Barometric Pressure Sensor](https://www.adafruit.com/product/4494) | $6.95 |
+| Voltage Regulator | [Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3791) | $4.95 |
+| Voltage Regulator | [Pololu D36V6F5 5V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3792) | $4.95 |
+| Enclosure |  | ~$50.00 |
+| Battery | Tadiran | ~$150.00 |
 
 
 #### Custom PCB
