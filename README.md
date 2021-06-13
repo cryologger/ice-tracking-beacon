@@ -36,7 +36,7 @@ Version 3.0 of the Cryologger iceberg tracking beacon builds on the success of v
 | Voltage Regulator | [Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3791) | $4.95 |
 | Voltage Regulator | [Pololu D36V6F5 5V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3792) | $4.95 |
 | Enclosure | [Hammond Manufacturing Polycarbonate 1554WA2GY ](https://www.hammfg.com/part/1554WA2GY) | $30.00 |
-| Battery | Tadiran TLP93121 | $150.00 |
+| Battery | [Tadiran TLP93121](https://www.tadiranbat.com/assets/tlp-93121-b-al1.pdf) | $150.00 |
 
 
 #### Custom PCB
