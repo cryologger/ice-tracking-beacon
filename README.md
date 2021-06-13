@@ -28,7 +28,7 @@ Version 3.0 of the Cryologger iceberg tracking beacon builds on the success of v
 | Component | Product | Cost (USD) |
 | --- | --- | :---: |
 | Satellite transceiver | [Rock7 RockBLOCK 9603](http://www.rock7mobile.com/products-rockblock-9603) | $249.95 |
-| Satellite antenna | [Maxtena M1621HCT-P-SMA](https://www.richardsonrfpd.com/Products/Product/M1621HCT-P-SMA) | $50.00 |
+| Satellite antenna | [Maxtena M1621HCT-P-SMA](https://maxtena.com/products/f-passive/m1621hct-p-sma-iridium-passive-antenna/) | $50.00 |
 | Processor | [Adafruit Feather M0 Basic Proto](https://www.adafruit.com/product/2772) | $19.95 |
 | GPS | [Adafruit Ultimate GPS FeatherWing](https://www.adafruit.com/product/3133) | $39.95 |
 | IMU | [Adafruit LSM6DS33 + LIS3MDL - 9 DoF IMU](https://www.adafruit.com/product/4485) | $9.95 |
@@ -38,6 +38,7 @@ Version 3.0 of the Cryologger iceberg tracking beacon builds on the success of v
 | Enclosure | [Hammond Manufacturing Polycarbonate 1554WA2GY ](https://www.hammfg.com/part/1554WA2GY) | $30.00 |
 | Battery | [Tadiran TLP93121](https://www.tadiranbat.com/assets/tlp-93121-b-al1.pdf) | $150.00 |
 
+For a full bill of materials, please see:
 
 #### Custom PCB
 A custom carrier board PCB was designed to eliminate the need for cutting, stripping and soldering of juper wires, which greatly simplifies the assembly process.
@@ -72,7 +73,7 @@ A custom carrier board PCB was designed to eliminate the need for cutting, strip
 
 * **/Documentation** - All project documents
 
-* **/Hardware** - Autodesk EAGLE schematics and Fusion 360 design files
+* **/Hardware** - KiCad schematics and Fusion 360 design files
 
 ## Documentation
 * Currently in progress
