@@ -1,6 +1,6 @@
 /*
     Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0
-    Date:     May 31, 2021
+    Date:     June 18, 2021
     Author:   Adam Garbo
 
     Description:
@@ -114,7 +114,7 @@ TinyGPSPlus       gps;
 unsigned long alarmInterval     = 3600;  // Sleep duration in seconds
 unsigned int  transmitInterval  = 3;     // Messages to transmit in each Iridium transmission (340 byte limit)
 unsigned int  retransmitLimit   = 2;     // Failed data transmission reattempt (340 byte limit)
-unsigned int  gpsTimeout        = 10;   // Timeout for GPS signal acquisition
+unsigned int  gpsTimeout        = 300;   // Timeout for GPS signal acquisition
 unsigned int  iridiumTimeout    = 10;   // Timeout for Iridium transmission (s)
 bool          firstTimeFlag     = true;  // Flag to determine if the program is running for the first time
 
@@ -147,25 +147,62 @@ tmElements_t  tm;                             // Variable for converting time el
 
 float p[] = {1, 0, 0};  // Y marking on sensor board points toward yaw = 0
 
-/*
 float M_B[3]
-{ -2956.76, 343.61, -1019.84};
-
-float M_Ainv[3][3]
 {
-  {  1.41050,  0.05847, -0.00925},
-  {  0.05847,  1.40344,  0.00380},
-  { -0.00925,  0.00380,  1.34955}
+  -2956.76, 343.61, -1019.84 // Test unit
+  // 1
+  // 2
+  // 3
+  // 4
+  // 5
+  // 6
+  // 7
+  // 8
+  // 9
+  // 10
 };
-*/
-float M_B[3]
-{ -2956.76, 343.61, -1019.84};
 
 float M_Ainv[3][3]
 {
-  {  1.41050,  0.05847, -0.00925},
-  {  0.05847,  1.40344,  0.00380},
-  { -0.00925,  0.00380,  1.34955}
+  {
+    1.41050,  0.05847, -0.00925 // Test unit
+    // 1
+    // 2
+    // 3
+    // 4
+    // 5
+    // 6
+    // 7
+    // 8
+    // 9
+    // 10
+  },
+  {
+    0.05847,  1.40344,  0.00380 // Test unit
+    // 1
+    // 2
+    // 3
+    // 4
+    // 5
+    // 6
+    // 7
+    // 8
+    // 9
+    // 10
+  },
+  {
+    -0.00925,  0.00380,  1.34955 // Test unit
+    // 1
+    // 2
+    // 3
+    // 4
+    // 5
+    // 6
+    // 7
+    // 8
+    // 9
+    // 10
+  }
 };
 
 // ------------------------------------------------------------------------------------------------

@@ -14,7 +14,6 @@ void configureAdc()
 
   // Apply ADC gain and offset error calibration correction
   //analogReadCorrection(12, 2059); // Test unit
-
   analogReadCorrection(23, 2060); // # 1
 }
 
@@ -142,7 +141,7 @@ void goToSleep()
 
   //disableGpsPower();
   //disableSensorPower();
-  disableImuPower();
+  //disableImuPower();
 
   // Enter deep sleep
   LowPower.deepSleep();
