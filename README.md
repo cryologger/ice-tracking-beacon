@@ -61,6 +61,7 @@ A custom carrier board PCB was designed to eliminate the need for cutting, strip
 | Altitude | m | GPS altitude |
 | Voltage | V | Battery voltage |
 | Transmit duration  | s | Length of Iridium transmission  |
+| Transmit Status | | Iridium error return code |
 | Iteration counter |  | Number of program iterations |
 
 ## Repository Contents
