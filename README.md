@@ -51,6 +51,10 @@ A custom carrier board PCB was designed to eliminate the need for cutting, strip
 
 <img width="720" alt="Screen Shot 2021-05-21 at 1 04 29 PM" src="https://user-images.githubusercontent.com/22924092/119173673-94f43f00-ba35-11eb-9bf8-35857b2f1c34.png">
 
+#### Photos
+
+<img width="720" src="https://user-images.githubusercontent.com/22924092/128431908-5bdc1f6b-d60b-4290-8024-060dc5c09b14.jpeg">
+
 #### Measurements
 | Variable | Unit | Comments |
 | --- | :---: | --- |
