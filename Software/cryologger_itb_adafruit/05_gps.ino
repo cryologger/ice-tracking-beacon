@@ -28,7 +28,7 @@ void readGps()
   //GPS_PORT.println("$PGCMD,33,0*6D"); // Disable antenna updates
 
   // Look for GPS signal for up to gpsTimeout
-  while (!fixFound && millis() - loopStartTime < gpsTimeout * 1000UL) // * 60UL
+  while (!fixFound && millis() - loopStartTime < gpsTimeout * 1000UL)
   {
     if (GPS_PORT.available())
     {
@@ -40,13 +40,14 @@ void readGps()
       if (gps.encode(c))
       {
         if ((gps.location.isValid() && gps.date.isValid() && gps.time.isValid()) &&
-            (gps.location.isUpdated() && gps.date.isUpdated() && gps.time.isUpdated()))
+            (gps.location.isUpdated() && gps.date.isUpdated() && gps.time.isUpdated()) &&
+            (gps.satellites.value() > 0))
         {
 
           fixCounter++; // Increment fix counter
 
           // Wait until a specified number of GPS fixes have been collected
-          if (fixCounter >= 10)
+          if ((fixCounter >= 20) && (gps.satellites.value() > 0))
           {
             fixFound = true;
 
@@ -65,9 +66,21 @@ void readGps()
             // Calculate RTC drift
             long rtcDrift = rtcEpoch - gpsEpoch;
 
-            // Sync RTC with GPS date and time
-            rtc.setEpoch(gpsEpoch);
-            DEBUG_PRINT(F("Info: RTC synced ")); printDateTime();
+            DEBUG_PRINTLN("");
+            DEBUG_PRINT(F("gpsEpoch: ")); DEBUG_PRINTLN(gpsEpoch);
+            DEBUG_PRINT(F("rtcEpoch: ")); DEBUG_PRINTLN(rtcEpoch);
+            DEBUG_PRINT(F("unixtime: ")); DEBUG_PRINTLN(unixtime);
+
+            // Sync RTC with GPS date and time only if gpsEpoch is in the future
+            if (((gpsEpoch > 1630368000) && (gpsEpoch > unixtime)) || firstTimeFlag)
+            {
+              rtc.setEpoch(gpsEpoch);
+              DEBUG_PRINT(F("Info: RTC synced ")); printDateTime();
+            }
+            else
+            {
+              DEBUG_PRINT(F("Warning: RTC not synced! GPS time in the past! ")); printDateTime();
+            }
 
             // Write data to buffer
             moSbdMessage.latitude = gps.location.lat() * 1000000;

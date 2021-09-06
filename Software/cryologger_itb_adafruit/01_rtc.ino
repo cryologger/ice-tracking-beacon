@@ -53,37 +53,32 @@ void readRtc()
 void setRtcAlarm()
 {
   // Set RTC alarm according to number of consecutive failed transmissions
-  if (failureCounter < 5)
+  if (failureCounter <= 8)
   {
     // Calculate next alarm
     alarmTime = unixtime + alarmInterval;
     DEBUG_PRINT(F("Info: unixtime ")); DEBUG_PRINTLN(unixtime);
     DEBUG_PRINT(F("Info: alarmTime ")); DEBUG_PRINTLN(alarmTime);
   }
-  else if (failureCounter > 5 && failureCounter < 10)
+  // Increase intervals if more than 24 hours of transmission failures
+  else if (failureCounter > 8 && failureCounter <= 16)
   {
-    DEBUG_PRINTLN(F("Warning: Increasing transmission interval to 12 hours!"));
-    // Add a 12-hour delay to next transmission attempt
-    alarmTime = unixtime + 43200;
+    DEBUG_PRINTLN(F("Warning: Increasing sampling interval to 3 hours and transmission interval to 9 hours!"));
+    alarmTime = unixtime + 10800; // Increase sampling interval to 3 hours
   }
-  else if (failureCounter > 10)
+  // Increase intervals if more than 3 days of transmission failures
+  else if (failureCounter > 16 && failureCounter <= 32)
   {
-    DEBUG_PRINTLN(F("Warning: Increasing transmission interval to 24 hours!"));
-    // Add a 24-hour delay to next transmission attempt
-    alarmTime = unixtime + 86400;
+    DEBUG_PRINTLN(F("Warning: Increasing sampling interval to 6 hours and transmission interval to 36 hours!"));
+    alarmTime = unixtime + 43200; // Increase sampling interval to 12 hours
   }
-  else if (failureCounter > 20)
+  // Increase intervals if more than 8 days of transmission failures
+  else if (failureCounter > 32)
   {
-    DEBUG_PRINTLN(F("Warning: Increasing transmission interval to 48 hours!"));
-    // Add a 48-hour delay to next transmission attempt
-    alarmTime = unixtime + 172800;
+    DEBUG_PRINTLN(F("Warning: Increasing sampling interval to 24 hours and transmission interval to 3 days!"));
+    alarmTime = unixtime + 86400; // Increase sampling interval to 24 hours (1 day)
   }
-  else if (failureCounter > 30)
-  {
-    DEBUG_PRINTLN(F("Warning: Increasing transmission interval to 96 hours!"));
-    // Add a 96-hour delay to next transmission attempt
-    alarmTime = unixtime + 345600;
-  }
+
   // Check if alarm was set in the past
   if ((rtc.getEpoch() >= alarmTime) || firstTimeFlag)
   {
@@ -94,6 +89,25 @@ void setRtcAlarm()
 
     // Enable alarm for hour rollover match
     rtc.enableAlarm(rtc.MATCH_MMSS);
+
+    DEBUG_PRINT("Info: "); printDateTime();
+    DEBUG_PRINT("Info: Next alarm "); printAlarm();
+    DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_MMSS);
+  }
+  // Check if alarm is set too far into the future
+  else if ((alarmTime - unixtime) > 86400)
+  {
+    DEBUG_PRINTLN(F("Warning: RTC alarm set too far in the future!"));
+
+    // Set alarm for hour rollover match
+    rtc.setAlarmTime(0, 0, 0); // hours, minutes, seconds
+
+    // Enable alarm for hour rollover match
+    rtc.enableAlarm(rtc.MATCH_MMSS);
+
+    DEBUG_PRINT("Info: "); printDateTime();
+    DEBUG_PRINT("Info: Next alarm "); printAlarm();
+    DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_MMSS);
   }
   else
   {
@@ -107,12 +121,13 @@ void setRtcAlarm()
 
     // Enable alarm
     rtc.enableAlarm(rtc.MATCH_DHHMMSS);
-  }
 
-  DEBUG_PRINT("Info: "); printDateTime();
-  DEBUG_PRINT("Info: Next alarm "); printAlarm();
-  DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_DHHMMSS);
-  alarmFlag = false; // Clear flag
+    DEBUG_PRINT("Info: "); printDateTime();
+    DEBUG_PRINT("Info: Next alarm "); printAlarm();
+    DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_DHHMMSS);
+  }
+  // Clear flag
+  alarmFlag = false;
 }
 
 // RTC alarm interrupt service routine (ISR)

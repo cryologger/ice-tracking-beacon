@@ -1,13 +1,15 @@
 /*
-    Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0
-    Date:     June 18, 2021
+    Title:    Cryologger Ice Tracking Beacon (ITB) - v3.2
+    Date:     August 30, 2021
     Author:   Adam Garbo
 
     Description:
-    - Code is currently under development for the next iteration of the
-    Cryologger iceberg tracking beacon to be deployed during the 2021
-    Amundsen Expedition.
-
+    - Code ready for deployment during the 2021 Amundsen Expedition.
+    - Fixed a bug with RTC alarm setting if failedTransmitCounter reaches 5
+    - Added additional functionality to ensure the GPS can not synchronize
+    the RTC to a date and time in the past (2021-08-27)
+    - Bug fix apparently didn't work with #8 (2021-08-30)
+    
     Components:
     - Rock7 RockBLOCK 9603
     - Maxtena M1621HCT-P-SMA antenna
@@ -39,7 +41,7 @@
 // ------------------------------------------------------------------------------------------------
 // Beacon
 // ------------------------------------------------------------------------------------------------
-#define BEACON 1
+#define BEACON 
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
@@ -114,7 +116,7 @@ TinyGPSPlus       gps;
 unsigned long alarmInterval     = 3600;  // Sleep duration in seconds
 unsigned int  transmitInterval  = 3;     // Messages to transmit in each Iridium transmission (340 byte limit)
 unsigned int  retransmitLimit   = 2;     // Failed data transmission reattempt (340 byte limit)
-unsigned int  gpsTimeout        = 180;   // Timeout for GPS signal acquisition
+unsigned int  gpsTimeout        = 120;   // Timeout for GPS signal acquisition
 unsigned int  iridiumTimeout    = 180;   // Timeout for Iridium transmission (s)
 bool          firstTimeFlag     = true;  // Flag to determine if the program is running for the first time
 
@@ -151,13 +153,13 @@ float M_B[3]
 {
   //-2956.76, 343.61, -1019.84 // Test unit
   //-5021.16, 2379.16, -401.36 // #1
-  //-4895.42, 1122.97,  673.48 // # 2
+  -4895.42, 1122.97,  673.48 // # 2
   //-4330.53, 2257.92, -578.89 // # 3
   //-4306.97, 4117.73,-2968.37 // # 4
   //-2794.84,  426.23, 1211.69 // # 5
   //-4309.75, 1150.95,  434.80 // # 6
   //-2490.24, 3090.17, -10508.42 // # 7
-  -2800.25,  201.42,-1575.44 // # 8
+  //-2800.25,  201.42,-1575.44 // # 8
   //-3344.98, 1263.94,  961.58 // # 9
   //-3079.49,  191.81, -641.79// # 10
 };
@@ -167,39 +169,39 @@ float M_Ainv[3][3]
   {
     //1.41050,  0.05847, -0.00925 // Test unit
     //1.71166,  0.05344,  0.00782 // #1
-    //1.60340,  0.06769, -0.02107 // # 2
+    1.60340,  0.06769, -0.02107 // # 2
     //1.56254,  0.06461, -0.02789 // # 3
     //1.91115,  0.09336, -0.00283 // # 4
     //1.17929,  0.06386, -0.03312// # 5
     //1.43098,  0.07278, -0.00109 // # 6
     //2.66743,  0.12139,  0.03131 // # 7
-    1.23264,  0.03110, -0.01659 // # 8
+    //1.23264,  0.03110, -0.01659 // # 8
     //1.26029,  0.04563, -0.00331// # 9
     //1.26643,  0.05112, -0.02144// # 10
   },
   {
     //0.05847,  1.40344,  0.00380 // Test unit
     //0.05344,  1.88985,  0.01983 // # 1
-    //0.06769,  1.64571, -0.06120// # 2
+    0.06769,  1.64571, -0.06120// # 2
     //0.06461,  1.56089, -0.04518 // # 3
     //0.09336,  1.92058, -0.09078 // # 4
     //0.06386,  1.23453, -0.01179 // # 5
     //0.07278,  1.45107, -0.02860 // # 6
     //0.12139,  2.75924,  0.00229 // # 7
-    0.03110,  1.26502, -0.05142 // # 8
+    //0.03110,  1.26502, -0.05142 // # 8
     //0.04563,  1.29467, -0.03437// # 9
     //0.05112,  1.26442, -0.04905// # 10
   },
   {
     //-0.00925,  0.00380,  1.34955 // Test unit
     //0.00782,  0.01983,  1.70078 // # 1
-    //-0.02107, -0.06120,  1.53980 // # 2
+    -0.02107, -0.06120,  1.53980 // # 2
     //-0.02789, -0.04518,  1.50373 // # 3
     //-0.00283, -0.09078,  1.91188 // # 4
     //-0.03312, -0.01179,  1.14876 // # 5
     //-0.00109, -0.02860,  1.45799 // # 6
     //0.03131,  0.00229,  2.72750 // # 7
-     -0.01659, -0.05142,  1.13965// # 8
+    //-0.01659, -0.05142,  1.13965// # 8
     //-0.00331, -0.03437,  1.27136// # 9
     //-0.02144, -0.04905,  1.23371// # 10
   }
@@ -285,6 +287,7 @@ void setup()
   digitalWrite(PIN_IMU_EN, LOW);      // Disable power to IMU
   digitalWrite(PIN_IRIDIUM_EN, LOW);  // Disable power to Iridium 9603
 
+  // Configure analog-to-digital (ADC) converter
   configureAdc();
 
   Wire.begin(); // Initialize I2C
@@ -292,16 +295,17 @@ void setup()
 
 #if DEBUG
   SERIAL_PORT.begin(115200); // Open serial port at 115200 baud
-  blinkLed(2, 1000); // Non-blocking delay to allow user to open Serial Monitor
+  blinkLed(4, 1000); // Non-blocking delay to allow user to open Serial Monitor
 #endif
 
   DEBUG_PRINTLN();
   printLine();
-  DEBUG_PRINTLN("Cryologger - Iceberg Tracking Beacon v3.0");
+  DEBUG_PRINTLN("Cryologger - Iceberg Tracking Beacon #2 v3.2");
   printLine();
 
   // Configure devices
   configureRtc();       // Configure real-time clock (RTC)
+  readRtc();            // Read date and time from RTC
   configureWdt();       // Configure Watchdog Timer (WDT)
   printSettings();      // Print configuration settings
   readGps();            // Synchronize RTC with GNSS
