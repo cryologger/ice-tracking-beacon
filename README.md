@@ -49,11 +49,11 @@ For a full bill of materials, please see:
 #### Custom PCB
 A custom carrier board PCB was designed to eliminate the need for cutting, stripping and soldering of juper wires, which greatly simplifies the assembly process.
 
-<img width="720" alt="Screen Shot 2021-05-21 at 1 04 29 PM" src="https://user-images.githubusercontent.com/22924092/119173673-94f43f00-ba35-11eb-9bf8-35857b2f1c34.png">
+<p align="left"><img src="https://user-images.githubusercontent.com/22924092/119173673-94f43f00-ba35-11eb-9bf8-35857b2f1c34.png" width="480"></p>
 
 #### Photos
 
-<img width="720" src="https://user-images.githubusercontent.com/22924092/128431908-5bdc1f6b-d60b-4290-8024-060dc5c09b14.jpeg">
+<p align="left"><img src="https://user-images.githubusercontent.com/22924092/128431908-5bdc1f6b-d60b-4290-8024-060dc5c09b14.jpeg" width="480"></p>
 
 #### Measurements
 | Variable | Unit | Comments |
@@ -73,6 +73,14 @@ A custom carrier board PCB was designed to eliminate the need for cutting, strip
 | Transmit duration  | s | Length of Iridium transmission  |
 | Transmit Status | | Iridium error return code |
 | Iteration counter |  | Number of program iterations |
+
+
+## Deployments
+
+A total of 10 Cryologger iceberg drift tracking beacons were deployed during the 2021 Amundsen Expedition.
+
+<p align="center"><img width="720" src="https://user-images.githubusercontent.com/22924092/133267058-386eeb21-d287-4fd8-9cc2-3a6dc06f92ce.png"></p>
+
 
 ## Repository Contents
 
