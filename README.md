@@ -79,8 +79,7 @@ A custom carrier board PCB was designed to eliminate the need for cutting, strip
 
 A total of 10 Cryologger iceberg drift tracking beacons were deployed during the 2021 Amundsen Expedition.
 
-<p align="center"><img width="720" src="https://user-images.githubusercontent.com/22924092/133267058-386eeb21-d287-4fd8-9cc2-3a6dc06f92ce.png"></p>
-
+<p align="center"><img width="720" src="https://user-images.githubusercontent.com/22924092/133269455-a93fabf0-ca7e-4b03-b9a1-95868b2fb3f7.png"></p>
 
 ## Repository Contents
 
