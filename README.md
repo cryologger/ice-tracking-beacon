@@ -50,10 +50,11 @@ For a full bill of materials, please see:
 A custom carrier board PCB was designed to eliminate the need for cutting, stripping and soldering of juper wires, which greatly simplifies the assembly process.
 
 <p align="left"><img src="https://user-images.githubusercontent.com/22924092/119173673-94f43f00-ba35-11eb-9bf8-35857b2f1c34.png" width="480"></p>
-
+<p align="left"><b>Figure 1:</b> 3D rendering of Cryologger iceberg drift tracking beacon carrier board designed in KiCad.</p>
 #### Photos
 
 <p align="left"><img src="https://user-images.githubusercontent.com/22924092/128431908-5bdc1f6b-d60b-4290-8024-060dc5c09b14.jpeg" width="480"></p>
+<p align="left"><b>Figure 2:</b> Assembled Cryologger iceberg drift tracking beacon.</p>
 
 #### Measurements
 | Variable | Unit | Comments |
@@ -80,6 +81,7 @@ A custom carrier board PCB was designed to eliminate the need for cutting, strip
 A total of 10 Cryologger iceberg drift tracking beacons were deployed during the 2021 Amundsen Expedition.
 
 <p align="center"><img width="720" src="https://user-images.githubusercontent.com/22924092/133269455-a93fabf0-ca7e-4b03-b9a1-95868b2fb3f7.png"></p>
+<p align="left"><b>Figure 3:</b> Map of Cryologger iceberg drift tracking beacons deployed during the 2021 Amundsen Expedition.</p>
 
 ## Repository Contents
 
