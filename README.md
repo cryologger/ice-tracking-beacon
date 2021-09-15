@@ -75,7 +75,7 @@ Another major change in v3.0 is a custom carrier board PCB that designed to grea
 | Altitude | m | GPS altitude |
 | Voltage | V | Battery voltage |
 | Transmit duration  | s | Length of Iridium transmission  |
-| Transmit Status | | Iridium error return code |
+| Transmit status | | Iridium error return code |
 | Iteration counter |  | Number of program iterations |
 
 ## 3.0 Deployments
