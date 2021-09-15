@@ -16,22 +16,22 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger prov
 
 #### 2.1.1 Changes in v3.0
 Version 3.0 of the Cryologger iceberg tracking beacon builds on the success of v2.0 and is also based on the Adafruit ecosystem of components. A number of improvements to the design were made, including:
-* 3.3 V power is now provided directly from a Pololu 3.3 V step-down voltage regulator, bypassing the onboard AP2112 LDO regulator completely (-55 μA).
-* A dedicated 5 V step-down voltage regulator is also provided for the RockBLOCK Iridium transceiver.
-* After extensive testing, the DS3231 real-time clock (RTC) was removed in favour of using the SAMD21's internal RTC and periodic time synchronizations with the GPS for all timekeeping and alarm functionality.
-* Due to the sensor reaching its end-of-life (EOL),tThe LSM303 accelerometer/magnetometer was replaced with the LSM6DS33 + LIS3MDL IMU.
-* The temperature/pressure and IMU sensors are now powered directly by SAMD21 GPIO pins, which allows power to the sensors to be removed completely during sleep.
+* 3.3 V power is now provided directly from a Pololu 3.3 V step-down voltage regulator, bypassing the Feather M0's onboard AP2112 LDO regulator (-55 μA).
+* A dedicated 5 V step-down voltage regulator was added to power the RockBLOCK Iridium transceiver.
+* The DS3231 real-time clock (RTC) was removed in favour of the SAMD21's internal RTC for all timekeeping and alarm functionality with periodic time synchronizations with the GPS.
+* The LSM303 accelerometer/magnetometer was replaced with the LSM6DS33 + LIS3MDL IMU due to the sensor reaching its end-of-life (EOL).
+* The temperature/pressure and IMU sensors are now powered directly through SAMD21 GPIO pins, allowing for power to be completely removed during sleep.
 * A 2MΩ + 1 MΩ resistor divider is now used to measured the battery voltage (+2.4 μA).
 
 #### 2.1.2 Custom PCB
-Another major change in v3.0 is a custom carrier board PCB that designed to greatly simplify the assembly process.
+Another major change in v3.0 is a custom carrier board PCB that designed to greatly simplify the assembly process. The PCB was designed in KiCad and fabricated by JLCPCB. 
 
 <p align="left"><img src="https://user-images.githubusercontent.com/22924092/119173673-94f43f00-ba35-11eb-9bf8-35857b2f1c34.png" width="480"></p>
 <p align="left"><b>Figure 1:</b> 3D rendering of Cryologger iceberg drift tracking beacon carrier board designed in KiCad.</p>
 
 ### 2.2 Bill of Materials 
 
-**Table 1.** Bill of materials for Cryologger iceberg tracking beacon v3.0.
+**Table 1.** Bill of materials and associated costs for components used in the Cryologger iceberg tracking beacon v3.0.
 | Component | Product | Cost (USD) |
 | --- | --- | :---: |
 | Satellite transceiver | [Rock7 RockBLOCK 9603](http://www.rock7mobile.com/products-rockblock-9603) | $249.95 |
@@ -50,8 +50,7 @@ Another major change in v3.0 is a custom carrier board PCB that designed to grea
 | Connector |	[Molex PicoBlade PCB Header](https://www.mouser.ca/datasheet/2/276/0530471010_PCB_HEADERS-171035.pdf) | $0.50 |
 | Enclosure | [Hammond Manufacturing Polycarbonate 1554WA2GY ](https://www.hammfg.com/part/1554WA2GY) | $30.00 |
 | Battery | [Tadiran TLP93121](https://www.tadiranbat.com/assets/tlp-93121-b-al1.pdf) | $150.00 |
-
-For a full bill of materials, please see:
+| **Total** | | |
 
 #### Photos
 
@@ -85,6 +84,13 @@ A total of 10 Cryologger iceberg drift tracking beacons were deployed during the
 
 <p align="center"><img width="720" src="https://user-images.githubusercontent.com/22924092/133437548-ac2ced2f-60ad-4eab-820c-647c70e01970.png"></p>
 <p align="left"><b>Figure 3:</b> Map of Cryologger iceberg drift tracking beacons deployed during the 2021 Amundsen Expedition.</p>
+
+
+<p align="center"><img width="480" src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Images/2021_300434065869240.JPG">
+<img width="480" src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Images/2021_300434063497310.JPG"></p>
+<p align="center"><img width="480" src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Images/2021_300434063291950.JPG">
+<img width="480" src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Images/2021_300434065864290.JPG"></p>
+<p align="left"><b>Figure 4:</b> Examples of icebergs instrumented with Cryologger iceberg tracking beacons during the 2021 Amundsen Expedition.</p>
 
 ## 4.0 Results
 
