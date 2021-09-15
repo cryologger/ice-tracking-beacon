@@ -1,19 +1,21 @@
 # Cryologger - Iceberg Tracking Beacon (ITB)
 ![Image](https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Images/2021_300434065734810.JPG)
 
-## Background
+## 1.0 Introduction
 Icebergs and ice islands represent significant hazards to marine navigation and offshore infrastructure at a time when demand for access to Canada’s Arctic waters is increasing. There is a growing demand for in situ iceberg tracking data to monitor their drift trajectory and improve predictions of ice hazard occurrence and behaviour, yet the high cost of commercial tracking devices often prevents monitoring at optimal spatial and temporal resolutions.
 
-## Objective
-The goal of this project is to determine if the Cryologger, a tracking beacon based on inexpensive, open-source hardware and software, can provide a reliable and cost-effective platform for monitoring the drift of icebergs and ice islands in the Canadian Arctic.
+The goal of this project is to demonstrate that the Cryologger, a tracking beacon based on inexpensive, open-source hardware and software, can provide a reliable and cost-effective platform for monitoring the drift of icebergs and ice islands in the Canadian Arctic.
 
-## Design
+## 2.0 Methods
+
+### 2.1 Design
+
 The Cryologger is based on the open-source Arduino platform (www.arduino.cc) and built using low-cost, do-it-yourself electronics that can be easily modified to meet the needs of the end-user. Code was written using the Arduino Integrated Development Environment (IDE) and benefits from the availability of community-generated libraries.
 
-Planned for extended deployments in harsh Arctic conditions, the Cryologger can provide long-term measurements of GPS position, temperature, pressure, pitch, roll, tilt-compensated heading and battery voltage. Data are transmitted over the Iridium satellite network at specified intervals and can be remotely updated based on the desired sampling frequency. Collected data are made freely available and can be viewed in near-real time at https://cryologger.org.
+Planned for extended deployments in harsh Arctic conditions, the Cryologger provides long-term measurements of GPS position, temperature, pressure, pitch, roll, tilt-compensated heading and battery voltage. Data are transmitted over the Iridium satellite network at specified intervals and can be remotely updated based on the desired sampling frequency. Collected data are made freely available and can be viewed in near-real time at https://cryologger.org.
 
-### Version 3.0
-Version 3.0 of the Cryologger iceberg tracking beacon builds on the success of v2.0 and will is also based on the Adafruit ecosystem of components. 
+### 2.1.1 Changes in v3.0
+Version 3.0 of the Cryologger iceberg tracking beacon builds on the success of v2.0 and is also based on the Adafruit ecosystem of components. 
 
 **Major changes include:**
 * 3.3 V power is now provided directly from a Pololu 3.3 V step-down voltage regulator, bypassing the onboard AP2112 LDO regulator completely (-55 μA).
@@ -23,8 +25,15 @@ Version 3.0 of the Cryologger iceberg tracking beacon builds on the success of v
 * The temperature/pressure and IMU sensors are now powered directly by SAMD21 GPIO pins, which allows power to the sensors to be removed completely during sleep.
 * A 2MΩ + 1 MΩ resistor divider is now used to measured the battery voltage (+2.4 μA).
 
-#### Materials 
+#### 2.1.2 Custom PCB
+Another major change in v3.0 is a custom carrier board PCB that designed to greatly simplify the assembly process.
 
+<p align="left"><img src="https://user-images.githubusercontent.com/22924092/119173673-94f43f00-ba35-11eb-9bf8-35857b2f1c34.png" width="480"></p>
+<p align="left"><b>Figure 1:</b> 3D rendering of Cryologger iceberg drift tracking beacon carrier board designed in KiCad.</p>
+
+### 2.2 Bill of Materials 
+
+**Table 1.** Bill of materials for Cryologger iceberg tracking beacon v3.0.
 | Component | Product | Cost (USD) |
 | --- | --- | :---: |
 | Satellite transceiver | [Rock7 RockBLOCK 9603](http://www.rock7mobile.com/products-rockblock-9603) | $249.95 |
@@ -46,17 +55,14 @@ Version 3.0 of the Cryologger iceberg tracking beacon builds on the success of v
 
 For a full bill of materials, please see:
 
-#### Custom PCB
-A custom carrier board PCB was designed to eliminate the need for cutting, stripping and soldering of juper wires, which greatly simplifies the assembly process.
-
-<p align="left"><img src="https://user-images.githubusercontent.com/22924092/119173673-94f43f00-ba35-11eb-9bf8-35857b2f1c34.png" width="480"></p>
-<p align="left"><b>Figure 1:</b> 3D rendering of Cryologger iceberg drift tracking beacon carrier board designed in KiCad.</p>
 #### Photos
 
 <p align="left"><img src="https://user-images.githubusercontent.com/22924092/128431908-5bdc1f6b-d60b-4290-8024-060dc5c09b14.jpeg" width="480"></p>
 <p align="left"><b>Figure 2:</b> Assembled Cryologger iceberg drift tracking beacon.</p>
 
-#### Measurements
+### 2.3 Measurements
+
+**Table 2.** Variables recorded and transmitted by the Cryologger iceberg drift tracking beacon.
 | Variable | Unit | Comments |
 | --- | :---: | --- |
 | Datetime  |   | YYYY-MM-DD HH:MM:SS |
@@ -75,13 +81,18 @@ A custom carrier board PCB was designed to eliminate the need for cutting, strip
 | Transmit Status | | Iridium error return code |
 | Iteration counter |  | Number of program iterations |
 
+## 3.0 Deployments
 
-## Deployments
-
-A total of 10 Cryologger iceberg drift tracking beacons were deployed during the 2021 Amundsen Expedition.
+A total of 10 Cryologger iceberg drift tracking beacons were deployed during the 2021 Amundsen Expedition between August 21st to September 3rd, 2021.
 
 <p align="center"><img width="720" src="https://user-images.githubusercontent.com/22924092/133269455-a93fabf0-ca7e-4b03-b9a1-95868b2fb3f7.png"></p>
 <p align="left"><b>Figure 3:</b> Map of Cryologger iceberg drift tracking beacons deployed during the 2021 Amundsen Expedition.</p>
+
+## 4.0 Results
+
+
+## 5.0 Conclusion
+
 
 ## Repository Contents
 
