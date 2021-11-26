@@ -24,17 +24,17 @@
 // ------------------------------------------------------------------------------------------------
 // Libraries
 // ------------------------------------------------------------------------------------------------
-#include <Adafruit_Sensor.h>        // https://github.com/adafruit/Adafruit_Sensor
-#include <Adafruit_DPS310.h>        // https://github.com/adafruit/Adafruit_DPS310
-#include <Adafruit_LIS3MDL.h>       // https://github.com/adafruit/Adafruit_LIS3MDL
-#include <Adafruit_LSM6DS33.h>      // https://github.com/adafruit/Adafruit_LSM6DS
+#include <Adafruit_Sensor.h>        // https://github.com/adafruit/Adafruit_Sensor (v1.1.4)
+#include <Adafruit_DPS310.h>        // https://github.com/adafruit/Adafruit_DPS310 (v1.1.1)
+#include <Adafruit_LIS3MDL.h>       // https://github.com/adafruit/Adafruit_LIS3MDL (v1.1.0)
+#include <Adafruit_LSM6DS33.h>      // https://github.com/adafruit/Adafruit_LSM6DS (v4.3.0)
 #include <Arduino.h>                // Required for creating new Serial instance. Must be included before <wiring_private.h>
-#include <ArduinoLowPower.h>        // https://github.com/arduino-libraries/ArduinoLowPower
-#include <IridiumSBD.h>             // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library
-#include <RTCZero.h>                // https://github.com/arduino-libraries/RTCZero
+#include <ArduinoLowPower.h>        // https://github.com/arduino-libraries/ArduinoLowPower (v1.2.2)
+#include <IridiumSBD.h>             // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library (v3.0.1)
+#include <RTCZero.h>                // https://github.com/arduino-libraries/RTCZero (v1.6.0)
 #include <SAMD_AnalogCorrection.h>  // https://github.com/arduino/ArduinoCore-samd/tree/master/libraries/SAMD_AnalogCorrection
-#include <TimeLib.h>                // https://github.com/PaulStoffregen/Time
-#include <TinyGPS++.h>              // https://github.com/mikalhart/TinyGPSPlus
+#include <TimeLib.h>                // https://github.com/PaulStoffregen/Time (v1.6.1)
+#include <TinyGPS++.h>              // https://github.com/mikalhart/TinyGPSPlus (v1.0.2b)
 #include <Wire.h>                   // https://www.arduino.cc/en/Reference/Wire
 #include <wiring_private.h>         // Required for creating new Serial instance
 
