@@ -97,6 +97,9 @@ A total of 10 Cryologger iceberg drift tracking beacons were deployed during the
 
 ## 5.0 Conclusion
 
+The Cryologger iceberg tracking beacon harnesses low-cost, open-source hardware and software to provide a robust, cost-effective and user-friendly platform for the collection of long-term iceberg observations. 
+
+The overall success of the Cryologger deployments has demonstrated that it can provide a robust platform for the collection of in-situ iceberg tracking data. With a total cost of under $600 USD in materials each, this represents a cost-effective alternative to existing proprietary commercial systems.
 
 ## Repository Contents
 
