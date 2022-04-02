@@ -9,6 +9,7 @@
     - Added additional functionality to ensure the GPS can not synchronize
     the RTC to a date and time in the past (2021-08-27)
     - Bug fix apparently didn't work with #8 (2021-08-30)
+    - Memory leak bug fixed by LSM6DS library v4.3.2 (2022-03-15)
     
     Components:
     - Rock7 RockBLOCK 9603
@@ -27,7 +28,7 @@
 #include <Adafruit_Sensor.h>        // https://github.com/adafruit/Adafruit_Sensor (v1.1.4)
 #include <Adafruit_DPS310.h>        // https://github.com/adafruit/Adafruit_DPS310 (v1.1.1)
 #include <Adafruit_LIS3MDL.h>       // https://github.com/adafruit/Adafruit_LIS3MDL (v1.1.0)
-#include <Adafruit_LSM6DS33.h>      // https://github.com/adafruit/Adafruit_LSM6DS (v4.3.0)
+#include <Adafruit_LSM6DS33.h>      // https://github.com/adafruit/Adafruit_LSM6DS (Only use v4.3.2 or higher)
 #include <Arduino.h>                // Required for creating new Serial instance. Must be included before <wiring_private.h>
 #include <ArduinoLowPower.h>        // https://github.com/arduino-libraries/ArduinoLowPower (v1.2.2)
 #include <IridiumSBD.h>             // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library (v3.0.1)
@@ -151,9 +152,9 @@ float p[] = {1, 0, 0};  // Y marking on sensor board points toward yaw = 0
 
 float M_B[3]
 {
-  //-2956.76, 343.61, -1019.84 // Test unit
+  -2956.76, 343.61, -1019.84 // Test unit
   //-5021.16, 2379.16, -401.36 // #1
-  -4895.42, 1122.97,  673.48 // # 2
+  //-4895.42, 1122.97,  673.48 // # 2
   //-4330.53, 2257.92, -578.89 // # 3
   //-4306.97, 4117.73,-2968.37 // # 4
   //-2794.84,  426.23, 1211.69 // # 5
@@ -167,9 +168,9 @@ float M_B[3]
 float M_Ainv[3][3]
 {
   {
-    //1.41050,  0.05847, -0.00925 // Test unit
+    1.41050,  0.05847, -0.00925 // Test unit
     //1.71166,  0.05344,  0.00782 // #1
-    1.60340,  0.06769, -0.02107 // # 2
+    //1.60340,  0.06769, -0.02107 // # 2
     //1.56254,  0.06461, -0.02789 // # 3
     //1.91115,  0.09336, -0.00283 // # 4
     //1.17929,  0.06386, -0.03312// # 5
@@ -180,9 +181,9 @@ float M_Ainv[3][3]
     //1.26643,  0.05112, -0.02144// # 10
   },
   {
-    //0.05847,  1.40344,  0.00380 // Test unit
+    0.05847,  1.40344,  0.00380 // Test unit
     //0.05344,  1.88985,  0.01983 // # 1
-    0.06769,  1.64571, -0.06120// # 2
+    //0.06769,  1.64571, -0.06120// # 2
     //0.06461,  1.56089, -0.04518 // # 3
     //0.09336,  1.92058, -0.09078 // # 4
     //0.06386,  1.23453, -0.01179 // # 5
@@ -193,9 +194,9 @@ float M_Ainv[3][3]
     //0.05112,  1.26442, -0.04905// # 10
   },
   {
-    //-0.00925,  0.00380,  1.34955 // Test unit
+    -0.00925,  0.00380,  1.34955 // Test unit
     //0.00782,  0.01983,  1.70078 // # 1
-    -0.02107, -0.06120,  1.53980 // # 2
+    //-0.02107, -0.06120,  1.53980 // # 2
     //-0.02789, -0.04518,  1.50373 // # 3
     //-0.00283, -0.09078,  1.91188 // # 4
     //-0.03312, -0.01179,  1.14876 // # 5
