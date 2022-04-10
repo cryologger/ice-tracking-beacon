@@ -2,8 +2,7 @@
 void configureWdt()
 {
   /*
-  // Configure Generic Clock Controller 2 (GCLK1) 
-  // for use with the Watchdog Timer (WDT) at 1.024kHz
+  // Configure Generic Clock Controller 2 (GCLK1) for use with the Watchdog Timer (WDT) at 1.024kHz
   REG_GCLK_GENDIV = GCLK_GENDIV_ID(2) |           // Select Generic Clock Controller 2
                     GCLK_GENDIV_DIV(4) ;          // Divide the 32.768kHz clock source by divisor 32, where 2^(4 + 1): 32.768kHz/32=1.024kHz
   while (GCLK->STATUS.bit.SYNCBUSY);              // Wait for synchronization

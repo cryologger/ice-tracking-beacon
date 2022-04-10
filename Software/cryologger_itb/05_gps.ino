@@ -23,12 +23,12 @@ void readGps()
   GPS_PORT.println("$PMTK220,1000*1F"); // Set NMEA update rate to 1 Hz
   myDelay(100);
   GPS_PORT.println("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28"); // Set NMEA sentence output frequencies to GGA and RMC
-  //myDelay(100);
+  myDelay(100);
   //GPS_PORT.println("$PGCMD,33,1*6C"); // Enable antenna updates
   //GPS_PORT.println("$PGCMD,33,0*6D"); // Disable antenna updates
 
   // Look for GPS signal for up to gpsTimeout
-  while (!fixFound && millis() - loopStartTime < gpsTimeout * 1000UL)
+  while (!fixFound && millis() - loopStartTime < gpsTimeout * 60UL * 1000UL)
   {
     if (GPS_PORT.available())
     {
@@ -47,7 +47,7 @@ void readGps()
           fixCounter++; // Increment fix counter
 
           // Wait until a specified number of GPS fixes have been collected
-          if ((fixCounter >= 20) && (gps.satellites.value() > 0))
+          if ((fixCounter >= 50) && (gps.satellites.value() > 0))
           {
             fixFound = true;
 
