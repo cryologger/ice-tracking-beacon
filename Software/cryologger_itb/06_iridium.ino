@@ -4,6 +4,7 @@ void configureIridium()
   //modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE);     // Assume USB power
   modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
   modem.adjustSendReceiveTimeout(iridiumTimeout);           // Adjust timeout timer for library send/receive commands (default = 300 s)
+  modem.adjustStartupTimeout(10);
 }
 
 // Write data from structure to transmit buffer
