@@ -1,16 +1,11 @@
 /*
-    Title:    Cryologger Ice Tracking Beacon (ITB) - v3.2
+    Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0.0
     Date:     August 30, 2021
     Author:   Adam Garbo
 
     Description:
-    - Code ready for deployment during the 2021 Amundsen Expedition.
-    - Fixed a bug with RTC alarm setting if failedTransmitCounter reaches 5
-    - Added additional functionality to ensure the GPS can not synchronize
-    the RTC to a date and time in the past (2021-08-27)
-    - Bug fix apparently didn't work with #8 (2021-08-30)
-    - Memory leak bug fixed by LSM6DS library v4.3.2 (2022-03-15)
-    
+    - Code used in deployments made during the 2021 Amundsen Expedition.
+
     Components:
     - Rock7 RockBLOCK 9603
     - Maxtena M1621HCT-P-SMA antenna
@@ -20,6 +15,13 @@
     - Adafruit DPS310 Precision Barometric Pressure Sensor
     - Pololu 3.3V, 600mA Step-Down Voltage Regulator D36V6F3
     - Pololu 5V, 600mA Step-Down Voltage Regulator D36V6F5
+    
+    Comments:
+    - Fixed a bug with RTC alarm setting if failedTransmitCounter reaches 5
+    - Added functionality to ensure the GPS can not synchronize the RTC to a 
+    date and time in the past (2021-08-27)
+    - Bug fix apparently didn't work with #8 (2021-08-30)
+    - Memory leak bug fixed by LSM6DS library v4.3.2 (2022-03-15)
 */
 
 // ------------------------------------------------------------------------------------------------
