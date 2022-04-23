@@ -79,7 +79,6 @@
 #define PIN_SENSOR_EN       A3
 #define PIN_IMU_EN          A4
 #define PIN_GPS_EN          A5
-#define PIN_LED             5
 #define PIN_IRIDIUM_EN      6
 #define PIN_IRIDIUM_RX      10 // Pin 1 RXD (Yellow)
 #define PIN_IRIDIUM_TX      11 // Pin 6 TXD (Orange)
