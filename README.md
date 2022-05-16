@@ -37,7 +37,7 @@ Another major change in v3.0 is a custom carrier board PCB that designed to grea
 
 ### 2.2 Bill of Materials 
 
-**Table 1.** Bill of materials and associated costs for components used in the Cryologger iceberg tracking beacon v3.0.
+**Table 1.** Bill of materials and associated costs for components used in the Cryologger iceberg tracking beacon v3.0. Component costs current as of July 2021.
 | Component | Product | Cost (USD) |
 | --- | --- | :---: |
 | Satellite transceiver | [Rock7 RockBLOCK 9603](http://www.rock7mobile.com/products-rockblock-9603) | $249.95 |
