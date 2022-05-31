@@ -53,35 +53,16 @@ void readRtc()
 // Set RTC alarm
 void setRtcAlarm()
 {
-  // Set RTC alarm according to number of consecutive failed transmissions
-  if (failureCounter <= 8)
-  {
-    // Calculate next alarm
-    alarmTime = unixtime + alarmInterval;
-    DEBUG_PRINT(F("Info: unixtime ")); DEBUG_PRINTLN(unixtime);
-    DEBUG_PRINT(F("Info: alarmTime ")); DEBUG_PRINTLN(alarmTime);
-  }
-  // Increase intervals if more than 24 hours of transmission failures
-  else if (failureCounter > 8 && failureCounter <= 16)
-  {
-    DEBUG_PRINTLN(F("Warning: Increasing sampling interval to 3 hours and transmission interval to 9 hours!"));
-    alarmTime = unixtime + 10800; // Increase sampling interval to 3 hours
-  }
-  // Increase intervals if more than 3 days of transmission failures
-  else if (failureCounter > 16 && failureCounter <= 32)
-  {
-    DEBUG_PRINTLN(F("Warning: Increasing sampling interval to 6 hours and transmission interval to 36 hours!"));
-    alarmTime = unixtime + 43200; // Increase sampling interval to 12 hours
-  }
-  // Increase intervals if more than 8 days of transmission failures
-  else if (failureCounter > 32)
-  {
-    DEBUG_PRINTLN(F("Warning: Increasing sampling interval to 24 hours and transmission interval to 3 days!"));
-    alarmTime = unixtime + 86400; // Increase sampling interval to 24 hours (1 day)
-  }
+  // Calculate next alarm
+  alarmTime = unixtime + alarmInterval;
+  DEBUG_PRINT(F("Info: unixtime ")); DEBUG_PRINTLN(unixtime);
+  DEBUG_PRINT(F("Info: alarmTime ")); DEBUG_PRINTLN(alarmTime);
 
-  // Check if alarm was set in the past
-  if ((rtc.getEpoch() >= alarmTime) || firstTimeFlag)
+  // Check if alarm is set in the past, if programming is running for first time, or if there have been
+  // too many transmission attempt failures have occurred 
+  if (rtc.getEpoch() >= alarmTime ||
+      firstTimeFlag ||
+      failureCounter >= 12)
   {
     DEBUG_PRINTLN(F("Warning: RTC alarm set in the past or program running for the first time."));
 

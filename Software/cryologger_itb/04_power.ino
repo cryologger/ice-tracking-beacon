@@ -1,34 +1,14 @@
-// Configure analog-to-digital converter (ADC)
-void configureAdc()
-{
-  ADC->CTRLA.bit.ENABLE = 0;                      // Disable ADC
-  ADC->CTRLB.reg = ADC_CTRLB_PRESCALER_DIV512 |   // Divide Clock ADC GCLK by 512 (48MHz/512 = 93.7kHz)
-                   ADC_CTRLB_RESSEL_16BIT;        // Set ADC resolution to 12 bits
-  while (ADC->STATUS.bit.SYNCBUSY);               // Wait for synchronization
-  ADC->SAMPCTRL.reg = ADC_SAMPCTRL_SAMPLEN(32);   // Set Sampling Time Length (341.33 us)
-  ADC->AVGCTRL.reg = ADC_AVGCTRL_SAMPLENUM_256 |  // Configure multisampling
-                     ADC_AVGCTRL_ADJRES(4);       // Configure averaging
-  while (ADC->STATUS.bit.SYNCBUSY);               // Wait for synchronization
-  ADC->CTRLA.bit.ENABLE = 1;                      // Enable ADC
-  while (ADC->STATUS.bit.SYNCBUSY);               // Wait for synchronization
-
-  // Apply ADC gain and offset error calibration correction
-  //analogReadCorrection(12, 2059); // Test unit
-  analogReadCorrection(23, 2060); // # 1
-}
-
 // Read battery voltage from voltage divider
 void readBattery()
 {
   // Start loop timer
   unsigned long loopStartTime = millis();
 
-  int reading = analogRead(PIN_VBAT); // Read VIN across 2/1 MΩ resistor divider (1/3 divider)
+  // Measure external battery voltage across 2/1 MΩ resistor divider (1/3 divider)
+  int reading = analogRead(PIN_VBAT);
+  float voltage = reading * 3.3 * 3 / 4096.0;
 
-  // External battery
-  float voltage = reading * 3.3 * 3 / 4096.0; // Convert analog reading to voltage measurement
-
-  // LiPo
+  // Measure LiPo battery voltage across 100 kΩ/100 kΩ onboard resistor divider (1/2 divider)
   //float voltage = (float)reading / samples * 3.3 * 2 / 4096.0;
 
   // Write data to union
@@ -93,16 +73,16 @@ void disableSensorPower()
   digitalWrite(PIN_SENSOR_EN, LOW);
 }
 
-// Enable power to GPS
-void enableGpsPower()
+// Enable power to GNSS
+void enableGnssPower()
 {
-  digitalWrite(PIN_GPS_EN, LOW);
+  digitalWrite(PIN_GNSS_EN, LOW);
 }
 
-// Disable power to GPS
-void disableGpsPower()
+// Disable power to GNSS
+void disableGnssPower()
 {
-  digitalWrite(PIN_GPS_EN, HIGH);
+  digitalWrite(PIN_GNSS_EN, HIGH);
 }
 
 // Enable power to RockBLOCK 9603
@@ -139,7 +119,7 @@ void goToSleep()
     firstTimeFlag = false;
   }
 
-  //disableGpsPower();
+  //disableGnssPower();
   //disableSensorPower();
   //disableImuPower();
 

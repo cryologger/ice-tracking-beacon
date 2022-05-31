@@ -37,7 +37,7 @@ void printTimers()
   DEBUG_PRINT("readRtc: ");         printTab(1);  DEBUG_PRINTLN(timer.rtc);
   DEBUG_PRINT("readSensors: ");     printTab(1);  DEBUG_PRINTLN(timer.sensors);
   DEBUG_PRINT("readImu: ");         printTab(1);  DEBUG_PRINTLN(timer.imu);
-  DEBUG_PRINT("readGps: ");         printTab(1);  DEBUG_PRINTLN(timer.gps);
+  DEBUG_PRINT("readGnss: ");         printTab(1);  DEBUG_PRINTLN(timer.gnss);
   DEBUG_PRINT("transmitData: ");    printTab(1);  DEBUG_PRINTLN(timer.iridium);
   DEBUG_PRINT("freeRam(): ");       printTab(1);  DEBUG_PRINTLN(freeRam());
 

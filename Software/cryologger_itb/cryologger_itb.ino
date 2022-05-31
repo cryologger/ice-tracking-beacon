@@ -1,10 +1,10 @@
 /*
-    Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0.0
-    Date:     August 30, 2021
+    Title:    Cryologger Ice Tracking Beacon (ITB) - v3.1
+    Date:     May 31, 2022
     Author:   Adam Garbo
 
     Description:
-    - Code used in deployments made during the 2021 Amundsen Expedition.
+    - Code intended for deployments to be made during the 2022 Milne Fiord expedition.
 
     Components:
     - Rock7 RockBLOCK 9603
@@ -17,11 +17,7 @@
     - Pololu 5V, 600mA Step-Down Voltage Regulator D36V6F5
     
     Comments:
-    - Fixed a bug with RTC alarm setting if failedTransmitCounter reaches 5
-    - Added functionality to ensure the GPS can not synchronize the RTC to a 
-    date and time in the past (2021-08-27)
-    - Bug fix apparently didn't work with #8 (2021-08-30)
-    - Memory leak bug fixed by LSM6DS library v4.3.2 (2022-03-15)
+    - 
 */
 
 // ------------------------------------------------------------------------------------------------
@@ -35,7 +31,6 @@
 #include <ArduinoLowPower.h>        // https://github.com/arduino-libraries/ArduinoLowPower (v1.2.2)
 #include <IridiumSBD.h>             // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library (v3.0.1)
 #include <RTCZero.h>                // https://github.com/arduino-libraries/RTCZero (v1.6.0)
-#include <SAMD_AnalogCorrection.h>  // https://github.com/arduino/ArduinoCore-samd/tree/master/libraries/SAMD_AnalogCorrection
 #include <TimeLib.h>                // https://github.com/PaulStoffregen/Time (v1.6.1)
 #include <TinyGPS++.h>              // https://github.com/mikalhart/TinyGPSPlus (v1.0.2b)
 #include <Wire.h>                   // https://www.arduino.cc/en/Reference/Wire
@@ -50,7 +45,7 @@
 // Debugging macros
 // ------------------------------------------------------------------------------------------------
 #define DEBUG           true  // Output debug messages to Serial Monitor
-#define DEBUG_GPS       true  // Output GPS debug information
+#define DEBUG_GNSS      true  // Output GPS debug information
 #define DEBUG_IRIDIUM   true  // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
@@ -78,7 +73,7 @@
 #define PIN_VBAT            A0
 #define PIN_SENSOR_EN       A3
 #define PIN_IMU_EN          A4
-#define PIN_GPS_EN          A5
+#define PIN_GNSS_EN         A5
 #define PIN_LED             5
 #define PIN_IRIDIUM_EN      6
 #define PIN_IRIDIUM_RX      10 // Pin 1 RXD (Yellow)
@@ -93,7 +88,7 @@
 Uart Serial2 (&sercom1, PIN_IRIDIUM_RX, PIN_IRIDIUM_TX, SERCOM_RX_PAD_2, UART_TX_PAD_0);
 
 #define SERIAL_PORT   Serial
-#define GPS_PORT      Serial1
+#define GNSS_PORT     Serial1
 #define IRIDIUM_PORT  Serial2
 
 // Attach interrupt handler to SERCOM for new Serial instance
@@ -110,16 +105,16 @@ Adafruit_LIS3MDL  lis3mdl;  // I2C address: 0x1C
 Adafruit_LSM6DS33 lsm6ds33; // I2C address: 0x6A
 IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP);
 RTCZero           rtc;
-TinyGPSPlus       gps;
+TinyGPSPlus       gnss;
 
 // ------------------------------------------------------------------------------------------------
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
 
-unsigned long alarmInterval     = 60;  // Sleep duration in seconds
+unsigned long alarmInterval     = 3600;  // Sleep duration in seconds
 unsigned int  transmitInterval  = 3;     // Messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitLimit   = 2;     // Failed data transmission reattempt (340 byte limit)
-unsigned int  gpsTimeout        = 10;   // Timeout for GPS signal acquisition (minutes
+unsigned int  retransmitLimit   = 2;     // Failed data transmission reattempt (340-byte limit)
+unsigned int  gnssTimeout        = 1;   // Timeout for GNSS signal acquisition (minutes)
 unsigned int  iridiumTimeout    = 10;   // Timeout for Iridium transmission (s)
 bool          firstTimeFlag     = true;  // Flag to determine if the program is running for the first time
 
@@ -145,7 +140,7 @@ unsigned long unixtime          = 0;          // Global epoch time variable
 tmElements_t  tm;                             // Variable for converting time elements to time_t
 
 // ------------------------------------------------------------------------------------------------
-// IMU calibration
+// Magnetometer calibration
 // ------------------------------------------------------------------------------------------------
 // Code initialization statements from magneto required to correct magnetometer distortion
 // See: https://forum.pololu.com/t/correcting-the-balboa-magnetometer/14315
@@ -229,7 +224,7 @@ struct struct_timer
   unsigned long battery;
   unsigned long sensors;
   unsigned long imu;
-  unsigned long gps;
+  unsigned long gnss;
   unsigned long iridium;
 } timer;
 
@@ -241,12 +236,12 @@ void setup()
   // Pin assignments
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(PIN_IRIDIUM_EN, OUTPUT);
-  pinMode(PIN_GPS_EN, OUTPUT);
+  pinMode(PIN_GNSS_EN, OUTPUT);
   pinMode(PIN_SENSOR_EN, OUTPUT);
   pinMode(PIN_IMU_EN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
   digitalWrite(PIN_SENSOR_EN, LOW);   // Disable power to sensors
-  digitalWrite(PIN_GPS_EN, HIGH);     // Disable power to GPS
+  digitalWrite(PIN_GNSS_EN, HIGH);     // Disable power to GNSS
   digitalWrite(PIN_IMU_EN, LOW);      // Disable power to IMU
   digitalWrite(PIN_IRIDIUM_EN, LOW);  // Disable power to Iridium 9603
 
@@ -263,7 +258,7 @@ void setup()
 
   DEBUG_PRINTLN();
   printLine();
-  DEBUG_PRINTLN("Cryologger - Iceberg Tracking Beacon #2 v3.2");
+  DEBUG_PRINTLN("Cryologger - Iceberg Tracking Beacon v3.0.0");
   printLine();
 
   // Configure devices
@@ -271,7 +266,7 @@ void setup()
   readRtc();            // Read date and time from RTC
   configureWdt();       // Configure Watchdog Timer (WDT)
   printSettings();      // Print configuration settings
-  readGps();            // Synchronize RTC with GNSS
+  readGnss();           // Synchronize RTC with GNSS
   configureIridium();   // Configure Iridium 9603 transceiver
 
   // Close serial port if immediately entering deep sleep
@@ -279,7 +274,8 @@ void setup()
   {
     disableSerial();
   }
-
+  
+  // Blink LED to indicate completion of setup
   blinkLed(10, 100);
 }
 
@@ -305,7 +301,7 @@ void loop()
     // Perform measurements
     petDog();         // Reset the Watchdog Timer
     readBattery();    // Read the battery voltage
-    readGps();        // Read the GPS
+    readGnss();       // Read the GNSS
     readImu();        // Read the IMU
     readSensors();    // Read sensor(s)
     writeBuffer();    // Write the data to transmit buffer

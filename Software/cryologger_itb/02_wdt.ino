@@ -1,19 +1,7 @@
 // Configure the Watchdog Timer to perform a system reset if loop() blocks for more than 8-16 seconds
 void configureWdt()
 {
-  /*
-  // Configure Generic Clock Controller 2 (GCLK1) for use with the Watchdog Timer (WDT) at 1.024kHz
-  REG_GCLK_GENDIV = GCLK_GENDIV_ID(2) |           // Select Generic Clock Controller 2
-                    GCLK_GENDIV_DIV(4) ;          // Divide the 32.768kHz clock source by divisor 32, where 2^(4 + 1): 32.768kHz/32=1.024kHz
-  while (GCLK->STATUS.bit.SYNCBUSY);              // Wait for synchronization
 
-  REG_GCLK_GENCTRL = GCLK_GENCTRL_ID(2) |         // Select GCLK2
-                     GCLK_GENCTRL_GENEN |         // Enable GCLK2
-                     GCLK_GENCTRL_SRC_OSCULP32K | // Set the clock source to the ultra low power oscillator (OSCULP32K)
-                     GCLK_GENCTRL_DIVSEL |        // Set to divide by 2^(GCLK_GENDIV_DIV(4) + 1)
-                     GCLK_GENCTRL_IDC;            // Set the duty cycle to 50/50 HIGH/LOW (REQUIRED?)
-  while (GCLK->STATUS.bit.SYNCBUSY);              // Wait for synchronization to complete
-*/
   // Feed GCLK2 (preconfigured by the RTC) to WDT
   REG_GCLK_CLKCTRL = GCLK_CLKCTRL_ID_WDT |        // Identify it as the WDT clock
                      GCLK_CLKCTRL_CLKEN |         // Enable the generic clock by setting the Clock Enabler bit

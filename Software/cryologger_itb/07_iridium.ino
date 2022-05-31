@@ -3,8 +3,8 @@ void configureIridium()
 {
   //modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE);     // Assume USB power
   modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
-  modem.adjustSendReceiveTimeout(iridiumTimeout);           // Adjust timeout timer for library send/receive commands (default = 300 s)
-  modem.adjustStartupTimeout(10);
+  modem.adjustSendReceiveTimeout(iridiumTimeout);           // Timeout for Iridium send/receive commands (default = 300 s)
+  modem.adjustStartupTimeout(10);                           // Timeout for Iridium startup (default = 240 s)
 }
 
 // Write data from structure to transmit buffer
@@ -192,7 +192,7 @@ void transmitData()
   }
 }
 
-// Non-blocking RockBLOCK callback function can be called during transmit or GPS signal acquisition
+// Non-blocking RockBLOCK callback function can be called during transmit or GNSS signal acquisition
 bool ISBDCallback()
 {
   unsigned long currentMillis = millis();
