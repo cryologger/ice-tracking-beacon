@@ -4,9 +4,15 @@ void readBattery()
   // Start loop timer
   unsigned long loopStartTime = millis();
 
-  // Measure external battery voltage across 2/1 MΩ resistor divider (1/3 divider)
-  int reading = analogRead(PIN_VBAT);
-  float voltage = reading * 3.3 * 3 / 4096.0;
+  (void)analogRead(A0); // Required when switching ADC channels due to multiplexer and capacitor charge and hold
+  int sensorValue = analogRead(A0);
+  // Measure external battery voltage across 10/1 MΩ resistor divider (1/10 divider)
+  //voltage = analogRead(PIN_VBAT);
+  voltage = sensorValue * ((10000000.0 + 1000000.0) / 1000000.0); // Multiply back 1 MOhm / (10 MOhm + 1 MOhm)
+  voltage *= 3.3;   // Multiply by 3.3V reference voltage
+  voltage /= 4096;  // Convert to voltage
+  
+  //DEBUG_PRINT("sensorValue: "); DEBUG_PRINT(sensorValue); DEBUG_PRINT(","); DEBUG_PRINTLN_DEC(voltage,4);
 
   // Measure LiPo battery voltage across 100 kΩ/100 kΩ onboard resistor divider (1/2 divider)
   //float voltage = (float)reading / samples * 3.3 * 2 / 4096.0;
@@ -14,16 +20,6 @@ void readBattery()
   // Write data to union
   moSbdMessage.voltage = voltage * 100;
 
-  /*
-    // Write minimum battery voltage value to union
-    if (moSbdMessage.voltage == 0)
-    {
-    moSbdMessage.voltage = voltage * 1000;
-    } else if ((voltage * 1000) < moSbdMessage.voltage)
-    {
-    moSbdMessage.voltage = voltage * 1000;
-    }
-  */
   // Stop loop timer
   timer.battery = millis() - loopStartTime;
 }
