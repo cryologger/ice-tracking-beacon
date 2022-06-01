@@ -28,7 +28,7 @@ void readGnss()
   //GNSS_PORT.println("$PGCMD,33,0*6D"); // Disable antenna updates
 
   // Look for GNSS signal for up to gnssTimeout
-  while (!fixFound && millis() - loopStartTime < gnssTimeout * 10UL * 1000UL)
+  while (!fixFound && millis() - loopStartTime < gnssTimeout * 60UL * 1000UL)
   {
     if (GNSS_PORT.available())
     {
@@ -39,15 +39,16 @@ void readGnss()
 #endif
       if (gnss.encode(c))
       {
-        if ((gnss.location.isValid() && gnss.date.isValid() && gnss.time.isValid()) &&
-            (gnss.location.isUpdated() && gnss.date.isUpdated() && gnss.time.isUpdated()) &&
-            (gnss.satellites.value() > 0))
+        // Check if NMEA sentences are valid and not stale
+        if ((gnssFix.value() > 0 && gnssFix.age() < 1000) &&
+            (String(gnssValidity.value()) == "A" && gnssValidity.age() < 1000) &&
+            gnss.satellites.value() > 0)
         {
           DEBUG_PRINT(F(" Pass"));
           fixCounter++; // Increment fix counter
 
           // Wait until a specified number of GNSS fixes have been collected
-          if ((fixCounter >= 50) && (gnss.satellites.value() > 0))
+          if (fixCounter >= 20)
           {
             fixFound = true;
 
@@ -69,17 +70,18 @@ void readGnss()
             DEBUG_PRINTLN("");
             DEBUG_PRINT(F("gnssEpoch: ")); DEBUG_PRINTLN(gnssEpoch);
             DEBUG_PRINT(F("rtcEpoch: ")); DEBUG_PRINTLN(rtcEpoch);
-            DEBUG_PRINT(F("unixtime: ")); DEBUG_PRINTLN(unixtime);
 
-            // Sync RTC with GNSS date and time only if gnssEpoch is in the future
-            if (((gnssEpoch > 1630368000) && (gnssEpoch > unixtime)) || firstTimeFlag)
+            // Sync RTC with GNSS only if gnssEpoch meets the following criteria:
+            // 1) Is after July 1, 2022
+            // 2) Is greater than current unixtime
+            if (((gnssEpoch > 1656633600) && (gnssEpoch > unixtime)) || firstTimeFlag)
             {
               rtc.setEpoch(gnssEpoch);
               DEBUG_PRINT(F("Info: RTC synced ")); printDateTime();
             }
             else
             {
-              DEBUG_PRINT(F("Warning: RTC not synced! GNSS time in the past! ")); printDateTime();
+              DEBUG_PRINT(F("Warning: RTC not synced! GNSS time not accurate! ")); printDateTime();
             }
 
             // Write data to buffer
