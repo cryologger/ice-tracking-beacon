@@ -17,8 +17,9 @@ void configureAdc()
   while (ADC->STATUS.bit.SYNCBUSY);               // Wait for synchronization
 
   // Apply ADC gain and offset error calibration correction
-  ADC->OFFSETCORR.reg = ADC_OFFSETCORR_OFFSETCORR(12);
-  ADC->GAINCORR.reg = ADC_GAINCORR_GAINCORR(2059);
+  // Two point calibration at 0.5V & 2.5V (VIN = 5.5V & 27.5)
+  ADC->OFFSETCORR.reg = ADC_OFFSETCORR_OFFSETCORR(29);
+  ADC->GAINCORR.reg = ADC_GAINCORR_GAINCORR(2102);
   ADC->CTRLB.bit.CORREN = true;
   while (ADC->STATUS.bit.SYNCBUSY); // Wait for synchronization
 }

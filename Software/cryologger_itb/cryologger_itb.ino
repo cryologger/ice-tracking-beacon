@@ -1,6 +1,6 @@
 /*
     Title:    Cryologger Ice Tracking Beacon (ITB) - v3.1
-    Date:     May 31, 2022
+    Date:     June 1, 2022
     Author:   Adam Garbo
 
     Description:
@@ -15,9 +15,9 @@
     - Adafruit DPS310 Precision Barometric Pressure Sensor
     - Pololu 3.3V, 600mA Step-Down Voltage Regulator D36V6F3
     - Pololu 5V, 600mA Step-Down Voltage Regulator D36V6F5
-    
+
     Comments:
-    - 
+    -
 */
 
 // ------------------------------------------------------------------------------------------------
@@ -39,13 +39,13 @@
 // ------------------------------------------------------------------------------------------------
 // Beacon
 // ------------------------------------------------------------------------------------------------
-#define BEACON 
+#define BEACON
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
 // ------------------------------------------------------------------------------------------------
 #define DEBUG           true  // Output debug messages to Serial Monitor
-#define DEBUG_GNSS      true  // Output GPS debug information
+#define DEBUG_GNSS      true  // Output GNSS debug information
 #define DEBUG_IRIDIUM   true  // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
@@ -107,16 +107,20 @@ IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP);
 RTCZero           rtc;
 TinyGPSPlus       gnss;
 
+// Custom TinyGPS objects to store fix and validity information
+TinyGPSCustom gnssFix(gnss, "GPGGA", 6); // Fix quality
+TinyGPSCustom gnssValidity(gnss, "GPRMC", 2); //
+
 // ------------------------------------------------------------------------------------------------
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
 
-unsigned long alarmInterval     = 3600;  // Sleep duration in seconds
-unsigned int  transmitInterval  = 3;     // Messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitLimit   = 2;     // Failed data transmission reattempt (340-byte limit)
-unsigned int  gnssTimeout        = 1;   // Timeout for GNSS signal acquisition (minutes)
-unsigned int  iridiumTimeout    = 10;   // Timeout for Iridium transmission (s)
-bool          firstTimeFlag     = true;  // Flag to determine if the program is running for the first time
+unsigned long alarmInterval     = 86400;  // Sleep duration (seconds)
+unsigned int  transmitInterval  = 1;      // Messages to transmit in each Iridium transmission (340 byte limit)
+unsigned int  retransmitLimit   = 9;      // Failed data transmission reattempt (340-byte limit)
+unsigned int  gnssTimeout       = 2;      // Timeout for GNSS signal acquisition (minutes)
+unsigned int  iridiumTimeout    = 180;    // Timeout for Iridium transmission (seconds)
+bool          firstTimeFlag     = true;   // Flag to determine if the program is running for the first time
 
 // ------------------------------------------------------------------------------------------------
 // Global variable declarations
@@ -138,6 +142,7 @@ unsigned long previousMillis    = 0;          // Global millis() timer
 unsigned long alarmTime         = 0;          // Global epoch alarm time variable
 unsigned long unixtime          = 0;          // Global epoch time variable
 tmElements_t  tm;                             // Variable for converting time elements to time_t
+float         voltage           = 0.0;        // Battery voltage
 
 // ------------------------------------------------------------------------------------------------
 // Magnetometer calibration
@@ -155,13 +160,13 @@ float M_B[3]
 float M_Ainv[3][3]
 {
   {
-    1.41050,  0.05847, -0.00925 // Test unit
+    0.0,  0.0, 0.0 
   },
   {
-    0.05847,  1.40344,  0.00380 // Test unit
+    0.0,  0.0,  0.0
   },
   {
-    -0.00925,  0.00380,  1.34955 // Test unit
+    0.0,  0.0, 0.0
   }
 };
 
@@ -241,7 +246,7 @@ void setup()
   pinMode(PIN_IMU_EN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
   digitalWrite(PIN_SENSOR_EN, LOW);   // Disable power to sensors
-  digitalWrite(PIN_GNSS_EN, HIGH);     // Disable power to GNSS
+  digitalWrite(PIN_GNSS_EN, HIGH);    // Disable power to GNSS
   digitalWrite(PIN_IMU_EN, LOW);      // Disable power to IMU
   digitalWrite(PIN_IRIDIUM_EN, LOW);  // Disable power to Iridium 9603
 
@@ -265,6 +270,7 @@ void setup()
   configureRtc();       // Configure real-time clock (RTC)
   readRtc();            // Read date and time from RTC
   configureWdt();       // Configure Watchdog Timer (WDT)
+  readBattery();        // Read battery at start-up
   printSettings();      // Print configuration settings
   readGnss();           // Synchronize RTC with GNSS
   configureIridium();   // Configure Iridium 9603 transceiver
@@ -274,7 +280,7 @@ void setup()
   {
     disableSerial();
   }
-  
+
   // Blink LED to indicate completion of setup
   blinkLed(10, 100);
 }

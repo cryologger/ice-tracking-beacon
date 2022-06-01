@@ -1,10 +1,9 @@
 // Configure RockBLOCK 9603
 void configureIridium()
 {
-  //modem.setPowerProfile(IridiumSBD::USB_POWER_PROFILE);     // Assume USB power
-  modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power
+  modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE); // Assume battery power (USB power: IridiumSBD::USB_POWER_PROFILE)
   modem.adjustSendReceiveTimeout(iridiumTimeout);           // Timeout for Iridium send/receive commands (default = 300 s)
-  modem.adjustStartupTimeout(10);                           // Timeout for Iridium startup (default = 240 s)
+  modem.adjustStartupTimeout(120);                          // Timeout for Iridium startup (default = 240 s)
 }
 
 // Write data from structure to transmit buffer
