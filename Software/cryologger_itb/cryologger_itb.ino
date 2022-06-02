@@ -181,9 +181,9 @@ typedef union
     uint32_t  unixtime;         // UNIX Epoch time                (4 bytes)
     int16_t   temperature;      // Temperature (°C)               (2 bytes)   * 100
     uint16_t  pressure;         // Pressure (hPa)                 (2 bytes)   - 850 * 100
-    int16_t   pitch;            // LSM303D pitch (°)              (2 bytes)   * 100
-    int16_t   roll;             // LSM303D roll (°)               (2 bytes)   * 100
-    uint16_t  heading;          // LSM303D heading (°)            (2 bytes)
+    int16_t   pitch;            // Pitch (°)                      (2 bytes)   * 100
+    int16_t   roll;             // Roll (°)                       (2 bytes)   * 100
+    uint16_t  heading;          // Heading (°)                    (2 bytes)
     int32_t   latitude;         // Latitude (DD)                  (4 bytes)   * 1000000
     int32_t   longitude;        // Longitude (DD)                 (4 bytes)   * 1000000
     uint8_t   satellites;       // # of satellites                (1 byte)
