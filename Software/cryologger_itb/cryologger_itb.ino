@@ -1,6 +1,6 @@
 /*
-    Title:    Cryologger Ice Tracking Beacon (ITB) - v3.1
-    Date:     June 1, 2022
+    Title:    Cryologger Ice Tracking Beacon (ITB) - v3.1.0
+    Date:     June 7, 2022
     Author:   Adam Garbo
 
     Description:
@@ -109,7 +109,7 @@ TinyGPSPlus       gnss;
 
 // Custom TinyGPS objects to store fix and validity information
 TinyGPSCustom gnssFix(gnss, "GPGGA", 6); // Fix quality
-TinyGPSCustom gnssValidity(gnss, "GPRMC", 2); //
+TinyGPSCustom gnssValidity(gnss, "GPRMC", 2); // Validity
 
 // ------------------------------------------------------------------------------------------------
 // User defined global variable declarations
@@ -154,19 +154,28 @@ float p[] = {1, 0, 0};  // Y marking on sensor board points toward yaw = 0
 
 float M_B[3]
 {
-  -2956.76, 343.61, -1019.84 // Test unit
+  //-2956.76, 343.61, -1019.84 // Test unit
+  -3384.32,  -44.61,  214.17 // 2022 ITB Milne Fiord #1
+  //- 2138.74, 2699.46, -2487.70 // 2022 ITB Milne Fiord #2
+
 };
 
 float M_Ainv[3][3]
 {
   {
-    0.0,  0.0, 0.0 
+    //1.41050,  0.05847, -0.00925 // Test unit
+    //1.39358,  0.05349,  0.01230 // 2022 ITB Milne Fiord #1
+    1.51130,  0.05420,  0.00168 // 2022 ITB Milne Fiord #2
   },
   {
-    0.0,  0.0,  0.0
+    //0.05847,  1.40344,  0.00380 // Test unit
+    //0.05349,  1.39424,  0.00211 // 2022 ITB Milne Fiord #1
+    0.05420,  1.52255, -0.01307 // 2022 ITB Milne Fiord #2
   },
   {
-    0.0,  0.0, 0.0
+    //-0.00925,  0.00380,  1.34955 // Test unit
+    //0.01230,  0.00211,  1.40318 // 2022 ITB Milne Fiord #1
+    0.00168, -0.01307,  1.48831 // 2022 ITB Milne Fiord #2
   }
 };
 
@@ -263,7 +272,7 @@ void setup()
 
   DEBUG_PRINTLN();
   printLine();
-  DEBUG_PRINTLN("Cryologger - Iceberg Tracking Beacon v3.0.0");
+  DEBUG_PRINTLN("Cryologger - Iceberg Tracking Beacon v3.1.0");
   printLine();
 
   // Configure devices
