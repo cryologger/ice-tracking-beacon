@@ -47,7 +47,7 @@ void readSensors()
     float temperature = temp_event.temperature;
     float pressure = pressure_event.pressure;
 
-    Serial.print(temperature); Serial.print(","); Serial.println(pressure);
+    //Serial.print(temperature); Serial.print(","); Serial.println(pressure);
 
     // Write data to union
     moSbdMessage.temperature = temperature * 100;

@@ -1,10 +1,10 @@
 /*
-    Title:    Cryologger Ice Tracking Beacon (ITB) - v3.0.0
-    Date:     August 30, 2021
+    Title:    Cryologger Ice Tracking Beacon (ITB) - v3.1.0
+    Date:     June 7, 2022
     Author:   Adam Garbo
 
     Description:
-    - Code used in deployments made during the 2021 Amundsen Expedition.
+    - Code intended for deployments to be made during the 2022 Milne Fiord expedition.
 
     Components:
     - Rock7 RockBLOCK 9603
@@ -15,13 +15,9 @@
     - Adafruit DPS310 Precision Barometric Pressure Sensor
     - Pololu 3.3V, 600mA Step-Down Voltage Regulator D36V6F3
     - Pololu 5V, 600mA Step-Down Voltage Regulator D36V6F5
-    
+
     Comments:
-    - Fixed a bug with RTC alarm setting if failedTransmitCounter reaches 5
-    - Added functionality to ensure the GPS can not synchronize the RTC to a 
-    date and time in the past (2021-08-27)
-    - Bug fix apparently didn't work with #8 (2021-08-30)
-    - Memory leak bug fixed by LSM6DS library v4.3.2 (2022-03-15)
+    -
 */
 
 // ------------------------------------------------------------------------------------------------
@@ -35,7 +31,6 @@
 #include <ArduinoLowPower.h>        // https://github.com/arduino-libraries/ArduinoLowPower (v1.2.2)
 #include <IridiumSBD.h>             // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library (v3.0.1)
 #include <RTCZero.h>                // https://github.com/arduino-libraries/RTCZero (v1.6.0)
-#include <SAMD_AnalogCorrection.h>  // https://github.com/arduino/ArduinoCore-samd/tree/master/libraries/SAMD_AnalogCorrection
 #include <TimeLib.h>                // https://github.com/PaulStoffregen/Time (v1.6.1)
 #include <TinyGPS++.h>              // https://github.com/mikalhart/TinyGPSPlus (v1.0.2b)
 #include <Wire.h>                   // https://www.arduino.cc/en/Reference/Wire
@@ -44,13 +39,13 @@
 // ------------------------------------------------------------------------------------------------
 // Beacon
 // ------------------------------------------------------------------------------------------------
-#define BEACON 
+#define BEACON
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
 // ------------------------------------------------------------------------------------------------
 #define DEBUG           true  // Output debug messages to Serial Monitor
-#define DEBUG_GPS       true  // Output GPS debug information
+#define DEBUG_GNSS      true  // Output GNSS debug information
 #define DEBUG_IRIDIUM   true  // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
@@ -78,7 +73,8 @@
 #define PIN_VBAT            A0
 #define PIN_SENSOR_EN       A3
 #define PIN_IMU_EN          A4
-#define PIN_GPS_EN          A5
+#define PIN_GNSS_EN         A5
+#define PIN_LED             5
 #define PIN_IRIDIUM_EN      6
 #define PIN_IRIDIUM_RX      10 // Pin 1 RXD (Yellow)
 #define PIN_IRIDIUM_TX      11 // Pin 6 TXD (Orange)
@@ -92,7 +88,7 @@
 Uart Serial2 (&sercom1, PIN_IRIDIUM_RX, PIN_IRIDIUM_TX, SERCOM_RX_PAD_2, UART_TX_PAD_0);
 
 #define SERIAL_PORT   Serial
-#define GPS_PORT      Serial1
+#define GNSS_PORT     Serial1
 #define IRIDIUM_PORT  Serial2
 
 // Attach interrupt handler to SERCOM for new Serial instance
@@ -109,18 +105,22 @@ Adafruit_LIS3MDL  lis3mdl;  // I2C address: 0x1C
 Adafruit_LSM6DS33 lsm6ds33; // I2C address: 0x6A
 IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP);
 RTCZero           rtc;
-TinyGPSPlus       gps;
+TinyGPSPlus       gnss;
+
+// Custom TinyGPS objects to store fix and validity information
+TinyGPSCustom gnssFix(gnss, "GPGGA", 6); // Fix quality
+TinyGPSCustom gnssValidity(gnss, "GPRMC", 2); // Validity
 
 // ------------------------------------------------------------------------------------------------
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
 
-unsigned long alarmInterval     = 3600;  // Sleep duration in seconds
-unsigned int  transmitInterval  = 3;     // Messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitLimit   = 2;     // Failed data transmission reattempt (340 byte limit)
-unsigned int  gpsTimeout        = 120;   // Timeout for GPS signal acquisition
-unsigned int  iridiumTimeout    = 180;   // Timeout for Iridium transmission (s)
-bool          firstTimeFlag     = true;  // Flag to determine if the program is running for the first time
+unsigned long alarmInterval     = 86400;  // Sleep duration (seconds)
+unsigned int  transmitInterval  = 1;      // Messages to transmit in each Iridium transmission (340 byte limit)
+unsigned int  retransmitLimit   = 9;      // Failed data transmission reattempt (340-byte limit)
+unsigned int  gnssTimeout       = 2;      // Timeout for GNSS signal acquisition (minutes)
+unsigned int  iridiumTimeout    = 180;    // Timeout for Iridium transmission (seconds)
+bool          firstTimeFlag     = true;   // Flag to determine if the program is running for the first time
 
 // ------------------------------------------------------------------------------------------------
 // Global variable declarations
@@ -142,9 +142,10 @@ unsigned long previousMillis    = 0;          // Global millis() timer
 unsigned long alarmTime         = 0;          // Global epoch alarm time variable
 unsigned long unixtime          = 0;          // Global epoch time variable
 tmElements_t  tm;                             // Variable for converting time elements to time_t
+float         voltage           = 0.0;        // Battery voltage
 
 // ------------------------------------------------------------------------------------------------
-// IMU calibration
+// Magnetometer calibration
 // ------------------------------------------------------------------------------------------------
 // Code initialization statements from magneto required to correct magnetometer distortion
 // See: https://forum.pololu.com/t/correcting-the-balboa-magnetometer/14315
@@ -153,59 +154,28 @@ float p[] = {1, 0, 0};  // Y marking on sensor board points toward yaw = 0
 
 float M_B[3]
 {
-  -2956.76, 343.61, -1019.84 // Test unit
-  //-5021.16, 2379.16, -401.36 // #1
-  //-4895.42, 1122.97,  673.48 // # 2
-  //-4330.53, 2257.92, -578.89 // # 3
-  //-4306.97, 4117.73,-2968.37 // # 4
-  //-2794.84,  426.23, 1211.69 // # 5
-  //-4309.75, 1150.95,  434.80 // # 6
-  //-2490.24, 3090.17, -10508.42 // # 7
-  //-2800.25,  201.42,-1575.44 // # 8
-  //-3344.98, 1263.94,  961.58 // # 9
-  //-3079.49,  191.81, -641.79// # 10
+  //-2956.76, 343.61, -1019.84 // Test unit
+  -3384.32,  -44.61,  214.17 // 2022 ITB Milne Fiord #1
+  //- 2138.74, 2699.46, -2487.70 // 2022 ITB Milne Fiord #2
+
 };
 
 float M_Ainv[3][3]
 {
   {
-    1.41050,  0.05847, -0.00925 // Test unit
-    //1.71166,  0.05344,  0.00782 // #1
-    //1.60340,  0.06769, -0.02107 // # 2
-    //1.56254,  0.06461, -0.02789 // # 3
-    //1.91115,  0.09336, -0.00283 // # 4
-    //1.17929,  0.06386, -0.03312// # 5
-    //1.43098,  0.07278, -0.00109 // # 6
-    //2.66743,  0.12139,  0.03131 // # 7
-    //1.23264,  0.03110, -0.01659 // # 8
-    //1.26029,  0.04563, -0.00331// # 9
-    //1.26643,  0.05112, -0.02144// # 10
+    //1.41050,  0.05847, -0.00925 // Test unit
+    //1.39358,  0.05349,  0.01230 // 2022 ITB Milne Fiord #1
+    1.51130,  0.05420,  0.00168 // 2022 ITB Milne Fiord #2
   },
   {
-    0.05847,  1.40344,  0.00380 // Test unit
-    //0.05344,  1.88985,  0.01983 // # 1
-    //0.06769,  1.64571, -0.06120// # 2
-    //0.06461,  1.56089, -0.04518 // # 3
-    //0.09336,  1.92058, -0.09078 // # 4
-    //0.06386,  1.23453, -0.01179 // # 5
-    //0.07278,  1.45107, -0.02860 // # 6
-    //0.12139,  2.75924,  0.00229 // # 7
-    //0.03110,  1.26502, -0.05142 // # 8
-    //0.04563,  1.29467, -0.03437// # 9
-    //0.05112,  1.26442, -0.04905// # 10
+    //0.05847,  1.40344,  0.00380 // Test unit
+    //0.05349,  1.39424,  0.00211 // 2022 ITB Milne Fiord #1
+    0.05420,  1.52255, -0.01307 // 2022 ITB Milne Fiord #2
   },
   {
-    -0.00925,  0.00380,  1.34955 // Test unit
-    //0.00782,  0.01983,  1.70078 // # 1
-    //-0.02107, -0.06120,  1.53980 // # 2
-    //-0.02789, -0.04518,  1.50373 // # 3
-    //-0.00283, -0.09078,  1.91188 // # 4
-    //-0.03312, -0.01179,  1.14876 // # 5
-    //-0.00109, -0.02860,  1.45799 // # 6
-    //0.03131,  0.00229,  2.72750 // # 7
-    //-0.01659, -0.05142,  1.13965// # 8
-    //-0.00331, -0.03437,  1.27136// # 9
-    //-0.02144, -0.04905,  1.23371// # 10
+    //-0.00925,  0.00380,  1.34955 // Test unit
+    //0.01230,  0.00211,  1.40318 // 2022 ITB Milne Fiord #1
+    0.00168, -0.01307,  1.48831 // 2022 ITB Milne Fiord #2
   }
 };
 
@@ -268,7 +238,7 @@ struct struct_timer
   unsigned long battery;
   unsigned long sensors;
   unsigned long imu;
-  unsigned long gps;
+  unsigned long gnss;
   unsigned long iridium;
 } timer;
 
@@ -280,12 +250,12 @@ void setup()
   // Pin assignments
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(PIN_IRIDIUM_EN, OUTPUT);
-  pinMode(PIN_GPS_EN, OUTPUT);
+  pinMode(PIN_GNSS_EN, OUTPUT);
   pinMode(PIN_SENSOR_EN, OUTPUT);
   pinMode(PIN_IMU_EN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
   digitalWrite(PIN_SENSOR_EN, LOW);   // Disable power to sensors
-  digitalWrite(PIN_GPS_EN, HIGH);     // Disable power to GPS
+  digitalWrite(PIN_GNSS_EN, HIGH);    // Disable power to GNSS
   digitalWrite(PIN_IMU_EN, LOW);      // Disable power to IMU
   digitalWrite(PIN_IRIDIUM_EN, LOW);  // Disable power to Iridium 9603
 
@@ -302,15 +272,16 @@ void setup()
 
   DEBUG_PRINTLN();
   printLine();
-  DEBUG_PRINTLN("Cryologger - Iceberg Tracking Beacon #2 v3.2");
+  DEBUG_PRINTLN("Cryologger - Iceberg Tracking Beacon v3.1.0");
   printLine();
 
   // Configure devices
   configureRtc();       // Configure real-time clock (RTC)
   readRtc();            // Read date and time from RTC
   configureWdt();       // Configure Watchdog Timer (WDT)
+  readBattery();        // Read battery at start-up
   printSettings();      // Print configuration settings
-  readGps();            // Synchronize RTC with GNSS
+  readGnss();           // Synchronize RTC with GNSS
   configureIridium();   // Configure Iridium 9603 transceiver
 
   // Close serial port if immediately entering deep sleep
@@ -319,6 +290,7 @@ void setup()
     disableSerial();
   }
 
+  // Blink LED to indicate completion of setup
   blinkLed(10, 100);
 }
 
@@ -344,7 +316,7 @@ void loop()
     // Perform measurements
     petDog();         // Reset the Watchdog Timer
     readBattery();    // Read the battery voltage
-    readGps();        // Read the GPS
+    readGnss();       // Read the GNSS
     readImu();        // Read the IMU
     readSensors();    // Read sensor(s)
     writeBuffer();    // Write the data to transmit buffer
