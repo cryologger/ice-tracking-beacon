@@ -4,24 +4,24 @@ void readBattery()
   // Start loop timer
   unsigned long loopStartTime = millis();
 
-  (void)analogRead(A0); // Required when switching ADC channels due to multiplexer and capacitor charge and hold
-  int sensorValue = analogRead(A0);
+  myDelay(1000);
+
   // Measure external battery voltage across 10/1 MΩ resistor divider (1/10 divider)
-  //voltage = analogRead(PIN_VBAT);
-  voltage = sensorValue * ((10000000.0 + 1000000.0) / 1000000.0); // Multiply back 1 MOhm / (10 MOhm + 1 MOhm)
+  (void)analogRead(PIN_VBAT);
+  voltage = analogRead(PIN_VBAT);
+  voltage *=  ((10000000.0 + 1000000.0) / 1000000.0); // Multiply back 1 MOhm / (10 MOhm + 1 MOhm)
   voltage *= 3.3;   // Multiply by 3.3V reference voltage
   voltage /= 4096;  // Convert to voltage
-  
-  //DEBUG_PRINT("sensorValue: "); DEBUG_PRINT(sensorValue); DEBUG_PRINT(","); DEBUG_PRINTLN_DEC(voltage,4);
 
   // Measure LiPo battery voltage across 100 kΩ/100 kΩ onboard resistor divider (1/2 divider)
-  //float voltage = (float)reading / samples * 3.3 * 2 / 4096.0;
+  //float voltage = analogRead(A7);
+  //voltage = voltage * 3.3 * 2 / 4096.0;
 
   // Write data to union
   moSbdMessage.voltage = voltage * 100;
 
   // Stop loop timer
-  timer.battery = millis() - loopStartTime;
+  timer.readBattery = millis() - loopStartTime;
 }
 
 // Disable serial port
@@ -136,7 +136,7 @@ void wakeUp()
 }
 
 // Non-blocking blink LED (https://forum.arduino.cc/index.php?topic=503368.0)
-void blinkLed(byte ledFlashes, unsigned int ledDelay)
+void blinkLed(byte ledPin, byte ledFlashes, unsigned int ledDelay)
 {
   byte i = 0;
   while (i < ledFlashes * 2)
@@ -144,20 +144,20 @@ void blinkLed(byte ledFlashes, unsigned int ledDelay)
     unsigned long currentMillis = millis();
     if (currentMillis - previousMillis >= ledDelay)
     {
-      digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+      digitalWrite(ledPin, !digitalRead(ledPin));
       previousMillis = currentMillis;
       i++;
     }
   }
   // Ensure LED is off at end of blink cycle
-  digitalWrite(LED_BUILTIN, LOW);
+  digitalWrite(ledPin, LOW);
 }
 
 // Non-blocking delay (milliseconds)
 // https://arduino.stackexchange.com/questions/12587/how-can-i-handle-the-millis-rollover
 void myDelay(unsigned long ms)
 {
-  unsigned long start = millis(); // Start: timestamp
+  unsigned long start = millis();        // Start: timestamp
   for (;;)
   {
     petDog();                            // Reset watchdog timer
