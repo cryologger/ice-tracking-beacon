@@ -47,7 +47,7 @@ void readRtc()
   moSbdMessage.unixtime = unixtime;
 
   // Stop loop timer
-  timer.rtc = millis() - loopStartTime;
+  timer.readRtc = millis() - loopStartTime;
 }
 
 // Set RTC alarm

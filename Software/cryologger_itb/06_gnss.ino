@@ -91,7 +91,7 @@ void readGnss()
             moSbdMessage.hdop = gnss.hdop.value();
 
             DEBUG_PRINT(F("Info: RTC drift ")); DEBUG_PRINT(rtcDrift); DEBUG_PRINTLN(F(" seconds"));
-            blinkLed(5, 250);
+            blinkLed(LED_BUILTIN, 5, 100);
           }
         }
         else
@@ -124,5 +124,5 @@ void readGnss()
   disableGnssPower();
 
   // Stop the loop timer
-  timer.gnss = millis() - loopStartTime;
+  timer.readGnss = millis() - loopStartTime;
 }

@@ -35,10 +35,11 @@ void printTimers()
   //printLine();
   DEBUG_PRINTLN("Function Execution Timers");
   printLine();
-  DEBUG_PRINT("readRtc: ");         printTab(1);  DEBUG_PRINTLN(timer.rtc);
-  DEBUG_PRINT("readSensors: ");     printTab(1);  DEBUG_PRINTLN(timer.sensors);
-  DEBUG_PRINT("readImu: ");         printTab(1);  DEBUG_PRINTLN(timer.imu);
-  DEBUG_PRINT("readGnss: ");        printTab(1);  DEBUG_PRINTLN(timer.gnss);
+  DEBUG_PRINT("readBattery: ");     printTab(1);  DEBUG_PRINTLN(timer.readBattery);
+  DEBUG_PRINT("readRtc: ");         printTab(1);  DEBUG_PRINTLN(timer.readRtc);
+  DEBUG_PRINT("readBme280: ");      printTab(1);  DEBUG_PRINTLN(timer.readBme280);
+  DEBUG_PRINT("readLsm303agr: ");   printTab(1);  DEBUG_PRINTLN(timer.readLsm303agr);
+  DEBUG_PRINT("readGnss: ");        printTab(1);  DEBUG_PRINTLN(timer.readGnss);
   DEBUG_PRINT("transmitData: ");    printTab(1);  DEBUG_PRINTLN(timer.iridium);
   DEBUG_PRINT("freeRam(): ");       printTab(1);  DEBUG_PRINTLN(freeRam());
 
@@ -52,8 +53,9 @@ void printMoSbd()
   DEBUG_PRINTLN("MO-SBD Message Data");
   printLine();
   DEBUG_PRINT("unixtime:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.unixtime);
-  DEBUG_PRINT("temperature:");      printTab(2);  DEBUG_PRINTLN(moSbdMessage.temperature);
-  DEBUG_PRINT("pressure:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.pressure);
+  DEBUG_PRINT("temperature:");      printTab(2);  DEBUG_PRINTLN(moSbdMessage.temperatureInt);
+  DEBUG_PRINT("humidity:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.humidityInt);
+  DEBUG_PRINT("pressure:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.pressureInt);
   DEBUG_PRINT("pitch:");            printTab(3);  DEBUG_PRINTLN(moSbdMessage.pitch);
   DEBUG_PRINT("roll:");             printTab(3);  DEBUG_PRINTLN(moSbdMessage.roll);
   DEBUG_PRINT("heading:");          printTab(2);  DEBUG_PRINTLN(moSbdMessage.heading);

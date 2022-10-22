@@ -73,7 +73,7 @@ void transmitData()
       if (returnCode == ISBD_SUCCESS)
       {
         DEBUG_PRINTLN("Info: MO-SBD message transmission successful!");
-        blinkLed(10, 250);
+        blinkLed(LED_BUILTIN, 10, 250);
         
         failureCounter = 0; // Clear failed transmission counter
         retransmitCounter = 0; // Clear message retransmit counter
