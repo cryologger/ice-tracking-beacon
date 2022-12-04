@@ -1,45 +1,48 @@
 /*
-    Title:    Cryologger Ice Tracking Beacon (ITB) - v3.1.0
-    Date:     June 7, 2022
-    Author:   Adam Garbo
+  Title:    Cryologger Ice Tracking Beacon (ITB) - v3.2.0
+  Date:     October 25, 2022
+  Author:   Adam Garbo
 
-    Description:
-    - Code intended for deployments to be made during the 2022 Milne Fiord expedition.
+  Description:
+  - Code intended for deployments to be made during the 2022 Grise Fiord community visit.
 
-    Components:
-    - Rock7 RockBLOCK 9603
-    - Maxtena M1621HCT-P-SMA antenna
-    - Adafruit Feather M0 Proto
-    - Adafruit Ultimate GPS Featherwing
-    - Adafruit LSM6DS33 + LIS3MDL - 9 DoF IMU
-    - Adafruit DPS310 Precision Barometric Pressure Sensor
-    - Pololu 3.3V, 600mA Step-Down Voltage Regulator D36V6F3
-    - Pololu 5V, 600mA Step-Down Voltage Regulator D36V6F5
+  Components:
+  - Rock7 RockBLOCK 9603
+  - Maxtena M1621HCT-P-SMA antenna
+  - Adafruit Feather M0 Proto
+  - Adafruit Ultimate GPS Featherwing (PA1616D)
+  - Adafruit BME280 Temperature Humidity Pressure Sensor
+  - Adafruit LSM303AGR Accelerometer/Magnetomter
+  - Pololu 3.3V, 600mA Step-Down Voltage Regulator D36V6F3
+  - Pololu 5V, 600mA Step-Down Voltage Regulator D36V6F5
 
-    Comments:
-    -
+  Comments:
+  - Began merging of code with the Cryologger Automatic Weather Station (AWS) repository.
+  - The LSM6DS33/LIS3MDL 9-dof IMU was discontinued and replaced with the LSM303AGR/LIS2MDL 6-dof
+  accelerometer/magnetometer.
 */
 
 // ------------------------------------------------------------------------------------------------
 // Libraries
 // ------------------------------------------------------------------------------------------------
-#include <Adafruit_Sensor.h>        // https://github.com/adafruit/Adafruit_Sensor (v1.1.4)
+#include <Adafruit_BME280.h>        // https://github.com/adafruit/Adafruit_BME280 (v2.2.2)
 #include <Adafruit_DPS310.h>        // https://github.com/adafruit/Adafruit_DPS310 (v1.1.1)
-#include <Adafruit_LIS3MDL.h>       // https://github.com/adafruit/Adafruit_LIS3MDL (v1.1.0)
-#include <Adafruit_LSM6DS33.h>      // https://github.com/adafruit/Adafruit_LSM6DS (Only use v4.3.2 or higher)
+#include <Adafruit_LSM303_Accel.h>  // https://github.com/adafruit/Adafruit_LSM303_Accel (v1.1.6)
+#include <Adafruit_LIS2MDL.h>       // https://github.com/adafruit/Adafruit_LIS2MDL (v2.1.4)
+#include <Adafruit_Sensor.h>        // https://github.com/adafruit/Adafruit_Sensor (v1.1.6)
 #include <Arduino.h>                // Required for creating new Serial instance. Must be included before <wiring_private.h>
 #include <ArduinoLowPower.h>        // https://github.com/arduino-libraries/ArduinoLowPower (v1.2.2)
-#include <IridiumSBD.h>             // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library (v3.0.1)
+#include <IridiumSBD.h>             // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library (v3.0.5)
 #include <RTCZero.h>                // https://github.com/arduino-libraries/RTCZero (v1.6.0)
 #include <TimeLib.h>                // https://github.com/PaulStoffregen/Time (v1.6.1)
-#include <TinyGPS++.h>              // https://github.com/mikalhart/TinyGPSPlus (v1.0.2b)
+#include <TinyGPS++.h>              // https://github.com/mikalhart/TinyGPSPlus (v1.0.3)
 #include <Wire.h>                   // https://www.arduino.cc/en/Reference/Wire
 #include <wiring_private.h>         // Required for creating new Serial instance
 
-// ------------------------------------------------------------------------------------------------
-// Beacon
-// ------------------------------------------------------------------------------------------------
-#define BEACON
+// ----------------------------------------------------------------------------
+// Define unique identifier
+// ----------------------------------------------------------------------------
+#define CRYOLOGGER_ID 0
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
@@ -100,24 +103,27 @@ void SERCOM1_Handler()
 // ------------------------------------------------------------------------------------------------
 // Object instantiations
 // ------------------------------------------------------------------------------------------------
+Adafruit_BME280   bme280;   // I2C address: 0x??
 Adafruit_DPS310   dps310;   // I2C address: 0x77
-Adafruit_LIS3MDL  lis3mdl;  // I2C address: 0x1C
-Adafruit_LSM6DS33 lsm6ds33; // I2C address: 0x6A
+Adafruit_LIS2MDL  lis2mdl = Adafruit_LIS2MDL(12345); //
+Adafruit_LSM303_Accel_Unified   lsm303agr = Adafruit_LSM303_Accel_Unified(54321); // I2C address: 0x1E
 IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP);
 RTCZero           rtc;
 TinyGPSPlus       gnss;
 
 // Custom TinyGPS objects to store fix and validity information
-TinyGPSCustom gnssFix(gnss, "GPGGA", 6); // Fix quality
-TinyGPSCustom gnssValidity(gnss, "GPRMC", 2); // Validity
+// Note: $GPGGA and $GPRMC sentences are GPS only (PA6H module)
+// $GNGGA and $GNRMC sentences are produced by GPS/GLONASS receivers (PA161D module)
+TinyGPSCustom gnssFix(gnss, "GNGGA", 6); // Fix quality
+TinyGPSCustom gnssValidity(gnss, "GNRMC", 2); // Validity
 
 // ------------------------------------------------------------------------------------------------
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
 
-unsigned long alarmInterval     = 86400;  // Sleep duration (seconds)
+unsigned long alarmInterval     = 3600;   // Sleep duration (seconds)
 unsigned int  transmitInterval  = 1;      // Messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitLimit   = 9;      // Failed data transmission reattempt (340-byte limit)
+unsigned int  retransmitLimit   = 6;      // Failed data transmission reattempt (340-byte limit)
 unsigned int  gnssTimeout       = 2;      // Timeout for GNSS signal acquisition (minutes)
 unsigned int  iridiumTimeout    = 180;    // Timeout for Iridium transmission (seconds)
 bool          firstTimeFlag     = true;   // Flag to determine if the program is running for the first time
@@ -141,42 +147,30 @@ unsigned int  failureCounter    = 0;          // Counter to track consecutive fa
 unsigned long previousMillis    = 0;          // Global millis() timer
 unsigned long alarmTime         = 0;          // Global epoch alarm time variable
 unsigned long unixtime          = 0;          // Global epoch time variable
-tmElements_t  tm;                             // Variable for converting time elements to time_t
+float         temperatureInt    = 0.0;        // Internal temperature (°C)
+float         humidityInt       = 0.0;        // Internal hunidity (%)
+float         pressureInt       = 0.0;        // Internal pressure (hPa)
 float         voltage           = 0.0;        // Battery voltage
+tmElements_t  tm;                             // Variable for converting time elements to time_t
+
 
 // ------------------------------------------------------------------------------------------------
-// Magnetometer calibration
+// Magnetometer min/max calibration
 // ------------------------------------------------------------------------------------------------
-// Code initialization statements from magneto required to correct magnetometer distortion
-// See: https://forum.pololu.com/t/correcting-the-balboa-magnetometer/14315
+// Based on:
+// https://learn.adafruit.com/lsm303-accelerometer-slash-compass-breakout/calibration?view=all#calibration
+// https://gist.github.com/CalebFenton/a97444750eb43e3354fd2d0196a2ebcf
+// https://github.com/jremington/LSM9DS1-AHRS
 
-float p[] = {1, 0, 0};  // Y marking on sensor board points toward yaw = 0
+float p[] = {1, 0, 0};  // X marking on sensor board points toward yaw = 0 (N?)
 
-float M_B[3]
-{
-  //-2956.76, 343.61, -1019.84 // Test unit
-  -3384.32,  -44.61,  214.17 // 2022 ITB Milne Fiord #1
-  //- 2138.74, 2699.46, -2487.70 // 2022 ITB Milne Fiord #2
-
+// Min/max magnetometer values
+float m_min[3] = {
+  -84.60, -64.35, -51.00
 };
 
-float M_Ainv[3][3]
-{
-  {
-    //1.41050,  0.05847, -0.00925 // Test unit
-    //1.39358,  0.05349,  0.01230 // 2022 ITB Milne Fiord #1
-    1.51130,  0.05420,  0.00168 // 2022 ITB Milne Fiord #2
-  },
-  {
-    //0.05847,  1.40344,  0.00380 // Test unit
-    //0.05349,  1.39424,  0.00211 // 2022 ITB Milne Fiord #1
-    0.05420,  1.52255, -0.01307 // 2022 ITB Milne Fiord #2
-  },
-  {
-    //-0.00925,  0.00380,  1.34955 // Test unit
-    //0.01230,  0.00211,  1.40318 // 2022 ITB Milne Fiord #1
-    0.00168, -0.01307,  1.48831 // 2022 ITB Milne Fiord #2
-  }
+float m_max[3] = {
+  54.00, 72.60, 84.15
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -188,8 +182,9 @@ typedef union
   struct
   {
     uint32_t  unixtime;         // UNIX Epoch time                (4 bytes)
-    int16_t   temperature;      // Temperature (°C)               (2 bytes)   * 100
-    uint16_t  pressure;         // Pressure (hPa)                 (2 bytes)   - 850 * 100
+    int16_t   temperatureInt;   // Internal temperature (°C)      (2 bytes)   * 100
+    uint16_t  humidityInt;      // Internal humidity (%)          (2 bytes)   * 100
+    uint16_t  pressureInt;      // Internal pressure (hPa)        (2 bytes)   - 850 * 100
     int16_t   pitch;            // Pitch (°)                      (2 bytes)   * 100
     int16_t   roll;             // Roll (°)                       (2 bytes)   * 100
     uint16_t  heading;          // Heading (°)                    (2 bytes)
@@ -201,8 +196,8 @@ typedef union
     uint16_t  transmitDuration; // Previous transmission duration (2 bytes)
     uint8_t   transmitStatus;   // Iridium return code            (1 byte)
     uint16_t  iterationCounter; // Message counter                (2 bytes)
-  } __attribute__((packed));                            // Total: (32 bytes)
-  uint8_t bytes[32];
+  } __attribute__((packed));                            // Total: (34 bytes)
+  uint8_t bytes[34];
 } SBD_MO_MESSAGE;
 
 SBD_MO_MESSAGE moSbdMessage;
@@ -225,21 +220,24 @@ SBD_MT_MESSAGE mtSbdMessage;
 // Structure to store device online/offline states
 struct struct_online
 {
-  bool lsm6ds33 = false;
-  bool lis3mdl = false;
-  bool gnss = false;
-  bool dps310 = false;
+  bool bme280     = false;
+  bool dps310     = false;
+  bool lis2mdl    = false;
+  bool lsm303agr  = false;
+  bool gnss       = false;
 } online;
 
 // Union to store loop timers`
 struct struct_timer
 {
-  unsigned long rtc;
-  unsigned long battery;
-  unsigned long sensors;
-  unsigned long imu;
-  unsigned long gnss;
+  unsigned long readRtc;
+  unsigned long readBattery;
+  unsigned long readBme280;
+  unsigned long readDps310;
+  unsigned long readLsm303agr;
+  unsigned long readGnss;
   unsigned long iridium;
+
 } timer;
 
 // ------------------------------------------------------------------------------------------------
@@ -267,12 +265,12 @@ void setup()
 
 #if DEBUG
   SERIAL_PORT.begin(115200); // Open serial port at 115200 baud
-  blinkLed(4, 1000); // Non-blocking delay to allow user to open Serial Monitor
+  blinkLed(LED_BUILTIN, 4, 1000); // Non-blocking delay to allow user to open Serial Monitor
 #endif
 
   DEBUG_PRINTLN();
   printLine();
-  DEBUG_PRINTLN("Cryologger - Iceberg Tracking Beacon v3.1.0");
+  DEBUG_PRINT("Cryologger - Ice Tracking Beacon #"); DEBUG_PRINTLN(CRYOLOGGER_ID);
   printLine();
 
   // Configure devices
@@ -291,7 +289,7 @@ void setup()
   }
 
   // Blink LED to indicate completion of setup
-  blinkLed(10, 100);
+  blinkLed(LED_BUILTIN, 10, 100);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -305,6 +303,9 @@ void loop()
     // Read the RTC
     readRtc();
 
+    // Reset WDT
+    petDog();
+
     // Check if program is running for the first time
     if (!firstTimeFlag)
     {
@@ -314,15 +315,19 @@ void loop()
     DEBUG_PRINT("Info: Alarm trigger "); printDateTime();
 
     // Perform measurements
-    petDog();         // Reset the Watchdog Timer
-    readBattery();    // Read the battery voltage
-    readGnss();       // Read the GNSS
-    readImu();        // Read the IMU
-    readSensors();    // Read sensor(s)
-    writeBuffer();    // Write the data to transmit buffer
-    transmitData();   // Transmit data via Iridium transceiver
-    printTimers();    // Print function execution timers
-    setRtcAlarm();    // Set the RTC alarm
+    enableSensorPower();  // Enable 3.3V power to sensor(s)
+    enableImuPower();     // Enable 3.3V power to IMU
+    readBattery();        // Read the battery voltage
+    readGnss();           // Read the GNSS
+    readLsm303agr();         // Read the IMU
+    readBme280();         // Read sensor(s)
+    disableSensorPower(); // Disable 3.3V power to sensor(s)
+    disableImuPower();    // Disable 3.3V power to IMU
+
+    writeBuffer();        // Write the data to transmit buffer
+    transmitData();       // Transmit data via Iridium transceiver
+    printTimers();        // Print function execution timers
+    setRtcAlarm();        // Set the RTC alarm
 
     DEBUG_PRINTLN("Info: Entering deep sleep...");
     DEBUG_PRINTLN();
@@ -338,7 +343,7 @@ void loop()
   }
 
   // Blink LED to indicate WDT interrupt and nominal system operation
-  blinkLed(1, 25);
+  blinkLed(LED_BUILTIN, 1, 25);
 
   // Enter deep sleep and wait for WDT or RTC alarm interrupt
   goToSleep();
