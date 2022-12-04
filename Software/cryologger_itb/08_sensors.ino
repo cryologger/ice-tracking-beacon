@@ -2,139 +2,66 @@
 // Adafruit LSM303AGR Accelerometer/Magnetomter
 // https://www.adafruit.com/product/4413
 // ----------------------------------------------------------------------------
-void configureLsm303()
-{
-  DEBUG_PRINT("Info: Initializing LSM303...");
-
-  // Initialize LSM303 accelerometer
-  if (lsm303.begin())
-  {
-    online.lsm303 = true;
-    DEBUG_PRINTLN("success!");
-  }
-  else
-  {
-    online.lsm303 = false;
-    DEBUG_PRINTLN("failed!");
-  }
-}
-
-void readLsm303()
-{
-  // Start loop timer
-  unsigned long loopStartTime = millis();
-
-  // Initialize accelerometer
-  configureLsm303();
-
-  // Check if sensor initialized successfully
-  if (online.lsm303)
-  {
-    DEBUG_PRINT("Info: Reading LSM303...");
-
-    myDelay(500);
-
-    // Read accelerometer data
-    sensors_event_t accel;
-    lsm303.getEvent(&accel);
-
-    // Calculate pitch and roll
-    float pitch = atan2(-accel.acceleration.x, sqrt(accel.acceleration.y * accel.acceleration.y + accel.acceleration.z * accel.acceleration.z)) * 180 / PI;
-    float roll = atan2(accel.acceleration.y, accel.acceleration.z) * 180 / PI;
-    
-    // Write data to union
-    moSbdMessage.pitch = pitch * 100;
-    moSbdMessage.roll = roll * 100;
-    //moSbdMessage.heading = heading * 10;
-
-    // Add to statistics object
-    //pitchStats.add();
-    //rollStats.add();
-    //headingStats.add();
-    
-    DEBUG_PRINTLN("done.");
-
-    // Print debug info
-    //DEBUG_PRINT(F("pitch: ")); DEBUG_PRINT_DEC(pitch, 2);
-    //DEBUG_PRINT(F(" roll: ")); DEBUG_PRINTLN_DEC(roll, 2);
-
-  }
-  else
-  {
-    DEBUG_PRINTLN("Warning: LSM303 offline!");
-  }
-
-  // Stop loop timer
-  timer.readLsm303 = millis() - loopStartTime;
-}
-
-// ----------------------------------------------------------------------------
-// Adafruit LSM6DS33 + LIS3MDL - 9 DoF IMU
-// https://www.adafruit.com/product/4485
-// ----------------------------------------------------------------------------
-// Configure
-void configureLsm6ds33()
+void configureLsm303agr()
 {
   // Enable power to IMU
   enableImuPower();
 
-  DEBUG_PRINT("Info: Initializing LSM6DS33 + LIS3MDL...");
+  DEBUG_PRINT("Info: Initializing LSM303AGR + LIS2MDL...");
 
-  // Initialize LSM6DS33 accelerometer/gyroscope
-  if (lsm6ds33.begin_I2C())
+  // Initialize LSM303AGR accelerometer
+  if (lsm303agr.begin())
   {
-    online.lsm6ds33 = true;
+    online.lsm303agr = true;
     DEBUG_PRINTLN("success!");
   }
   else
   {
-    DEBUG_PRINTLN(F("Warning: Failed to initialize LSM6DS33!"));
-    online.lsm6ds33 = false;
+    DEBUG_PRINTLN(F("Warning: Failed to initialize LSM303AGR!"));
+    online.lsm303agr = false;
   }
 
-  // Initialize LIS3MDL magnetometer
-  if (lis3mdl.begin_I2C())
+  // Initialize LIS2MDL magnetometer
+  if (lis2mdl.begin())
   {
-    online.lis3mdl = true;
+    online.lis2mdl = true;
   }
   else
   {
-    DEBUG_PRINTLN(F("Warning: Failed to initialize LIS3MDL!"));
-    online.lis3mdl = false;
+    DEBUG_PRINTLN(F("Warning: Failed to initialize LIS2MDL!"));
+    online.lis2mdl = false;
   }
 }
 
-// Returns a set of scaled magnetic readings from the LIS3MDL
-void readLis3mdl(float Mxyz[3])
+// Returns a set of scaled magnetic readings from the LIS2MDL
+void readLis2mdl(float Mxyz[3])
 {
   float temp[3];
 
   // Read magnetometer
-  lis3mdl.read();
-  Mxyz[0] += lis3mdl.x;
-  Mxyz[1] += lis3mdl.y;
-  Mxyz[2] += lis3mdl.z;
+  sensors_event_t event;
+  lis2mdl.getEvent(&event);
+  Mxyz[0] += event.magnetic.x;
+  Mxyz[1] += event.magnetic.y;
+  Mxyz[2] += event.magnetic.z;
 
-  // Apply offsets (bias) and scale factors from Magneto
-  for (byte i = 0; i < 3; i++)
-  {
-    temp[i] = (Mxyz[i] - M_B[i]);
-  }
-  Mxyz[0] = M_Ainv[0][0] * temp[0] + M_Ainv[0][1] * temp[1] + M_Ainv[0][2] * temp[2];
-  Mxyz[1] = M_Ainv[1][0] * temp[0] + M_Ainv[1][1] * temp[1] + M_Ainv[1][2] * temp[2];
-  Mxyz[2] = M_Ainv[2][0] * temp[0] + M_Ainv[2][1] * temp[1] + M_Ainv[2][2] * temp[2];
-  vectorNormalize(Mxyz);
+  // Important: Subtract average of min and max from magnetometer calibration
+  Mxyz[0] -= (m_min[0] + m_max[0]) / 2;
+  Mxyz[1] -= (m_min[1] + m_max[1]) / 2;
+  Mxyz[2] -= (m_min[2] + m_max[2]) / 2;
 }
 
-// Returns a heading (in degrees) given an acceleration vector a due to gravity, a magnetic vector m, and a facing vector p (global)
+// Returns a heading (°) given an acceleration vector a due to gravity, a magnetic vector m, and a facing vector p (global)
 int getHeading(float acc[3], float mag[3], float p[3])
 {
   float E[3], N[3]; // Derived direction vectors
 
-  // D x M = E, cross acceleration vector Down with M (magnetic north + inclination) to produce "East"
+  // Compute east vector
+  // D x M = E, cross acceleration vector Down with M (magnetic north + inclination)
   vectorCross(mag, acc, E); // Accel vector is up when horizontal
   vectorNormalize(E);
 
+  // Compute north vector
   // E x D = N, cross "East" with "Down" to produce "North" (parallel to the ground)
   vectorCross(acc, E, N);  // Up x East
   vectorNormalize(N);
@@ -146,13 +73,13 @@ int getHeading(float acc[3], float mag[3], float p[3])
   return heading;
 }
 
-void readLsm6ds33()
+void readLsm303agr()
 {
   // Start loop timer
   unsigned long loopStartTime = millis();
 
   // Initialize IMU
-  configureLsm6ds33();
+  configureLsm303agr();
 
   // Centered and scaled accelerometer/magnetomer data initialized to zero
   float Axyz[3] = {};
@@ -160,19 +87,17 @@ void readLsm6ds33()
   int heading = 0;
 
   // Check if IMU initialized successfully
-  if (online.lsm6ds33 && online.lis3mdl)
+  if (online.lsm303agr && online.lis2mdl)
   {
-    DEBUG_PRINT("Info: Reading LSM6DS33 + LIS3MDL...");
+    DEBUG_PRINT("Info: Reading LSM303AGR + LIS2MDL...");
 
     // Read scaled magnetometer data
-    readLis3mdl(Mxyz);
+    readLis2mdl(Mxyz);
 
-    // Read normalized accelerometer data
+    // Read accelerometer data
     sensors_event_t accel;
-    sensors_event_t gyro;
-    sensors_event_t temp;
 
-    lsm6ds33.getEvent(&accel, &gyro, &temp);
+    lsm303agr.getEvent(&accel);
     Axyz[0] += accel.acceleration.x;
     Axyz[1] += accel.acceleration.y;
     Axyz[2] += accel.acceleration.z;
@@ -197,14 +122,14 @@ void readLsm6ds33()
   }
   else
   {
-    DEBUG_PRINTLN("Warning: LSM6DS33 + LIS3MDL offline!");
+    DEBUG_PRINTLN("Warning: LSM303AGR + LIS2MDL offline!");
   }
 
   // Disable power to IMU
   disableImuPower();
 
   // Stop loop timer
-  timer.imu = millis() - loopStartTime;
+  timer.readLsm303agr = millis() - loopStartTime;
 }
 
 // Basic vector operations
