@@ -44,7 +44,7 @@ Another major change in v3.0 is a custom carrier board PCB that designed to grea
 | Satellite antenna (optional) | [Maxtena M1621HCT-P-SMA](https://maxtena.com/products/f-passive/m1621hct-p-sma-iridium-passive-antenna/) | $50.00 |
 | Processor | [Adafruit Feather M0 Basic Proto](https://www.adafruit.com/product/2772) | $19.95 |
 | GPS | [Adafruit Ultimate GPS FeatherWing](https://www.adafruit.com/product/3133) | $39.95 |
-| IMU | [Adafruit LSM6DS33 + LIS3MDL - 9 DoF IMU](https://www.adafruit.com/product/4485) | $9.95 |
+| IMU | [Adafruit LSM303AGR Accelerometer Magnetometer](https://www.adafruit.com/product/4413) | $12.95 |
 | Sensor | [Adafruit DPS310 Precision Barometric Pressure Sensor](https://www.adafruit.com/product/4494) | $6.95 |
 | Voltage regulator | [Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3791) | $4.95 |
 | Voltage regulator | [Pololu D36V6F5 5V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3792) | $4.95 |
