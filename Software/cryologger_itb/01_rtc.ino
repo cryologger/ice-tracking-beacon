@@ -64,11 +64,11 @@ void setRtcAlarm()
   {
     DEBUG_PRINTLN(F("Warning: RTC alarm set in the past or too far in the future."));
 
-    // Set alarm for next day rollover match
+    // Set alarm for next hour rollover match
     rtc.setAlarmTime(0, 0, 0); // hours, minutes, seconds
 
     // Enable alarm
-    rtc.enableAlarm(rtc.MATCH_HHMMSS);
+    rtc.enableAlarm(rtc.MATCH_MMSS);
 
     DEBUG_PRINT("Info: "); printDateTime();
     DEBUG_PRINT("Info: Next alarm "); printAlarm();
