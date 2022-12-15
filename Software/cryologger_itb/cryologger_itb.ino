@@ -1,6 +1,6 @@
 /*
   Title:    Cryologger Ice Tracking Beacon (ITB) - v3.2.0
-  Date:     October 25, 2022
+  Date:     December 15, 2022
   Author:   Adam Garbo
 
   Description:
@@ -42,7 +42,7 @@
 // ----------------------------------------------------------------------------
 // Define unique identifier
 // ----------------------------------------------------------------------------
-#define CRYOLOGGER_ID 0
+#define CRYOLOGGER_ID 1
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
@@ -153,7 +153,6 @@ float         pressureInt       = 0.0;        // Internal pressure (hPa)
 float         voltage           = 0.0;        // Battery voltage
 tmElements_t  tm;                             // Variable for converting time elements to time_t
 
-
 // ------------------------------------------------------------------------------------------------
 // Magnetometer min/max calibration
 // ------------------------------------------------------------------------------------------------
@@ -166,11 +165,11 @@ float p[] = {1, 0, 0};  // X marking on sensor board points toward yaw = 0 (N?)
 
 // Min/max magnetometer values
 float m_min[3] = {
-  -84.60, -64.35, -51.00
+  -75.60, -62.25, -52.35
 };
 
 float m_max[3] = {
-  54.00, 72.60, 84.15
+  51.75, 72.60, 78.30
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -270,7 +269,7 @@ void setup()
 
   DEBUG_PRINTLN();
   printLine();
-  DEBUG_PRINT("Cryologger - Ice Tracking Beacon #"); DEBUG_PRINTLN(CRYOLOGGER_ID);
+  DEBUG_PRINT("Cryologger Ice Tracking Beacon - Grise Fiord #"); DEBUG_PRINTLN(CRYOLOGGER_ID);
   printLine();
 
   // Configure devices
