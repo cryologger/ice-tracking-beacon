@@ -27,7 +27,7 @@ Version 3.0 of the Cryologger iceberg tracking beacon builds on the success of v
 * The DS3231 real-time clock (RTC) was removed in favour of the SAMD21's internal RTC for all timekeeping and alarm functionality with periodic time synchronizations with the GPS.
 * The LSM303 accelerometer/magnetometer was replaced with the LSM6DS33 + LIS3MDL IMU due to the sensor reaching its end-of-life (EOL).
 * The temperature/pressure and IMU sensors are now powered directly through SAMD21 GPIO pins, allowing for power to be completely removed during sleep.
-* A 2MΩ + 1 MΩ resistor divider is now used to measured the battery voltage (+2.4 μA).
+* A 10MΩ + 1 MΩ resistor divider is now used to measured the battery voltage (+2.4 μA).
 
 #### 2.1.2 Custom PCB
 Another major change in v3.0 is a custom carrier board PCB that designed to greatly simplify the assembly process. The PCB was designed in KiCad and fabricated by JLCPCB. 
