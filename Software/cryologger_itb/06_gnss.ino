@@ -28,7 +28,7 @@ void readGnss()
   //GNSS_PORT.println("$PGCMD,33,0*6D"); // Disable antenna updates
 
   // Look for GNSS signal for up to gnssTimeout
-  while (!fixFound && millis() - loopStartTime < gnssTimeout * 60UL * 1000UL)
+  while (!fixFound && millis() - loopStartTime < gnssTimeout * 1000UL) // 60UL *
   {
     if (GNSS_PORT.available())
     {
@@ -71,10 +71,8 @@ void readGnss()
             DEBUG_PRINT(F("gnssEpoch: ")); DEBUG_PRINTLN(gnssEpoch);
             DEBUG_PRINT(F("rtcEpoch: ")); DEBUG_PRINTLN(rtcEpoch);
 
-            // Sync RTC with GNSS only if gnssEpoch meets the following criteria:
-            // 1) Is after July 1, 2022
-            // 2) Is greater than current unixtime
-            if (((gnssEpoch > 1656633600) && (gnssEpoch > unixtime)) || firstTimeFlag)
+            // Sync RTC with GNSS only if gnssEpoch is greater than current unixtime
+            if ((gnssEpoch > unixtime) || firstTimeFlag)
             {
               rtc.setEpoch(gnssEpoch);
               DEBUG_PRINT(F("Info: RTC synced ")); printDateTime();

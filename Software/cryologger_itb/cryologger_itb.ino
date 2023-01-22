@@ -26,7 +26,6 @@
 // Libraries
 // ------------------------------------------------------------------------------------------------
 #include <Adafruit_BME280.h>        // https://github.com/adafruit/Adafruit_BME280 (v2.2.2)
-#include <Adafruit_DPS310.h>        // https://github.com/adafruit/Adafruit_DPS310 (v1.1.1)
 #include <Adafruit_LSM303_Accel.h>  // https://github.com/adafruit/Adafruit_LSM303_Accel (v1.1.6)
 #include <Adafruit_LIS2MDL.h>       // https://github.com/adafruit/Adafruit_LIS2MDL (v2.1.4)
 #include <Adafruit_Sensor.h>        // https://github.com/adafruit/Adafruit_Sensor (v1.1.6)
@@ -77,11 +76,11 @@
 #define PIN_SENSOR_EN       A3
 #define PIN_IMU_EN          A4
 #define PIN_GNSS_EN         A5
-#define PIN_LED             5
-#define PIN_IRIDIUM_EN      6
+#define PIN_5V_EN           6
 #define PIN_IRIDIUM_RX      10 // Pin 1 RXD (Yellow)
 #define PIN_IRIDIUM_TX      11 // Pin 6 TXD (Orange)
 #define PIN_IRIDIUM_SLEEP   12 // Pin 7 OnOff (Grey)
+#define PIN_LED_RED         13
 
 // ------------------------------------------------------------------------------------------------
 // Port configuration
@@ -100,58 +99,64 @@ void SERCOM1_Handler()
   Serial2.IrqHandler();
 }
 
-// ------------------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // Object instantiations
-// ------------------------------------------------------------------------------------------------
-Adafruit_BME280   bme280;   // I2C address: 0x??
-Adafruit_DPS310   dps310;   // I2C address: 0x77
-Adafruit_LIS2MDL  lis2mdl = Adafruit_LIS2MDL(12345); //
-Adafruit_LSM303_Accel_Unified   lsm303agr = Adafruit_LSM303_Accel_Unified(54321); // I2C address: 0x1E
-IridiumSBD        modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP);
-RTCZero           rtc;
-TinyGPSPlus       gnss;
+// ----------------------------------------------------------------------------
+Adafruit_BME280                 bme280; // I2C address:
+Adafruit_LIS2MDL                lis2mdl = Adafruit_LIS2MDL(12345); // I2C address:
+Adafruit_LSM303_Accel_Unified   lsm303 = Adafruit_LSM303_Accel_Unified(54321); // I2C address: 0x1E
+IridiumSBD                      modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP);
+RTCZero                         rtc;
+TinyGPSPlus                     gnss;
 
 // Custom TinyGPS objects to store fix and validity information
-// Note: $GPGGA and $GPRMC sentences are GPS only (PA6H module)
-// $GNGGA and $GNRMC sentences are produced by GPS/GLONASS receivers (PA161D module)
+// Note: $GPGGA and $GPRMC sentences produced by GPS receivers (PA6H module)
+// $GNGGA and $GNRMC sentences produced by GPS/GLONASS receivers (PA161D module)
 TinyGPSCustom gnssFix(gnss, "GNGGA", 6); // Fix quality
 TinyGPSCustom gnssValidity(gnss, "GNRMC", 2); // Validity
 
 // ------------------------------------------------------------------------------------------------
 // User defined global variable declarations
 // ------------------------------------------------------------------------------------------------
-
-unsigned long alarmInterval     = 3600;   // Sleep duration (seconds)
-unsigned int  transmitInterval  = 1;      // Messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitLimit   = 6;      // Failed data transmission reattempt (340-byte limit)
-unsigned int  gnssTimeout       = 2;      // Timeout for GNSS signal acquisition (minutes)
-unsigned int  iridiumTimeout    = 180;    // Timeout for Iridium transmission (seconds)
-bool          firstTimeFlag     = true;   // Flag to determine if the program is running for the first time
+unsigned long sampleInterval    = 60;     // Sampling interval (minutes). Default: 60 minutes (1 hour)
+unsigned int  averageInterval   = 1;      // Number of samples to be averaged in each transmission. Default: 1 (hourly)
+unsigned int  transmitInterval  = 10;     // Messages to transmit in each Iridium transmission (340 byte limit)
+unsigned int  retransmitLimit   = 1;      // Failed data transmission reattempt (340-byte limit)
+unsigned int  gnssTimeout       = 1;      // Timeout for GNSS signal acquisition (minutes)
+unsigned int  iridiumTimeout    = 1;      // Timeout for Iridium transmission (seconds)
+bool          firstTimeFlag     = true;   // Flag to determine if program is running for the first time
+float         batteryCutoff     = 0.0;    // Battery voltage cutoff threshold (V)
 
 // ------------------------------------------------------------------------------------------------
 // Global variable declarations
 // ------------------------------------------------------------------------------------------------
-volatile bool alarmFlag         = false;      // Flag for alarm interrupt service routine
-volatile bool wdtFlag           = false;      // Flag for Watchdog Timer interrupt service routine
-volatile int  wdtCounter        = 0;          // Watchdog Timer interrupt counter
-bool          resetFlag         = 0;          // Flag to force system reset using Watchdog Timer
-uint8_t       moSbdBuffer[340];               // Buffer for Mobile Originated SBD (MO-SBD) message (340 bytes max)
-uint8_t       mtSbdBuffer[270];               // Buffer for Mobile Terminated SBD (MT-SBD) message (270 bytes max)
+volatile bool alarmFlag         = false;  // Flag for alarm interrupt service routine
+volatile bool wdtFlag           = false;  // Flag for Watchdog Timer interrupt service routine
+volatile int  wdtCounter        = 0;      // Watchdog Timer interrupt counter
+bool          resetFlag         = 0;      // Flag to force system reset using Watchdog Timer
+uint8_t       moSbdBuffer[340];           // Buffer for Mobile Originated SBD (MO-SBD) message (340 bytes max)
+uint8_t       mtSbdBuffer[270];           // Buffer for Mobile Terminated SBD (MT-SBD) message (270 bytes max)
 size_t        moSbdBufferSize;
 size_t        mtSbdBufferSize;
-unsigned int  iterationCounter  = 0;          // Counter to track total number of program iterations (zero indicates a reset)
-byte          samples           = 30;         // Number of samples to average accelerometer and magnetometer readings
-byte          retransmitCounter = 0;          // Counter to track Iridium 9603 transmission reattempts
-byte          transmitCounter   = 0;          // Counter to track Iridium 9603 transmission intervals
-unsigned int  failureCounter    = 0;          // Counter to track consecutive failed Iridium transmission attempts
-unsigned long previousMillis    = 0;          // Global millis() timer
-unsigned long alarmTime         = 0;          // Global epoch alarm time variable
-unsigned long unixtime          = 0;          // Global epoch time variable
-float         temperatureInt    = 0.0;        // Internal temperature (°C)
-float         humidityInt       = 0.0;        // Internal hunidity (%)
-float         pressureInt       = 0.0;        // Internal pressure (hPa)
-float         voltage           = 0.0;        // Battery voltage
-tmElements_t  tm;                             // Variable for converting time elements to time_t
+unsigned int  iterationCounter  = 0;      // Counter to track total number of program iterations (zero indicates a reset)
+byte          samples           = 30;     // Number of samples to average accelerometer and magnetometer readings
+byte          retransmitCounter = 0;      // Counter to track Iridium 9603 transmission reattempts
+byte          transmitCounter   = 0;      // Counter to track Iridium 9603 transmission intervals
+unsigned int  failureCounter    = 0;      // Counter to track consecutive failed Iridium transmission attempts
+unsigned long previousMillis    = 0;      // Global millis() timer
+unsigned long alarmTime         = 0;      // Global epoch alarm time variable
+unsigned long unixtime          = 0;      // Global epoch time variable
+unsigned int  sampleCounter     = 0;      // Global sensor measurement counter
+unsigned int  cutoffCounter     = 0;      // Global battery voltage cutoff sleep cycle counter
+float         temperatureInt    = 0.0;    // Internal temperature (°C)
+float         humidityInt       = 0.0;    // Internal humidity (%)
+float         pressureInt       = 0.0;    // Internal pressure (hPa)
+float         latitude          = 0.0;    // GNSS latitude (DD)
+float         longitude         = 0.0;    // GNSS longitude (DD)
+byte          satellites        = 0;      // GNSS satellites
+float         hdop              = 0.0;    // GNSS HDOP
+float         voltage           = 0.0;    // Battery voltage
+tmElements_t  tm;                         // Variable for converting time elements to time_t
 
 // ------------------------------------------------------------------------------------------------
 // Magnetometer min/max calibration
@@ -206,12 +211,12 @@ typedef union
 {
   struct
   {
-    uint32_t  alarmInterval;      // 4 bytes
+    uint16_t  sampleInterval;     // 2 bytes
     uint8_t   transmitInterval;   // 1 byte
     uint8_t   retransmitLimit;    // 1 byte
     uint8_t   resetFlag;          // 1 byte
   };
-  uint8_t bytes[7]; // Size of message to be received in bytes
+  uint8_t bytes[5]; // Size of message to be received in bytes
 } SBD_MT_MESSAGE;
 
 SBD_MT_MESSAGE mtSbdMessage;
@@ -219,21 +224,19 @@ SBD_MT_MESSAGE mtSbdMessage;
 // Structure to store device online/offline states
 struct struct_online
 {
-  bool bme280     = false;
-  bool dps310     = false;
-  bool lis2mdl    = false;
-  bool lsm303agr  = false;
-  bool gnss       = false;
+  bool bme280   = false;
+  bool lis2mdl  = false;
+  bool lsm303   = false;
+  bool gnss     = false;
 } online;
 
-// Union to store loop timers`
+// Union to store loop timers
 struct struct_timer
 {
   unsigned long readRtc;
   unsigned long readBattery;
   unsigned long readBme280;
-  unsigned long readDps310;
-  unsigned long readLsm303agr;
+  unsigned long readLsm303;
   unsigned long readGnss;
   unsigned long iridium;
 
@@ -246,7 +249,7 @@ void setup()
 {
   // Pin assignments
   pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(PIN_IRIDIUM_EN, OUTPUT);
+  pinMode(PIN_5V_EN, OUTPUT);
   pinMode(PIN_GNSS_EN, OUTPUT);
   pinMode(PIN_SENSOR_EN, OUTPUT);
   pinMode(PIN_IMU_EN, OUTPUT);
@@ -254,7 +257,7 @@ void setup()
   digitalWrite(PIN_SENSOR_EN, LOW);   // Disable power to sensors
   digitalWrite(PIN_GNSS_EN, HIGH);    // Disable power to GNSS
   digitalWrite(PIN_IMU_EN, LOW);      // Disable power to IMU
-  digitalWrite(PIN_IRIDIUM_EN, LOW);  // Disable power to Iridium 9603
+  digitalWrite(PIN_5V_EN, LOW);       // Disable power to RockBLOCK 9603
 
   // Configure analog-to-digital (ADC) converter
   configureAdc();
@@ -305,45 +308,102 @@ void loop()
     // Reset WDT
     petDog();
 
+    // Increment the sample counter
+    sampleCounter++;
+
     // Check if program is running for the first time
     if (!firstTimeFlag)
     {
+      // Wake from deep sleep
       wakeUp();
+
+      // Blink LED
+      blinkLed(PIN_LED_RED, 4, 250);
     }
 
     DEBUG_PRINT("Info: Alarm trigger "); printDateTime();
 
-    // Perform measurements
-    enableSensorPower();  // Enable 3.3V power to sensor(s)
-    enableImuPower();     // Enable 3.3V power to IMU
-    readBattery();        // Read the battery voltage
-    readGnss();           // Read the GNSS
-    readLsm303agr();         // Read the IMU
-    readBme280();         // Read sensor(s)
-    disableSensorPower(); // Disable 3.3V power to sensor(s)
-    disableImuPower();    // Disable 3.3V power to IMU
+    // Read battery voltage
+    readBattery();
 
-    writeBuffer();        // Write the data to transmit buffer
-    transmitData();       // Transmit data via Iridium transceiver
-    printTimers();        // Print function execution timers
-    setRtcAlarm();        // Set the RTC alarm
+    // Check if battery voltage is above cutoff threshold
+    if (voltage < batteryCutoff)
+    {
+      cutoffCounter++;
 
-    DEBUG_PRINTLN("Info: Entering deep sleep...");
-    DEBUG_PRINTLN();
+      // In the event that the battery voltage never recovers, force a reset of the
+      // system after 1 week
+      if (cutoffCounter > 168)
+      {
+        // Force WDT reset
+        while (1);
+      }
 
-    // Prepare for sleep
-    prepareForSleep();
+      DEBUG_PRINTLN("Warning: Battery voltage cutoff exceeded. Entering deep sleep...");
+
+      // Reset sample counter
+      sampleCounter = 0;
+
+      // Clear statistics objects
+      clearStats();
+
+      // Go to sleep
+      setCutoffAlarm();
+    }
+    else
+    {
+      DEBUG_PRINT("Info: Battery voltage good: "); DEBUG_PRINTLN(voltage);
+
+      // Clear battery cutoff counter
+      cutoffCounter = 0;
+      
+      // Perform measurements
+      enableSensorPower();  // Enable power to sensor(s)
+      enableImuPower();     // Enable power to IMU
+      readBattery();        // Read the battery voltage
+      readGnss();           // Read the GNSS
+      readLsm303();         // Read the IMU
+      readBme280();         // Read sensor(s)
+      disableSensorPower(); // Disable 3.3V power to sensor(s)
+      disableImuPower();    // Disable 3.3V power to IMU
+
+      // Check if number of samples collected has been reached and calculate statistics (if enabled)
+      if ((sampleCounter == averageInterval) || firstTimeFlag)
+      {
+        calculateStats(); // Calculate statistics of variables to be transmitted
+        writeBuffer();    // Write data to transmit buffer
+
+        // Check if data transmission interval has been reached
+        if ((transmitCounter == transmitInterval) || firstTimeFlag)
+        {
+          transmitData();   // Transmit data via Iridium transceiver
+        }
+        sampleCounter = 0; // Reset sample counter
+      }
+
+      // Print function execution timers
+      printTimers();
+
+      // Set the RTC alarm
+      setRtcAlarm();
+
+      DEBUG_PRINTLN("Info: Entering deep sleep...");
+      DEBUG_PRINTLN();
+
+      // Prepare for sleep
+      prepareForSleep();
+    }
+
+    // Check for WDT interrupts
+    if (wdtFlag)
+    {
+      petDog(); // Reset the WDT
+    }
+
+    // Blink LED to indicate WDT interrupt and nominal system operation
+    blinkLed(LED_BUILTIN, 1, 25);
+
+    // Enter deep sleep and wait for WDT or RTC alarm interrupt
+    goToSleep();
   }
-
-  // Check for Watchdog Timer interrupts
-  if (wdtFlag)
-  {
-    petDog(); // Reset the Watchdog Timer
-  }
-
-  // Blink LED to indicate WDT interrupt and nominal system operation
-  blinkLed(LED_BUILTIN, 1, 25);
-
-  // Enter deep sleep and wait for WDT or RTC alarm interrupt
-  goToSleep();
 }
