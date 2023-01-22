@@ -2,7 +2,7 @@
 // Adafruit LSM303AGR Accelerometer/Magnetomter
 // https://www.adafruit.com/product/4413
 // ----------------------------------------------------------------------------
-void configureLsm303agr()
+void configureLsm303()
 {
   // Enable power to IMU
   enableImuPower();
@@ -10,15 +10,15 @@ void configureLsm303agr()
   DEBUG_PRINT("Info: Initializing LSM303AGR + LIS2MDL...");
 
   // Initialize LSM303AGR accelerometer
-  if (lsm303agr.begin())
+  if (lsm303.begin())
   {
-    online.lsm303agr = true;
+    online.lsm303 = true;
     DEBUG_PRINTLN("success!");
   }
   else
   {
     DEBUG_PRINTLN(F("Warning: Failed to initialize LSM303AGR!"));
-    online.lsm303agr = false;
+    online.lsm303 = false;
   }
 
   // Initialize LIS2MDL magnetometer
@@ -73,13 +73,13 @@ int getHeading(float acc[3], float mag[3], float p[3])
   return heading;
 }
 
-void readLsm303agr()
+void readLsm303()
 {
   // Start loop timer
   unsigned long loopStartTime = millis();
 
   // Initialize IMU
-  configureLsm303agr();
+  configureLsm303();
 
   // Centered and scaled accelerometer/magnetomer data initialized to zero
   float Axyz[3] = {};
@@ -87,7 +87,7 @@ void readLsm303agr()
   int heading = 0;
 
   // Check if IMU initialized successfully
-  if (online.lsm303agr && online.lis2mdl)
+  if (online.lsm303 && online.lis2mdl)
   {
     DEBUG_PRINT("Info: Reading LSM303AGR + LIS2MDL...");
 
@@ -97,7 +97,7 @@ void readLsm303agr()
     // Read accelerometer data
     sensors_event_t accel;
 
-    lsm303agr.getEvent(&accel);
+    lsm303.getEvent(&accel);
     Axyz[0] += accel.acceleration.x;
     Axyz[1] += accel.acceleration.y;
     Axyz[2] += accel.acceleration.z;
@@ -129,7 +129,7 @@ void readLsm303agr()
   disableImuPower();
 
   // Stop loop timer
-  timer.readLsm303agr = millis() - loopStartTime;
+  timer.readLsm303 = millis() - loopStartTime;
 }
 
 // Basic vector operations
@@ -207,65 +207,4 @@ void readBme280()
   }
   // Stop the loop timer
   timer.readBme280 = millis() - loopStartTime;
-}
-
-// ----------------------------------------------------------------------------
-// Adafruit DPS310 Precision Barometric Pressure Sensor
-// https://www.adafruit.com/product/4494
-// ----------------------------------------------------------------------------
-void configureDps310()
-{
-  DEBUG_PRINT("Info: Initializing DPS310...");
-
-  if (dps310.begin_I2C())
-  {
-    online.dps310 = true;
-    DEBUG_PRINTLN("success!");
-    dps310.configurePressure(DPS310_64HZ, DPS310_64SAMPLES);
-    dps310.configureTemperature(DPS310_64HZ, DPS310_64SAMPLES);
-  }
-  else
-  {
-    online.dps310 = false;
-    DEBUG_PRINTLN("failed!");
-  }
-}
-
-// Read DPS310
-void readDps310()
-{
-  // Start the loop timer
-  unsigned long loopStartTime = millis();
-
-  // Initialize sensor(s)
-  configureDps310();
-
-  // Check if sensor initialized successfully
-  if (online.dps310)
-  {
-    DEBUG_PRINT("Info: Reading DPS310...");
-
-    sensors_event_t temp_event, pressure_event;
-
-    // Read sensor until value is returned or timeout is exceeded
-    while ((!dps310.temperatureAvailable() || !dps310.pressureAvailable()) && millis() - loopStartTime < 5000UL)
-    {
-      return;
-    }
-
-    // Read sensor data
-    dps310.getEvents(&temp_event, &pressure_event);
-    float temperatureInt = temp_event.temperature;
-
-    // Write data to union
-    moSbdMessage.temperatureInt = temperatureInt * 100;
-
-    DEBUG_PRINTLN("done.");
-  }
-  else
-  {
-    DEBUG_PRINTLN("Warning: DPS310 offline!");
-  }
-  // Stop the loop timer
-  timer.readDps310 = millis() - loopStartTime;
 }

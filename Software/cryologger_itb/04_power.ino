@@ -73,6 +73,7 @@ void disableSensorPower()
 void enableGnssPower()
 {
   digitalWrite(PIN_GNSS_EN, LOW);
+  myDelay(1000);
 }
 
 // Disable power to GNSS
@@ -82,18 +83,19 @@ void disableGnssPower()
 }
 
 // Enable power to RockBLOCK 9603
-void enableIridiumPower()
+void enable5V()
 {
-  digitalWrite(PIN_IRIDIUM_EN, HIGH);
+  digitalWrite(PIN_5V_EN, HIGH);
+  myDelay(500);
 }
 
 // Disable power to RockBLOCK 9603
-void disableIridiumPower()
+void disable5V()
 {
-  digitalWrite(PIN_IRIDIUM_EN, LOW);
+  digitalWrite(PIN_5V_EN, LOW);
 }
 
-//
+// Prepare system for sleep
 void prepareForSleep()
 {
   // Disable serial
@@ -115,15 +117,8 @@ void goToSleep()
     firstTimeFlag = false;
   }
 
-  //disableGnssPower();
-  //disableSensorPower();
-  //disableImuPower();
-
   // Enter deep sleep
   LowPower.deepSleep();
-
-  // Sleep until next alarm match
-  //rtc.standbyMode();
 
   /* Code sleeps here and awaits RTC or WDT interrupt */
 }

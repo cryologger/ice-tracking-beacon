@@ -21,7 +21,7 @@ void printSettings()
   printLine();
   DEBUG_PRINTLN("Current Settings");
   printLine();
-  DEBUG_PRINT("alarmInterval: ");     printTab(2);  DEBUG_PRINTLN(alarmInterval);
+  DEBUG_PRINT("sampleInterval: ");     printTab(2);  DEBUG_PRINTLN(sampleInterval);
   DEBUG_PRINT("transmitInterval: ");  printTab(1);  DEBUG_PRINTLN(transmitInterval);
   DEBUG_PRINT("retransmitCounter: "); printTab(1);  DEBUG_PRINTLN(retransmitCounter);
   DEBUG_PRINT("retransmitLimit: ");   printTab(1);  DEBUG_PRINTLN(retransmitLimit);
@@ -38,7 +38,7 @@ void printTimers()
   DEBUG_PRINT("readBattery: ");     printTab(1);  DEBUG_PRINTLN(timer.readBattery);
   DEBUG_PRINT("readRtc: ");         printTab(1);  DEBUG_PRINTLN(timer.readRtc);
   DEBUG_PRINT("readBme280: ");      printTab(1);  DEBUG_PRINTLN(timer.readBme280);
-  DEBUG_PRINT("readLsm303agr: ");   printTab(1);  DEBUG_PRINTLN(timer.readLsm303agr);
+  DEBUG_PRINT("readLsm303: ");      printTab(1);  DEBUG_PRINTLN(timer.readLsm303);
   DEBUG_PRINT("readGnss: ");        printTab(1);  DEBUG_PRINTLN(timer.readGnss);
   DEBUG_PRINT("transmitData: ");    printTab(1);  DEBUG_PRINTLN(timer.iridium);
   DEBUG_PRINT("freeRam(): ");       printTab(1);  DEBUG_PRINTLN(freeRam());
@@ -76,7 +76,7 @@ void printMtSbd()
   printLine();
   DEBUG_PRINTLN("MT-SBD Message Data");
   printLine();
-  DEBUG_PRINT("alarmInterval:");    printTab(2);  DEBUG_PRINTLN(mtSbdMessage.alarmInterval);
+  DEBUG_PRINT("sampleInterval:");    printTab(2);  DEBUG_PRINTLN(mtSbdMessage.sampleInterval);
   DEBUG_PRINT("transmitInterval:"); printTab(1);  DEBUG_PRINTLN(mtSbdMessage.transmitInterval);
   DEBUG_PRINT("retransmitLimit:");  printTab(1);  DEBUG_PRINTLN(mtSbdMessage.retransmitLimit);
   DEBUG_PRINT("resetFlag:");        printTab(2);  DEBUG_PRINTLN(mtSbdMessage.resetFlag);
