@@ -5,6 +5,8 @@
 <img alt="GitHub issues" src="https://img.shields.io/github/issues/adamgarbo/Cryologger_Iceberg_Tracking_Beacon">
 </p>
 
+### Warning: This project is under active development. 
+
 ![2021_300434065734810](https://user-images.githubusercontent.com/22924092/158026368-e336462b-1e3f-46a9-8846-9ab7fdb8b459.JPG)
 
 ## 1.0 Introduction
@@ -37,25 +39,25 @@ Another major change in v3.0 is a custom carrier board PCB that designed to grea
 
 ### 2.2 Bill of Materials 
 
-**Table 1.** Bill of materials and associated costs for components used in the Cryologger iceberg tracking beacon v3.0. Component costs current as of July 2021.
+**Table 1.** Bill of materials and associated costs for components used in the Cryologger iceberg tracking beacon v3.1. Warning: BoM is a work in progress and does not include all components. Please contact for more information. Component costs current as of March 2023.
 | Component | Product | Cost (USD) |
 | --- | --- | :---: |
-| Satellite transceiver | [Rock7 RockBLOCK 9603](http://www.rock7mobile.com/products-rockblock-9603) | $249.95 |
+| Satellite transceiver | [Rock7 RockBLOCK 9603](https://www.groundcontrol.com/us/product/rockblock-9603-compact-plug-and-play-satellite-transmitter/) | $302.00 |
 | Satellite antenna (optional) | [Maxtena M1621HCT-P-SMA](https://maxtena.com/products/f-passive/m1621hct-p-sma-iridium-passive-antenna/) | $50.00 |
 | Processor | [Adafruit Feather M0 Basic Proto](https://www.adafruit.com/product/2772) | $19.95 |
-| GPS | [Adafruit Ultimate GPS FeatherWing](https://www.adafruit.com/product/3133) | $39.95 |
-| IMU | [Adafruit LSM303AGR Accelerometer Magnetometer](https://www.adafruit.com/product/4413) | $12.95 |
-| Sensor | [Adafruit DPS310 Precision Barometric Pressure Sensor](https://www.adafruit.com/product/4494) | $6.95 |
-| Voltage regulator | [Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3791) | $4.95 |
-| Voltage regulator | [Pololu D36V6F5 5V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3792) | $4.95 |
-| Resistor | [2 M 1% 0.6 W resistor](https://www.mouser.ca/ProductDetail/594-MBB02070C2004FCT) | $0.29 |
+| GPS | [Adafruit Ultimate GPS FeatherWing](https://www.adafruit.com/product/3133) | $24.95 |
+| IMU | [Adafruit LSM303AGR Accelerometer Magnetometer](https://www.adafruit.com/product/4413) | $12.50 |
+| Sensor | [Adafruit BME280 Temperature Humidity Pressure Sensor](https://www.adafruit.com/product/2652) | $14.95 |
+| Voltage regulator | [Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3791) | $16.95 |
+| Voltage regulator | [Pololu D36V6F5 5V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3792) | $16.95 |
+| Resistor | [10 M 1% 0.6 W resistor](https://www.mouser.ca/ProductDetail/594-MBB02070C1005FCT) | $0.29 |
 | Resistor | [1 M 1% 0.6 W resistor](https://www.mouser.ca/ProductDetail/594-B0207C1M000F5T) | $0.20 |
 | Capacitor | [0.1 uF Capacitor](https://www.mouser.ca/ProductDetail/Vishay-BC-Components/K104K15X7RF53L2?qs=mWFvmKOfYW8KbAXlf9eSQA%3D%3D) | $0.29 |
-| Power connector |	[Phoenix Contact MSTB 2,5/ 2-ST-5,08 - 1757019](https://www.mouser.ca/ProductDetail/Phoenix-Contact/1757242?qs=%2Fha2pyFadugVjodGKkrF4xNq%252BZEVHysqCHlL2cTnJ%252B8%3D) | $0.67 |
-| Power connector	| [Phoenix Contact MSTBA 2,5/ 2-G-5,08 - 1757242](https://www.mouser.ca/ProductDetail/Phoenix-Contact/1757019?qs=sGAEpiMZZMvlX3nhDDO4AGmxTE5dWGQY3FmaBdjJUN0%3D) | $2.08 |
-| Connector |	[Molex PicoBlade PCB Header](https://www.mouser.ca/datasheet/2/276/0530471010_PCB_HEADERS-171035.pdf) | $0.50 |
-| Enclosure | [Hammond Manufacturing Polycarbonate 1554WA2GY ](https://www.hammfg.com/part/1554WA2GY) | $30.00 |
-| Battery | [Tadiran TLP93121](https://www.tadiranbat.com/assets/tlp-93121-b-al1.pdf) | $150.00 |
+| Power connector |	[Phoenix Contact MSTB 2,5/ 2-ST-5,08 - 1757019](https://www.mouser.ca/ProductDetail/Phoenix-Contact/1757242?qs=%2Fha2pyFadugVjodGKkrF4xNq%252BZEVHysqCHlL2cTnJ%252B8%3D) | $0.99 |
+| Power connector	| [Phoenix Contact MSTBA 2,5/ 2-G-5,08 - 1757242](https://www.mouser.ca/ProductDetail/Phoenix-Contact/1757019?qs=sGAEpiMZZMvlX3nhDDO4AGmxTE5dWGQY3FmaBdjJUN0%3D) | $2.98 |
+| Connector |	[Molex PicoBlade PCB Header](https://www.mouser.ca/ProductDetail/Molex/53047-1010?qs=dvxwXVM4mZUfJg3FKCXbvw%3D%3D) | $0.64 |
+| Enclosure | [Nanuk 904](https://nanukcases.ca/products/nanuk-904) | $50.00 |
+| Battery | [Tadiran TLP93121](https://www.tadiranbat.com/assets/tlp-93121-b-al1.pdf) | $125.00 |
 | **Total** | | |
 
 #### Photos
@@ -70,6 +72,7 @@ Another major change in v3.0 is a custom carrier board PCB that designed to grea
 | --- | :---: | --- |
 | Datetime  |   | YYYY-MM-DD HH:MM:SS |
 | Temperature | °C  | Internal temperature |
+| Humidity | %  | Internal humidity |
 | Pressure | hPa | Internal pressure |
 | Pitch | °|  |
 | Roll | ° |  |
@@ -78,7 +81,6 @@ Another major change in v3.0 is a custom carrier board PCB that designed to grea
 | Longitude | DD |  |
 | Satellites | # | Number of satellites in view  |
 | HDOP |  | Horizonal dilution of precision |
-| Altitude | m | GPS altitude |
 | Voltage | V | Battery voltage |
 | Transmit duration  | s | Length of Iridium transmission  |
 | Transmit status | | Iridium error return code |
