@@ -40,25 +40,32 @@ Another major change in v3.0 is a custom carrier board PCB that designed to grea
 ### 2.2 Bill of Materials 
 
 **Table 1.** Bill of materials and associated costs for components used in the Cryologger iceberg tracking beacon v3.1. Warning: BoM is a work in progress and does not include all components. Please contact for more information. Component costs current as of March 2023.
-| Component | Product | Cost (USD) |
-| --- | --- | :---: |
-| Satellite transceiver | [Rock7 RockBLOCK 9603](https://www.groundcontrol.com/us/product/rockblock-9603-compact-plug-and-play-satellite-transmitter/) | $302.00 |
-| Satellite antenna (optional) | [Maxtena M1621HCT-P-SMA](https://maxtena.com/products/f-passive/m1621hct-p-sma-iridium-passive-antenna/) | $50.00 |
-| Processor | [Adafruit Feather M0 Basic Proto](https://www.adafruit.com/product/2772) | $19.95 |
-| GPS | [Adafruit Ultimate GPS FeatherWing](https://www.adafruit.com/product/3133) | $24.95 |
-| IMU | [Adafruit LSM303AGR Accelerometer Magnetometer](https://www.adafruit.com/product/4413) | $12.50 |
-| Sensor | [Adafruit BME280 Temperature Humidity Pressure Sensor](https://www.adafruit.com/product/2652) | $14.95 |
-| Voltage regulator | [Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3791) | $16.95 |
-| Voltage regulator | [Pololu D36V6F5 5V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3792) | $16.95 |
-| Resistor | [10 M 1% 0.6 W resistor](https://www.mouser.ca/ProductDetail/594-MBB02070C1005FCT) | $0.29 |
-| Resistor | [1 M 1% 0.6 W resistor](https://www.mouser.ca/ProductDetail/594-B0207C1M000F5T) | $0.20 |
-| Capacitor | [0.1 uF Capacitor](https://www.mouser.ca/ProductDetail/Vishay-BC-Components/K104K15X7RF53L2?qs=mWFvmKOfYW8KbAXlf9eSQA%3D%3D) | $0.29 |
-| Power connector |	[Phoenix Contact MSTB 2,5/ 2-ST-5,08 - 1757019](https://www.mouser.ca/ProductDetail/Phoenix-Contact/1757242?qs=%2Fha2pyFadugVjodGKkrF4xNq%252BZEVHysqCHlL2cTnJ%252B8%3D) | $0.99 |
-| Power connector	| [Phoenix Contact MSTBA 2,5/ 2-G-5,08 - 1757242](https://www.mouser.ca/ProductDetail/Phoenix-Contact/1757019?qs=sGAEpiMZZMvlX3nhDDO4AGmxTE5dWGQY3FmaBdjJUN0%3D) | $2.98 |
-| Connector |	[Molex PicoBlade PCB Header](https://www.mouser.ca/ProductDetail/Molex/53047-1010?qs=dvxwXVM4mZUfJg3FKCXbvw%3D%3D) | $0.64 |
-| Enclosure | [Nanuk 904](https://nanukcases.ca/products/nanuk-904) | $50.00 |
-| Battery | [Tadiran TLP93121](https://www.tadiranbat.com/assets/tlp-93121-b-al1.pdf) | $125.00 |
-| **Total** | | |
+| Component | Product | Quantity | Cost (USD) |
+| --- | --- | :---: | :---: |
+| Satellite transceiver | [Rock7 RockBLOCK 9603](https://www.groundcontrol.com/us/product/rockblock-9603-compact-plug-and-play-satellite-transmitter/) | 1 | $302.00 |
+| Satellite antenna (optional) | [Maxtena M1621HCT-P-SMA](https://maxtena.com/products/f-passive/m1621hct-p-sma-iridium-passive-antenna/) | 1 | $50.00 |
+| Processor | [Adafruit Feather M0 Basic Proto](https://www.adafruit.com/product/2772) | 1 | $19.95 |
+| GPS | [Adafruit Ultimate GPS FeatherWing](https://www.adafruit.com/product/3133) | 1 | $24.95 |
+| IMU | [Adafruit LSM303AGR Accelerometer Magnetometer](https://www.adafruit.com/product/4413) | 1 | $12.50 |
+| Sensor | [Adafruit BME280 Temperature Humidity Pressure Sensor](https://www.adafruit.com/product/2652) | 1 | $14.95 |
+| Voltage regulator | [Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3791) | 1 | $16.95 |
+| Voltage regulator | [Pololu D36V6F5 5V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3792) | 1 | $16.95 |
+| Resistor | [10 M 1% 0.6 W resistor](https://www.mouser.ca/ProductDetail/594-MBB02070C1005FCT) | 1 | $0.29 |
+| Resistor | [1 M 1% 0.6 W resistor](https://www.mouser.ca/ProductDetail/594-B0207C1M000F5T) | 1 | $0.20 |
+| Capacitor | [0.1 uF Capacitor](https://www.mouser.ca/ProductDetail/Vishay-BC-Components/K104K15X7RF53L2?qs=mWFvmKOfYW8KbAXlf9eSQA%3D%3D) | 1 | $0.29 |
+| Power connector |	[Phoenix Contact MSTB 2,5/ 2-ST-5,08 - 1757019](https://www.mouser.ca/ProductDetail/Phoenix-Contact/1757242?qs=%2Fha2pyFadugVjodGKkrF4xNq%252BZEVHysqCHlL2cTnJ%252B8%3D) | 1 | $0.99 |
+| Power connector	| [Phoenix Contact MSTBA 2,5/ 2-G-5,08 - 1757242](https://www.mouser.ca/ProductDetail/Phoenix-Contact/1757019?qs=sGAEpiMZZMvlX3nhDDO4AGmxTE5dWGQY3FmaBdjJUN0%3D) | 1 | $2.98 |
+| Connector |	[Molex PicoBlade PCB Header](https://www.mouser.ca/ProductDetail/Molex/53047-1010?qs=dvxwXVM4mZUfJg3FKCXbvw%3D%3D) | 1| $0.64 |
+| Connector |	Molex PicoBlade Crimp Housing | 2|  |
+| Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Yellow | 1 | |
+| Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Orange | 1 | |
+| Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Black | 1 | |
+| Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Slate | 1 | |
+| Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Red | 1 | |
+| Enclosure | [Nanuk 904](https://nanukcases.ca/products/nanuk-904) | 1 | $50.00 |
+| Battery | [Tadiran TLP93121](https://www.tadiranbat.com/assets/tlp-93121-b-al1.pdf) | 1 | $125.00 |
+| PCB | JLCPCB | 1 | $5.00 | 
+| **Total** | | | |
 
 #### Photos
 
