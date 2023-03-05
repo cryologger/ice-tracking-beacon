@@ -53,11 +53,11 @@ float p[] = {1, 0, 0};  // X marking on sensor board points toward yaw = 0
 
 // Min/max magnetometer values
 float m_min[3] = {
-  -86.70, -66.00, -57.45
+  -75.60, -62.25, -52.35
 };
 
 float m_max[3] = {
-  50.25, 75.90, 81.30
+  51.75, 72.60, 78.30
 };
 
 void setup()
