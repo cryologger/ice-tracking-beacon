@@ -34,7 +34,7 @@ Version 3.0 of the Cryologger iceberg tracking beacon builds on the success of v
 #### 2.1.2 Custom PCB
 Another major change in v3.0 is a custom carrier board PCB that designed to greatly simplify the assembly process. The PCB was designed in KiCad and fabricated by JLCPCB. 
 
-<p align="left"><img width="600" alt="image" src="https://user-images.githubusercontent.com/22924092/162533346-6f47decd-8a85-408f-8d23-26eb9c340179.png"></p>
+<p align="left"><img alt="image" src="https://user-images.githubusercontent.com/22924092/222990941-2d50d191-8055-475c-9464-4d9a1b2d12a2.png"></p>
 <p align="left"><b>Figure 1:</b> 3D rendering of Cryologger iceberg drift tracking beacon carrier board designed in KiCad.</p>
 
 ### 2.2 Bill of Materials 
@@ -69,8 +69,9 @@ Another major change in v3.0 is a custom carrier board PCB that designed to grea
 
 #### Photos
 
-<p align="left"><img src="https://user-images.githubusercontent.com/22924092/128431908-5bdc1f6b-d60b-4290-8024-060dc5c09b14.jpeg" width="480"></p>
-<p align="left"><b>Figure 2:</b> Assembled Cryologger iceberg drift tracking beacon.</p>
+<p align="center"><img src="https://github.com/adamgarbo/cryologger-ice-tracking-beacon/blob/main/Images/IMG_5407.jpeg" width="480"></p>
+<p align="center"><b>Figure 2:</b> Assembled Cryologger ice drift tracking beacon housed in Nanuk case and 3D-printed case lid removed.</p>
+
 
 ### 2.3 Measurements
 
