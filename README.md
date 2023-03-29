@@ -44,8 +44,8 @@ Another major change in v3.0 is a custom carrier board PCB that designed to grea
 | --- | --- | :---: | :---: |
 | Satellite transceiver | [Rock7 RockBLOCK 9603](https://www.groundcontrol.com/us/product/rockblock-9603-compact-plug-and-play-satellite-transmitter/) | 1 | $302.00 |
 | Satellite antenna (optional) | [Maxtena M1621HCT-P-SMA](https://maxtena.com/products/f-passive/m1621hct-p-sma-iridium-passive-antenna/) | 1 | $50.00 |
-| Processor | [Adafruit Feather M0 Basic Proto](https://www.adafruit.com/product/2772) | 1 | $19.95 |
-| GPS | [Adafruit Ultimate GPS FeatherWing](https://www.adafruit.com/product/3133) | 1 | $24.95 |
+| Microcontroller | [Adafruit Feather M0 Basic Proto](https://www.adafruit.com/product/2772) | 1 | $19.95 |
+| GNSS Receiver | [Adafruit Ultimate GPS FeatherWing](https://www.adafruit.com/product/3133) | 1 | $24.95 |
 | IMU | [Adafruit LSM303AGR Accelerometer Magnetometer](https://www.adafruit.com/product/4413) | 1 | $12.50 |
 | Sensor | [Adafruit BME280 Temperature Humidity Pressure Sensor](https://www.adafruit.com/product/2652) | 1 | $14.95 |
 | Voltage regulator | [Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3791) | 1 | $16.95 |
@@ -63,7 +63,7 @@ Another major change in v3.0 is a custom carrier board PCB that designed to grea
 | Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Slate | 1 | |
 | Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Red | 1 | |
 | Enclosure | [Nanuk 904](https://nanukcases.ca/products/nanuk-904) | 1 | $50.00 |
-| Battery | [Tadiran TLP93121](https://www.tadiranbat.com/assets/tlp-93121-b-al1.pdf) | 1 | $125.00 |
+| Battery | [Tadiran TLP93121](https://www.tadiranbat.com/assets/tlp-93121-b-al1.pdf) | 1 | $145.00 |
 | PCB | JLCPCB | 1 | $5.00 | 
 | **Total** | | | |
 
