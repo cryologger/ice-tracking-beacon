@@ -1,6 +1,6 @@
 /*
   Title:    Cryologger Ice Tracking Beacon (ITB) - v3.2.0
-  Date:     December 15, 2022
+  Date:     April 3, 2023
   Author:   Adam Garbo
 
   Description:
@@ -8,7 +8,6 @@
 
   Components:
   - Rock7 RockBLOCK 9603
-  - Maxtena M1621HCT-P-SMA antenna
   - Adafruit Feather M0 Proto
   - Adafruit Ultimate GPS Featherwing (PA1616D)
   - Adafruit BME280 Temperature Humidity Pressure Sensor
@@ -17,9 +16,7 @@
   - Pololu 5V, 600mA Step-Down Voltage Regulator D36V6F5
 
   Comments:
-  - Began merging of code with the Cryologger Automatic Weather Station (AWS) repository.
-  - The LSM6DS33/LIS3MDL 9-dof IMU was discontinued and replaced with the LSM303AGR/LIS2MDL 6-dof
-  accelerometer/magnetometer.
+  - Intended for deployment during the 2023 Amundsen Expedition.
 */
 
 // ------------------------------------------------------------------------------------------------
@@ -41,7 +38,7 @@
 // ----------------------------------------------------------------------------
 // Define unique identifier
 // ----------------------------------------------------------------------------
-#define CRYOLOGGER_ID 1
+#define CRYOLOGGER_ID 6
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
@@ -120,10 +117,10 @@ TinyGPSCustom gnssValidity(gnss, "GNRMC", 2); // Validity
 // ------------------------------------------------------------------------------------------------
 unsigned long sampleInterval    = 60;     // Sampling interval (minutes). Default: 60 minutes (1 hour)
 unsigned int  averageInterval   = 1;      // Number of samples to be averaged in each transmission. Default: 1 (hourly)
-unsigned int  transmitInterval  = 10;     // Messages to transmit in each Iridium transmission (340 byte limit)
-unsigned int  retransmitLimit   = 1;      // Failed data transmission reattempt (340-byte limit)
+unsigned int  transmitInterval  = 3;      // Messages to transmit in each Iridium transmission (340 byte limit)
+unsigned int  retransmitLimit   = 3;      // Failed data transmission reattempt (340-byte limit)
 unsigned int  gnssTimeout       = 1;      // Timeout for GNSS signal acquisition (minutes)
-unsigned int  iridiumTimeout    = 1;      // Timeout for Iridium transmission (seconds)
+unsigned int  iridiumTimeout    = 180;    // Timeout for Iridium transmission (seconds)
 bool          firstTimeFlag     = true;   // Flag to determine if program is running for the first time
 float         batteryCutoff     = 0.0;    // Battery voltage cutoff threshold (V)
 
@@ -166,15 +163,25 @@ tmElements_t  tm;                         // Variable for converting time elemen
 // https://gist.github.com/CalebFenton/a97444750eb43e3354fd2d0196a2ebcf
 // https://github.com/jremington/LSM9DS1-AHRS
 
-float p[] = {1, 0, 0};  // X marking on sensor board points toward yaw = 0 (N?)
+float p[] = {1, 0, 0};  // X marking on sensor board points toward yaw = 0 (N)
 
 // Min/max magnetometer values
 float m_min[3] = {
-  -75.60, -62.25, -52.35
+  //-76.35, -66.15, -23.40 // #1
+  //-109.20, -71.40, -27.75 // #2
+  //-107.25, -52.05, -94.95 // #3
+  //-28.50, -39.30, -30.90 // #4
+  //-72.30, -76.50, -96.75 // #5
+  -85.65, -62.25, -70.95 // #6
 };
 
 float m_max[3] = {
-  51.75, 72.60, 78.30
+  //51.90, 61.95, 105.60 // #1
+  //21.15, 59.10, 102.45 // #2
+  //25.50, 221.70, 132.75 // #3
+  //93.45, 83.10, 95.85 // #4
+  //51.00, 52.20, 36.45 // #5
+  41.10, 60.00, 56.85 // #6
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -272,7 +279,7 @@ void setup()
 
   DEBUG_PRINTLN();
   printLine();
-  DEBUG_PRINT("Cryologger Ice Tracking Beacon - Grise Fiord #"); DEBUG_PRINTLN(CRYOLOGGER_ID);
+  DEBUG_PRINT("Cryologger - Ice Tracking Beacon #"); DEBUG_PRINTLN(CRYOLOGGER_ID);
   printLine();
 
   // Configure devices
@@ -356,7 +363,7 @@ void loop()
 
       // Clear battery cutoff counter
       cutoffCounter = 0;
-      
+
       // Perform measurements
       enableSensorPower();  // Enable power to sensor(s)
       enableImuPower();     // Enable power to IMU

@@ -21,7 +21,7 @@ void printSettings()
   printLine();
   DEBUG_PRINTLN("Current Settings");
   printLine();
-  DEBUG_PRINT("sampleInterval: ");     printTab(2);  DEBUG_PRINTLN(sampleInterval);
+  DEBUG_PRINT("sampleInterval: ");    printTab(1);  DEBUG_PRINTLN(sampleInterval);
   DEBUG_PRINT("transmitInterval: ");  printTab(1);  DEBUG_PRINTLN(transmitInterval);
   DEBUG_PRINT("retransmitCounter: "); printTab(1);  DEBUG_PRINTLN(retransmitCounter);
   DEBUG_PRINT("retransmitLimit: ");   printTab(1);  DEBUG_PRINTLN(retransmitLimit);

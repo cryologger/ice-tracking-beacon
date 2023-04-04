@@ -21,14 +21,14 @@ void readGnss()
 
   // Configure GNSS
   GNSS_PORT.println("$PMTK220,1000*1F"); // Set NMEA update rate to 1 Hz
-  //myDelay(100);
-  //GNSS_PORT.println("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28"); // Set NMEA sentence output frequencies to GGA and RMC
-  //myDelay(100);
+  myDelay(100);
+  GNSS_PORT.println("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28"); // Set NMEA sentence output frequencies to GGA and RMC
+  myDelay(100);
   //GNSS_PORT.println("$PGCMD,33,1*6C"); // Enable antenna updates
   //GNSS_PORT.println("$PGCMD,33,0*6D"); // Disable antenna updates
 
   // Look for GNSS signal for up to gnssTimeout
-  while (!fixFound && millis() - loopStartTime < gnssTimeout * 1000UL) // 60UL *
+  while (!fixFound && millis() - loopStartTime < gnssTimeout * 60UL * 1000UL)
   {
     if (GNSS_PORT.available())
     {

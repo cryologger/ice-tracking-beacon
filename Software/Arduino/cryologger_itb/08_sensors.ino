@@ -119,6 +119,9 @@ void readLsm303()
 
     DEBUG_PRINTLN("done.");
 
+    DEBUG_PRINT("pitch: "); DEBUG_PRINTLN_DEC(pitch, 2);
+    DEBUG_PRINT("roll: "); DEBUG_PRINTLN_DEC(roll, 2);
+    DEBUG_PRINT("heading: "); DEBUG_PRINTLN(heading);
   }
   else
   {
@@ -200,6 +203,11 @@ void readBme280()
     moSbdMessage.pressureInt    = (pressureInt - 850) * 100; // Mean internal pressure (hPa)
 
     DEBUG_PRINTLN("done.");
+
+    DEBUG_PRINT("temperatureInt: "); DEBUG_PRINTLN_DEC(temperatureInt, 2);
+    DEBUG_PRINT("humidityInt: "); DEBUG_PRINTLN_DEC(humidityInt, 2);
+    DEBUG_PRINT("pressureInt: "); DEBUG_PRINTLN_DEC(pressureInt, 2);
+
   }
   else
   {
