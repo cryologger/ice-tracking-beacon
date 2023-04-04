@@ -459,7 +459,7 @@
       "idf": "",
       "netlist": "Cryologger ITB - Adafruit.net",
       "specctra_dsn": "",
-      "step": "",
+      "step": "Cryologger ITB.step",
       "vrml": ""
     },
     "page_layout_descr_file": ""
