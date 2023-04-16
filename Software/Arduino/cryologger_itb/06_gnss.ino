@@ -28,7 +28,7 @@ void readGnss()
   //GNSS_PORT.println("$PGCMD,33,0*6D"); // Disable antenna updates
 
   // Look for GNSS signal for up to gnssTimeout
-  while (!fixFound && millis() - loopStartTime < gnssTimeout * 60UL * 1000UL)
+  while (!fixFound && millis() - loopStartTime < gnssTimeout * 1000UL )
   {
     if (GNSS_PORT.available())
     {
