@@ -1,10 +1,7 @@
 /*
   Title:    Cryologger Ice Tracking Beacon (ITB) - v3.2.0
-  Date:     April 3, 2023
+  Date:     April 15, 2023
   Author:   Adam Garbo
-
-  Description:
-  - Code intended for deployments to be made during the 2022 Grise Fiord community visit.
 
   Components:
   - Rock7 RockBLOCK 9603
@@ -22,23 +19,23 @@
 // ------------------------------------------------------------------------------------------------
 // Libraries
 // ------------------------------------------------------------------------------------------------
-#include <Adafruit_BME280.h>        // https://github.com/adafruit/Adafruit_BME280 (v2.2.2)
-#include <Adafruit_LSM303_Accel.h>  // https://github.com/adafruit/Adafruit_LSM303_Accel (v1.1.6)
-#include <Adafruit_LIS2MDL.h>       // https://github.com/adafruit/Adafruit_LIS2MDL (v2.1.4)
-#include <Adafruit_Sensor.h>        // https://github.com/adafruit/Adafruit_Sensor (v1.1.6)
+#include <Adafruit_BME280.h>        // http://librarymanager/All#Adafruit_BME280 (v2.2.2)
+#include <Adafruit_LSM303_Accel.h>  // http://librarymanager/All#Adafruit_LSM303_Accel (v1.1.6)
+#include <Adafruit_LIS2MDL.h>       // http://librarymanager/All#Adafruit_LIS2MDL (v2.1.4)
+#include <Adafruit_Sensor.h>        // http://librarymanager/All#Adafruit_Sensor (v1.1.6)
 #include <Arduino.h>                // Required for creating new Serial instance. Must be included before <wiring_private.h>
-#include <ArduinoLowPower.h>        // https://github.com/arduino-libraries/ArduinoLowPower (v1.2.2)
-#include <IridiumSBD.h>             // https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library (v3.0.5)
-#include <RTCZero.h>                // https://github.com/arduino-libraries/RTCZero (v1.6.0)
-#include <TimeLib.h>                // https://github.com/PaulStoffregen/Time (v1.6.1)
-#include <TinyGPS++.h>              // https://github.com/mikalhart/TinyGPSPlus (v1.0.3)
+#include <ArduinoLowPower.h>        // http://librarymanager/All#ArduinoLowPower (v1.2.2)
+#include <IridiumSBD.h>             // http://librarymanager/All#SparkFun_IridiumSBD_I2C_Arduino_Library (v3.0.5)
+#include <RTCZero.h>                // http://librarymanager/All#RTCZero (v1.6.0)
+#include <TimeLib.h>                // http://librarymanager/All#Timelib (v1.6.1)
+#include <TinyGPS++.h>              // http://librarymanager/All#TinyGPSPlus (v1.0.3)
 #include <Wire.h>                   // https://www.arduino.cc/en/Reference/Wire
 #include <wiring_private.h>         // Required for creating new Serial instance
 
 // ----------------------------------------------------------------------------
 // Define unique identifier
 // ----------------------------------------------------------------------------
-#define CRYOLOGGER_ID 6
+#define CRYOLOGGER_ID 3
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
@@ -119,7 +116,7 @@ unsigned long sampleInterval    = 60;     // Sampling interval (minutes). Defaul
 unsigned int  averageInterval   = 1;      // Number of samples to be averaged in each transmission. Default: 1 (hourly)
 unsigned int  transmitInterval  = 3;      // Messages to transmit in each Iridium transmission (340 byte limit)
 unsigned int  retransmitLimit   = 3;      // Failed data transmission reattempt (340-byte limit)
-unsigned int  gnssTimeout       = 1;      // Timeout for GNSS signal acquisition (minutes)
+unsigned int  gnssTimeout       = 120;    // Timeout for GNSS signal acquisition (seconds)
 unsigned int  iridiumTimeout    = 180;    // Timeout for Iridium transmission (seconds)
 bool          firstTimeFlag     = true;   // Flag to determine if program is running for the first time
 float         batteryCutoff     = 0.0;    // Battery voltage cutoff threshold (V)
@@ -167,21 +164,23 @@ float p[] = {1, 0, 0};  // X marking on sensor board points toward yaw = 0 (N)
 
 // Min/max magnetometer values
 float m_min[3] = {
+  //0, 0, 0
   //-76.35, -66.15, -23.40 // #1
   //-109.20, -71.40, -27.75 // #2
   //-107.25, -52.05, -94.95 // #3
   //-28.50, -39.30, -30.90 // #4
   //-72.30, -76.50, -96.75 // #5
-  -85.65, -62.25, -70.95 // #6
+  //-85.65, -62.25, -70.95 // #6
 };
 
 float m_max[3] = {
+  //0, 0, 0
   //51.90, 61.95, 105.60 // #1
   //21.15, 59.10, 102.45 // #2
   //25.50, 221.70, 132.75 // #3
   //93.45, 83.10, 95.85 // #4
   //51.00, 52.20, 36.45 // #5
-  41.10, 60.00, 56.85 // #6
+  //41.10, 60.00, 56.85 // #6
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -274,7 +273,7 @@ void setup()
 
 #if DEBUG
   SERIAL_PORT.begin(115200); // Open serial port at 115200 baud
-  blinkLed(LED_BUILTIN, 4, 1000); // Non-blocking delay to allow user to open Serial Monitor
+  blinkLed(LED_BUILTIN, 4, 500); // Non-blocking delay to allow user to open Serial Monitor
 #endif
 
   DEBUG_PRINTLN();
@@ -365,10 +364,10 @@ void loop()
       cutoffCounter = 0;
 
       // Perform measurements
-      enableSensorPower();  // Enable power to sensor(s)
-      enableImuPower();     // Enable power to IMU
       readBattery();        // Read the battery voltage
       readGnss();           // Read the GNSS
+      enableSensorPower();  // Enable power to sensor(s)
+      enableImuPower();     // Enable power to IMU
       readLsm303();         // Read the IMU
       readBme280();         // Read sensor(s)
       disableSensorPower(); // Disable 3.3V power to sensor(s)
@@ -400,17 +399,17 @@ void loop()
       // Prepare for sleep
       prepareForSleep();
     }
-
-    // Check for WDT interrupts
-    if (wdtFlag)
-    {
-      petDog(); // Reset the WDT
-    }
-
-    // Blink LED to indicate WDT interrupt and nominal system operation
-    blinkLed(LED_BUILTIN, 1, 25);
-
-    // Enter deep sleep and wait for WDT or RTC alarm interrupt
-    goToSleep();
   }
+
+  // Check for WDT interrupts
+  if (wdtFlag)
+  {
+    petDog(); // Reset the WDT
+  }
+
+  // Blink LED to indicate WDT interrupt and nominal system operation
+  blinkLed(LED_BUILTIN, 1, 25);
+
+  // Enter deep sleep and wait for WDT or RTC alarm interrupt
+  goToSleep();
 }
