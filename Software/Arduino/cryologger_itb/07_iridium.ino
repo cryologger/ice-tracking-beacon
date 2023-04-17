@@ -86,7 +86,7 @@ void transmitData()
         // Check if MT-SBD message is the correct size
         if (mtSbdBufferSize == 7)
         {
-          DEBUG_PRINTLN("Info: MT-SBD message correct size.");
+          DEBUG_PRINTLN("Info - MT-SBD message correct size.");
 
           // Write incoming MT-SBD message to union/structure
           for (int i = 0; i < mtSbdBufferSize; ++i)
@@ -99,21 +99,25 @@ void transmitData()
           printMtSbd(); // Print MT-SBD message stored in union/structure
 
           // Check if MT-SBD message data is valid and update variables
-          if ((mtSbdMessage.sampleInterval    >= 1  &&  mtSbdMessage.sampleInterval   <= 1440)  &&
-              (mtSbdMessage.transmitInterval  >= 1  &&  mtSbdMessage.transmitInterval <= 24)    &&
-              (mtSbdMessage.retransmitLimit   >= 0  &&  mtSbdMessage.retransmitLimit  <= 24)    &&
+          if ((mtSbdMessage.sampleInterval    >= 1  &&  mtSbdMessage.sampleInterval   <= 60)  &&
+              (mtSbdMessage.averageInterval   >= 1  &&  mtSbdMessage.averageInterval  <= 24)  &&
+              (mtSbdMessage.transmitInterval  >= 1  &&  mtSbdMessage.transmitInterval <= 24)  &&
+              (mtSbdMessage.retransmitLimit   >= 0  &&  mtSbdMessage.retransmitLimit  <= 24)  &&
+              (mtSbdMessage.batteryCutoff     >= 0  &&  mtSbdMessage.batteryCutoff    <= 12)  &&
               (mtSbdMessage.resetFlag         == 0  ||  mtSbdMessage.resetFlag        == 255))
           {
-            DEBUG_PRINTLN("Info: All received values within accepted ranges.");
+            DEBUG_PRINTLN("Info - All received values within accepted ranges.");
 
-            sampleInterval = mtSbdMessage.sampleInterval;     // Update sampling interval
-            transmitInterval = mtSbdMessage.transmitInterval; // Update transmit interval
-            retransmitLimit = mtSbdMessage.retransmitLimit;   // Update retransmit limit
-            resetFlag = mtSbdMessage.resetFlag;               // Update force reset flag
+            sampleInterval    = mtSbdMessage.sampleInterval;    // Update alarm interval
+            averageInterval   = mtSbdMessage.averageInterval;   // Update sample average interval
+            transmitInterval  = mtSbdMessage.transmitInterval;  // Update transmit interval
+            retransmitLimit   = mtSbdMessage.retransmitLimit;   // Update retransmit limit
+            batteryCutoff     = mtSbdMessage.batteryCutoff;     // Update battery cutoff voltage
+            resetFlag         = mtSbdMessage.resetFlag;         // Update force reset flag
           }
           else
           {
-            DEBUG_PRINT("Warning: Received values exceed accepted range!");
+            DEBUG_PRINT("Warning - Received values exceed accepted range!");
           }
         }
         else

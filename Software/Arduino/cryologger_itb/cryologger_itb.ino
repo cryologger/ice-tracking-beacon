@@ -35,7 +35,7 @@
 // ----------------------------------------------------------------------------
 // Define unique identifier
 // ----------------------------------------------------------------------------
-#define CRYOLOGGER_ID 3
+#define CRYOLOGGER_ID 1
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
@@ -165,22 +165,30 @@ float p[] = {1, 0, 0};  // X marking on sensor board points toward yaw = 0 (N)
 // Min/max magnetometer values
 float m_min[3] = {
   //0, 0, 0
-  //-76.35, -66.15, -23.40 // #1
+  -76.35, -66.15, -23.40 // #1
   //-109.20, -71.40, -27.75 // #2
   //-107.25, -52.05, -94.95 // #3
   //-28.50, -39.30, -30.90 // #4
   //-72.30, -76.50, -96.75 // #5
   //-85.65, -62.25, -70.95 // #6
+  //-62.55, -72.00, -51.75 // #7
+  //-63.90, -81.00, -54.90 // #8
+  //-97.05, -92.10, -112.80 // #9
+  //-76.20, -80.40, -81.30 // #10
 };
 
 float m_max[3] = {
   //0, 0, 0
-  //51.90, 61.95, 105.60 // #1
+  51.90, 61.95, 105.60 // #1
   //21.15, 59.10, 102.45 // #2
   //25.50, 221.70, 132.75 // #3
   //93.45, 83.10, 95.85 // #4
   //51.00, 52.20, 36.45 // #5
   //41.10, 60.00, 56.85 // #6
+  //58.35, 51.45, 72.75 // #7
+  //51.45, 30.60, 72.15 // #8
+  //26.70, 25.20, 11.25 // #9
+  //41.55, 34.80, 41.85 // #10
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -211,18 +219,19 @@ typedef union
 } SBD_MO_MESSAGE;
 
 SBD_MO_MESSAGE moSbdMessage;
-
 // Union to store received Iridium SBD Mobile Terminated (MT) message
 typedef union
 {
   struct
   {
-    uint16_t  sampleInterval;     // 2 bytes
+    uint8_t   sampleInterval;     // 2 bytes
+    uint8_t   averageInterval;    // 1 byte
     uint8_t   transmitInterval;   // 1 byte
     uint8_t   retransmitLimit;    // 1 byte
+    uint8_t   batteryCutoff;      // 1 bytes
     uint8_t   resetFlag;          // 1 byte
   };
-  uint8_t bytes[5]; // Size of message to be received in bytes
+  uint8_t bytes[7]; // Size of message to be received in bytes
 } SBD_MT_MESSAGE;
 
 SBD_MT_MESSAGE mtSbdMessage;
