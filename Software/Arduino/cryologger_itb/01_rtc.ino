@@ -68,11 +68,11 @@ void setRtcAlarm()
     rtc.setAlarmTime(0, 0, 0); // hours, minutes, seconds
 
     // Enable alarm
-    rtc.enableAlarm(rtc.MATCH_SS);
+    rtc.enableAlarm(rtc.MATCH_MMSS);
 
     DEBUG_PRINT("Info: "); printDateTime();
     DEBUG_PRINT("Info: Next alarm "); printAlarm();
-    DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_SS);
+    DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_MMSS);
   }
   // Check if too many transmission attempt failures have occurred
   else if (failureCounter >= 12)
