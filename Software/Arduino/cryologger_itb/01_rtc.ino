@@ -72,7 +72,7 @@ void setRtcAlarm()
 
     DEBUG_PRINT("Info: "); printDateTime();
     DEBUG_PRINT("Info: Next alarm "); printAlarm();
-    DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_HHMMSS);
+    DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_SS);
   }
   // Check if too many transmission attempt failures have occurred
   else if (failureCounter >= 12)
