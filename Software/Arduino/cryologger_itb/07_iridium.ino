@@ -219,3 +219,19 @@ void ISBDDiagsCallback(IridiumSBD * device, char c)
   DEBUG_WRITE(c);
 }
 #endif
+
+void IridiumSBD::setSleepPin(uint8_t enable)
+{
+   if (enable == HIGH)
+  {
+      pinMode(this->sleepPin, OUTPUT); // LOW = awake
+      digitalWrite(this->sleepPin, LOW);
+      diagprint(F("HIGH\r\n"));
+   }
+   else
+   {
+      pinMode(this->sleepPin, OUTPUT);
+      digitalWrite(this->sleepPin, HIGH); // LOW = asleep
+      diagprint(F("LOW\r\n"));
+   }
+}
