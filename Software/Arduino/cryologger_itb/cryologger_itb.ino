@@ -116,8 +116,8 @@ unsigned long sampleInterval    = 60;     // Sampling interval (minutes). Defaul
 unsigned int  averageInterval   = 1;      // Number of samples to be averaged in each transmission. Default: 1 (hourly)
 unsigned int  transmitInterval  = 3;      // Messages to transmit in each Iridium transmission (340 byte limit)
 unsigned int  retransmitLimit   = 3;      // Failed data transmission reattempt (340-byte limit)
-unsigned int  gnssTimeout       = 120;    // Timeout for GNSS signal acquisition (seconds)
-unsigned int  iridiumTimeout    = 180;    // Timeout for Iridium transmission (seconds)
+unsigned int  gnssTimeout       = 1;    // Timeout for GNSS signal acquisition (seconds)
+unsigned int  iridiumTimeout    = 30;    // Timeout for Iridium transmission (seconds)
 bool          firstTimeFlag     = true;   // Flag to determine if program is running for the first time
 float         batteryCutoff     = 0.0;    // Battery voltage cutoff threshold (V)
 
@@ -268,11 +268,13 @@ void setup()
   pinMode(PIN_GNSS_EN, OUTPUT);
   pinMode(PIN_SENSOR_EN, OUTPUT);
   pinMode(PIN_IMU_EN, OUTPUT);
+  pinMode(PIN_IRIDIUM_SLEEP, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
   digitalWrite(PIN_SENSOR_EN, LOW);   // Disable power to sensors
   digitalWrite(PIN_GNSS_EN, HIGH);    // Disable power to GNSS
   digitalWrite(PIN_IMU_EN, LOW);      // Disable power to IMU
   digitalWrite(PIN_5V_EN, LOW);       // Disable power to RockBLOCK 9603
+  digitalWrite(PIN_IRIDIUM_SLEEP, HIGH);
 
   // Configure analog-to-digital (ADC) converter
   configureAdc();
