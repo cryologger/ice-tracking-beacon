@@ -1,6 +1,6 @@
 /*
   Title:    Cryologger Ice Tracking Beacon (ITB) - v3.2.0
-  Date:     April 15, 2023
+  Date:     April 20, 2023
   Author:   Adam Garbo
 
   Components:
@@ -14,6 +14,7 @@
 
   Comments:
   - Intended for deployment during the 2023 Amundsen Expedition.
+  - TN0702 N-Channel FET used for On/Off operation of RockBLOCK v3.F
 */
 
 // ------------------------------------------------------------------------------------------------
@@ -35,7 +36,7 @@
 // ----------------------------------------------------------------------------
 // Define unique identifier
 // ----------------------------------------------------------------------------
-#define CRYOLOGGER_ID 1
+#define CRYOLOGGER_ID 10
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
@@ -116,8 +117,8 @@ unsigned long sampleInterval    = 60;     // Sampling interval (minutes). Defaul
 unsigned int  averageInterval   = 1;      // Number of samples to be averaged in each transmission. Default: 1 (hourly)
 unsigned int  transmitInterval  = 3;      // Messages to transmit in each Iridium transmission (340 byte limit)
 unsigned int  retransmitLimit   = 3;      // Failed data transmission reattempt (340-byte limit)
-unsigned int  gnssTimeout       = 1;    // Timeout for GNSS signal acquisition (seconds)
-unsigned int  iridiumTimeout    = 30;    // Timeout for Iridium transmission (seconds)
+unsigned int  gnssTimeout       = 120;    // Timeout for GNSS signal acquisition (seconds)
+unsigned int  iridiumTimeout    = 180;    // Timeout for Iridium transmission (seconds)
 bool          firstTimeFlag     = true;   // Flag to determine if program is running for the first time
 float         batteryCutoff     = 0.0;    // Battery voltage cutoff threshold (V)
 
@@ -165,7 +166,7 @@ float p[] = {1, 0, 0};  // X marking on sensor board points toward yaw = 0 (N)
 // Min/max magnetometer values
 float m_min[3] = {
   //0, 0, 0
-  -76.35, -66.15, -23.40 // #1
+  //-76.35, -66.15, -23.40 // #1
   //-109.20, -71.40, -27.75 // #2
   //-107.25, -52.05, -94.95 // #3
   //-28.50, -39.30, -30.90 // #4
@@ -174,12 +175,12 @@ float m_min[3] = {
   //-62.55, -72.00, -51.75 // #7
   //-63.90, -81.00, -54.90 // #8
   //-97.05, -92.10, -112.80 // #9
-  //-76.20, -80.40, -81.30 // #10
+  -76.20, -80.40, -81.30 // #10
 };
 
 float m_max[3] = {
   //0, 0, 0
-  51.90, 61.95, 105.60 // #1
+  //51.90, 61.95, 105.60 // #1
   //21.15, 59.10, 102.45 // #2
   //25.50, 221.70, 132.75 // #3
   //93.45, 83.10, 95.85 // #4
@@ -188,7 +189,7 @@ float m_max[3] = {
   //58.35, 51.45, 72.75 // #7
   //51.45, 30.60, 72.15 // #8
   //26.70, 25.20, 11.25 // #9
-  //41.55, 34.80, 41.85 // #10
+   41.55, 34.80, 41.85 // #10
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -270,11 +271,11 @@ void setup()
   pinMode(PIN_IMU_EN, OUTPUT);
   pinMode(PIN_IRIDIUM_SLEEP, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
-  digitalWrite(PIN_SENSOR_EN, LOW);   // Disable power to sensors
-  digitalWrite(PIN_GNSS_EN, HIGH);    // Disable power to GNSS
-  digitalWrite(PIN_IMU_EN, LOW);      // Disable power to IMU
-  digitalWrite(PIN_5V_EN, LOW);       // Disable power to RockBLOCK 9603
-  digitalWrite(PIN_IRIDIUM_SLEEP, HIGH);
+  digitalWrite(PIN_SENSOR_EN, LOW);       // Disable power to sensors
+  digitalWrite(PIN_GNSS_EN, HIGH);        // Disable power to GNSS
+  digitalWrite(PIN_IMU_EN, LOW);          // Disable power to IMU
+  digitalWrite(PIN_5V_EN, LOW);           // Disable power to RockBLOCK 9603
+  digitalWrite(PIN_IRIDIUM_SLEEP, HIGH);  // Set N-FET controlling RockBLOCK On/Off pin to HIGH (no voltage)
 
   // Configure analog-to-digital (ADC) converter
   configureAdc();
