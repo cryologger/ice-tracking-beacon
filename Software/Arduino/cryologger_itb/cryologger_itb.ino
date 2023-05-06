@@ -1,6 +1,6 @@
 /*
   Title:    Cryologger Ice Tracking Beacon (ITB) - v3.2.0
-  Date:     April 15, 2023
+  Date:     April 20, 2023
   Author:   Adam Garbo
 
   Components:
@@ -11,9 +11,11 @@
   - Adafruit LSM303AGR Accelerometer/Magnetomter
   - Pololu 3.3V, 600mA Step-Down Voltage Regulator D36V6F3
   - Pololu 5V, 600mA Step-Down Voltage Regulator D36V6F5
+  - TN0702 N-Channel FET
 
   Comments:
   - Intended for deployment during the 2023 Amundsen Expedition.
+  - TN0702 N-Channel FET used for On/Off operation of RockBLOCK v3.F
 */
 
 // ------------------------------------------------------------------------------------------------
@@ -35,7 +37,7 @@
 // ----------------------------------------------------------------------------
 // Define unique identifier
 // ----------------------------------------------------------------------------
-#define CRYOLOGGER_ID 1
+#define CRYOLOGGER_ID 0
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
@@ -164,8 +166,8 @@ float p[] = {1, 0, 0};  // X marking on sensor board points toward yaw = 0 (N)
 
 // Min/max magnetometer values
 float m_min[3] = {
-  //0, 0, 0
-  -76.35, -66.15, -23.40 // #1
+  0, 0, 0
+  //-76.35, -66.15, -23.40 // #1
   //-109.20, -71.40, -27.75 // #2
   //-107.25, -52.05, -94.95 // #3
   //-28.50, -39.30, -30.90 // #4
@@ -178,8 +180,8 @@ float m_min[3] = {
 };
 
 float m_max[3] = {
-  //0, 0, 0
-  51.90, 61.95, 105.60 // #1
+  0, 0, 0
+  //51.90, 61.95, 105.60 // #1
   //21.15, 59.10, 102.45 // #2
   //25.50, 221.70, 132.75 // #3
   //93.45, 83.10, 95.85 // #4
@@ -268,11 +270,13 @@ void setup()
   pinMode(PIN_GNSS_EN, OUTPUT);
   pinMode(PIN_SENSOR_EN, OUTPUT);
   pinMode(PIN_IMU_EN, OUTPUT);
+  pinMode(PIN_IRIDIUM_SLEEP, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
-  digitalWrite(PIN_SENSOR_EN, LOW);   // Disable power to sensors
-  digitalWrite(PIN_GNSS_EN, HIGH);    // Disable power to GNSS
-  digitalWrite(PIN_IMU_EN, LOW);      // Disable power to IMU
-  digitalWrite(PIN_5V_EN, LOW);       // Disable power to RockBLOCK 9603
+  digitalWrite(PIN_SENSOR_EN, LOW);       // Disable power to sensors
+  digitalWrite(PIN_GNSS_EN, HIGH);        // Disable power to GNSS
+  digitalWrite(PIN_IMU_EN, LOW);          // Disable power to IMU
+  digitalWrite(PIN_5V_EN, LOW);           // Disable power to RockBLOCK 9603
+  digitalWrite(PIN_IRIDIUM_SLEEP, HIGH);  // Set N-FET controlling RockBLOCK On/Off pin to HIGH (no voltage)
 
   // Configure analog-to-digital (ADC) converter
   configureAdc();
