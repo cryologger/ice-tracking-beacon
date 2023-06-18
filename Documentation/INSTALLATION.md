@@ -54,9 +54,10 @@ Code for the Cryologger ITB is made available on the following GitHub repository
 ## Step 7: Connect Harware
 * Connect to the Cryologger ITB using a micro USB cable.
 * In the Arduino IDE click on "Select Board" and then "Adafruit Feather M0 (SAMD).
+![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/0199d2f2-ca16-42ae-bb7f-c8cd82348479)
 * If the board is not auto-populated, click on "Select other board and port..." and search for "Adafruit Feather M0":
 * Be sure to select the appropriate serial port that is connected to the Arduino.
-![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/0199d2f2-ca16-42ae-bb7f-c8cd82348479)
+![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/dc0b3bcc-e7c9-4635-941f-46600e63a128)
 
 ## Step 7: Upload Program
 * Once the code has compiled successfully, click on the right pointed arrow to upload the code
