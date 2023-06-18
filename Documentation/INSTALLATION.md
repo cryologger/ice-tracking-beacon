@@ -49,7 +49,7 @@ Code for the Cryologger ITB is made available on the following GitHub repository
 * Double click on the `cryologger_itb.ino` file
 * Click on the checkmark in the upper left corner of the Arduino IDE program window
 * Watch debugging window for compilation errors
-![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/b5f11ef8-764c-4fe2-9192-993496c80500)
+![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/c82fb874-a910-4be7-866c-09b41ea7edb9)
 
 ## Step 7: Connect Harware
 * Connect to the Cryologger ITB using a micro USB cable.
@@ -59,8 +59,6 @@ Code for the Cryologger ITB is made available on the following GitHub repository
 ![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/0199d2f2-ca16-42ae-bb7f-c8cd82348479)
 
 ## Step 7: Upload Program
-* Once the code has compiled successfully, connect the Adafruit Feather M0 board using a micro-USB. 
-* The board should appear under "Port" as a USB or COM device
-* Make any necessary changes to the code
-* Click on the right pointed arrow to upload the code
+* Once the code has compiled successfully, click on the right pointed arrow to upload the code
 * Watch debugging window for compilation errors and/or success messages
+![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/9b6e171d-9864-46d8-8cc3-003e7c313a0c)
