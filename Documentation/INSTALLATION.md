@@ -1,4 +1,5 @@
-# Cryologger - Ice Tracking Beacon Configuration
+# Cryologger - Ice Tracking Beacon (ITB) Configuration
+This guide provides step-by-step instructions on how to install the Arduino IDE and required board definitons and libraries, which are necessary for uploading code to the Cryologger ITB.
 
 ## Step 1: Download Arduino IDE
 *  Navigate to https://www.arduino.cc/en/software and download the most recent version of the Arduino IDE.
@@ -7,8 +8,8 @@
 
 ## Step 2: Add Additional Boards Manager URL:
 * In the Arduino IDE navigate to: Preferences
-* Add the following Additional Boards Manager URL as shown in the sceenshot below:
-  * https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
+* Add the following Additional Boards Manager URL as shown in the sceenshot below:  
+```https://adafruit.github.io/arduino-board-index/package_adafruit_index.json```
 * Also during this step, check the "compile" and "upload" boxes for "Show verbose output during" 
 ![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/fe589849-2062-4941-9465-0b012f48ba62)
 
@@ -25,17 +26,17 @@ Several libraries are required by the Cryologger ice tracking beacons. These can
 * Navigate to: Tools > Manage Libraries
 * Search for and install the following libraries:
 
-| Library Manager         | Version |
-|-------------------------|---------|
-| Adafruit BME280         | 2.2.2   |
-| Adafruit LSM303 Accel   | 1.1.6   |
-| Adafruit LIS2MDL        | 2.1.4   |
-| Adafruit Unified Sensor | 1.1.9   |
-| Arduino Low Power       | 1.2.2   |
-| IridiumSBD              | 3.0.5   |
-| RTCZero                 | 1.6.0   |
-| TimeLib                 | 1.6.1   |
-| TinyGPSPlus             | 1.0.3   |
+| Library Manager         | Version | GitHub Repository                                                   |
+|-------------------------|---------|---------------------------------------------------------------------|
+| Adafruit BME280         | 2.2.2   | https://github.com/adafruit/Adafruit_BME280_Library                 |
+| Adafruit LSM303 Accel   | 1.1.6   | https://github.com/adafruit/Adafruit_LSM303_Accel                   |
+| Adafruit LIS2MDL        | 2.1.4   | https://github.com/adafruit/Adafruit_LIS2MDL                        |
+| Adafruit Unified Sensor | 1.1.9   | https://github.com/adafruit/Adafruit_Sensor                         |
+| Arduino Low Power       | 1.2.2   | https://github.com/arduino-libraries/ArduinoLowPower                |
+| IridiumSBD              | 3.0.5   | https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library |
+| RTCZero                 | 1.6.0   | https://github.com/arduino-libraries/RTCZero                        |
+| TimeLib                 | 1.6.1   | https://github.com/PaulStoffregen/Time                              |
+| TinyGPSPlus             | 1.0.3   | https://github.com/mikalhart/TinyGPSPlus                            |
 
 ![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/dadb37fe-46c7-48af-ad3d-cbb4061d01a6)
 
