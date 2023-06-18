@@ -33,7 +33,7 @@ Several libraries are required by the Cryologger ice tracking beacons. These can
 | Adafruit LIS2MDL        | 2.1.4   | https://github.com/adafruit/Adafruit_LIS2MDL                        |
 | Adafruit Unified Sensor | 1.1.9   | https://github.com/adafruit/Adafruit_Sensor                         |
 | Arduino Low Power       | 1.2.2   | https://github.com/arduino-libraries/ArduinoLowPower                |
-| IridiumSBD              | 3.0.5   | https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library |
+| IridiumSBD              | 3.0.6   | https://github.com/sparkfun/SparkFun_IridiumSBD_I2C_Arduino_Library |
 | RTCZero                 | 1.6.0   | https://github.com/arduino-libraries/RTCZero                        |
 | TimeLib                 | 1.6.1   | https://github.com/PaulStoffregen/Time                              |
 | TinyGPSPlus             | 1.0.3   | https://github.com/mikalhart/TinyGPSPlus                            |
