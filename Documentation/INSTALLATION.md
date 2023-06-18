@@ -9,7 +9,8 @@
 * In the Arduino IDE navigate to: Preferences
 * Add the following Additional Boards Manager URL as shown in the sceenshot below:
   * https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
-![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/4b83ed4b-7055-42ff-9dcd-4086e3b99bec)
+* Also during this step, check the "compile" and "upload" boxes for "Show verbose output during" 
+![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/fe589849-2062-4941-9465-0b012f48ba62)
 
 ## Step 3: Install Board Definitions
 * Navigate to: Tools > Boards > Boards Manager
