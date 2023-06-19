@@ -10,8 +10,8 @@ This guide provides step-by-step instructions on how to install the Arduino IDE 
 * In the Arduino IDE navigate to: Preferences
 * Add the following "Additional Boards Manager URL" as shown in the screenshot below:  
 ```https://adafruit.github.io/arduino-board-index/package_adafruit_index.json```
-* Also during this step, check the "compile" and "upload" boxes for "Show verbose output during" 
-![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/fe589849-2062-4941-9465-0b012f48ba62)
+* Also during this step, check the "compile" and "upload" boxes for "Show verbose output during" and change "Compiler warnings" to "All"
+![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/f0db6767-526f-45cb-b0a7-c750295eeb83)
 
 ## Step 3: Install Board Definitions
 * Navigate to: Tools > Boards > Boards Manager
