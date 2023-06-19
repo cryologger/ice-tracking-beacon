@@ -2,13 +2,13 @@
 This guide provides step-by-step instructions on how to install the Arduino IDE and required board definitons and libraries, which are necessary for uploading code to the Cryologger ITB.
 
 ## Step 1: Download Arduino IDE  
-* Navigate to https://www.arduino.cc/en/software and download the most recent version of the Arduino IDE.
+* Navigate to https://www.arduino.cc/en/software and download the most recent version of the Arduino IDE
 
 ![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/323c74a1-2ce1-4e39-a8eb-d39ad760a9a6)
 
 ## Step 2: Add Additional Boards Manager URL:
 * In the Arduino IDE navigate to: Preferences
-* Add the following Additional Boards Manager URL as shown in the sceenshot below:  
+* Add the following "Additional Boards Manager URL" as shown in the screenshot below:  
 ```https://adafruit.github.io/arduino-board-index/package_adafruit_index.json```
 * Also during this step, check the "compile" and "upload" boxes for "Show verbose output during" 
 ![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/fe589849-2062-4941-9465-0b012f48ba62)
@@ -26,6 +26,7 @@ Several libraries are required by the Cryologger ice tracking beacons. These can
 * Navigate to: Tools > Manage Libraries
 * Search for and install the following libraries:
 
+**Table 1.** Libraries required by Cryologger ITB. Last updated 2023-06-19.
 | Library Manager         | Version | GitHub Repository                                                   |
 |-------------------------|---------|---------------------------------------------------------------------|
 | Adafruit BME280         | 2.2.2   | https://github.com/adafruit/Adafruit_BME280_Library                 |
@@ -40,7 +41,7 @@ Several libraries are required by the Cryologger ice tracking beacons. These can
 
 ![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/dadb37fe-46c7-48af-ad3d-cbb4061d01a6)
 
-## Step 5: Download Cryologger Ice Tracking Beacon Software
+## Step 5: Download Software
 Code for the Cryologger ITB is made available on the following GitHub repository:
 * https://github.com/adamgarbo/cryologger-ice-tracking-beacon
 * Click on "Releases" and download the vX.X .zip file:
@@ -52,15 +53,19 @@ Code for the Cryologger ITB is made available on the following GitHub repository
 * Watch debugging window for compilation errors
 ![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/c82fb874-a910-4be7-866c-09b41ea7edb9)
 
-## Step 7: Connect Harware
+## Step 7: Connect Hardware
 * Connect to the Cryologger ITB using a micro USB cable.
-* In the Arduino IDE click on "Select Board" and then "Adafruit Feather M0 (SAMD).
+* In the Arduino IDE click on "Select Board" and then "Adafruit Feather M0 (SAMD)
 ![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/0199d2f2-ca16-42ae-bb7f-c8cd82348479)
 * If the board is not auto-populated, click on "Select other board and port..." and search for "Adafruit Feather M0":
-* Be sure to select the appropriate serial port that is connected to the Arduino.
+* Be sure to select the appropriate serial port that is connected to the Arduino
 ![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/dc0b3bcc-e7c9-4635-941f-46600e63a128)
 
-## Step 7: Upload Program
-* Once the code has compiled successfully, click on the right pointed arrow to upload the code
-* Watch debugging window for compilation errors and/or success messages
+## Step 8: Upload Program
+* Once the code has compiled successfully, click on the right-pointed arrow to upload the code
+* Watch the output window for compilation errors and/or success messages
+* If no errors are presented, the code has now been successfully uploaded!
 ![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/9b6e171d-9864-46d8-8cc3-003e7c313a0c)
+
+## Step 9: Next Steps
+* Next, the detailed operation of the Cryologger ITB will be covered OPERATION.md
