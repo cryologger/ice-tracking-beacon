@@ -1,8 +1,8 @@
 # Cryologger - Ice Tracking Beacon (ITB) Configuration
 This guide provides step-by-step instructions on how to install the Arduino IDE and required board definitons and libraries, which are necessary for uploading code to the Cryologger ITB.
 
-## Step 1: Download Arduino IDE
-*  Navigate to https://www.arduino.cc/en/software and download the most recent version of the Arduino IDE.
+## Step 1: Download Arduino IDE  
+* Navigate to https://www.arduino.cc/en/software and download the most recent version of the Arduino IDE.
 
 ![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/323c74a1-2ce1-4e39-a8eb-d39ad760a9a6)
 
@@ -17,7 +17,7 @@ This guide provides step-by-step instructions on how to install the Arduino IDE 
 * Navigate to: Tools > Boards > Boards Manager
 * Search for: SAMD Boards
 * Select and install version: Arduino SAMD Boards v1.8.13 
-* Select and install version: Adafruit SAMD Boards v1.7.11 
+* Select and install version: Adafruit SAMD Boards v1.7.12
 ![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/f4d9af80-c4ba-4fab-958b-c35e1e4ac1e3)
 
 ## Step 4: Install Libraries
