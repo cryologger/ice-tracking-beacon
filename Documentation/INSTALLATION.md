@@ -1,5 +1,5 @@
-# Cryologger - Ice Tracking Beacon (ITB) Configuration
-This guide provides step-by-step instructions on how to install the Arduino IDE and required board definitons and libraries, which are necessary for uploading code to the Cryologger ITB.
+# Cryologger Ice Tracking Beacon (ITB) - Installation
+This guide provides step-by-step instructions on installing the Arduino IDE and required board definitions and libraries, which are necessary for uploading code to the Cryologger ITB.
 
 ## Step 1: Download Arduino IDE  
 * Navigate to https://www.arduino.cc/en/software and download the most recent version of the Arduino IDE
@@ -27,7 +27,7 @@ Several libraries are required by the Cryologger ice tracking beacons. These can
 * Search for and install the following libraries:
 
 **Table 1.** Libraries required by Cryologger ITB. Last updated 2023-06-19.
-| Library Manager         | Version | GitHub Repository                                                   |
+| Library                 | Version | GitHub Repository                                                   |
 |-------------------------|---------|---------------------------------------------------------------------|
 | Adafruit BME280         | 2.2.2   | https://github.com/adafruit/Adafruit_BME280_Library                 |
 | Adafruit LSM303 Accel   | 1.1.6   | https://github.com/adafruit/Adafruit_LSM303_Accel                   |
