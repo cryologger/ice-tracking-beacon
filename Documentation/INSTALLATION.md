@@ -17,7 +17,7 @@ This guide provides step-by-step instructions on installing the Arduino IDE and 
 * Navigate to: Tools > Boards > Boards Manager
 * Search for: SAMD Boards
 * Select and install version: Arduino SAMD Boards v1.8.13 
-* Select and install version: Adafruit SAMD Boards v1.7.12
+* Select and install version: Adafruit SAMD Boards v1.7.13
 ![image](https://github.com/adamgarbo/cryologger-ice-tracking-beacon/assets/22924092/f4d9af80-c4ba-4fab-958b-c35e1e4ac1e3)
 
 ## Step 4: Install Libraries
