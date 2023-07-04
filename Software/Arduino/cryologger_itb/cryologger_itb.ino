@@ -1,6 +1,6 @@
 /*
-  Title:    Cryologger Ice Tracking Beacon (ITB) - v3.2.0
-  Date:     April 20, 2023
+  Title:    Cryologger Ice Tracking Beacon (ITB) - v3.3.1
+  Date:     July 4, 2023
   Author:   Adam Garbo
 
   Components:
@@ -221,12 +221,13 @@ typedef union
 } SBD_MO_MESSAGE;
 
 SBD_MO_MESSAGE moSbdMessage;
+
 // Union to store received Iridium SBD Mobile Terminated (MT) message
 typedef union
 {
   struct
   {
-    uint8_t   sampleInterval;     // 2 bytes
+    uint16_t  sampleInterval;     // 2 bytes
     uint8_t   averageInterval;    // 1 byte
     uint8_t   transmitInterval;   // 1 byte
     uint8_t   retransmitLimit;    // 1 byte
