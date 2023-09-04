@@ -27,18 +27,26 @@ The Cryologger ITB uses a 7.2 V 38 Ah lithium thionyl chloride (Li-SoCl2) batter
   - The PCB is also marked with -/+ and can be used to confirm the correct orientation.
 <p align="center"><img width="720" src="https://github.com/adamgarbo/cryologger-ice-tracking-beacon/blob/main/Images/cryologger-itb-battery-1.jpeg"></p>
 
-### Documentation
-It is important to properly document the operation of each Cryologger in order to better troubleshoot issues in the future.
+### Assemble Wooden Platform
+
+
+
+## Testing
+
+### Initial Test & Documentation
+The first step is conduct a test of each Cryologger ITB to ensure it can properly transmit a message. It is advantageous to document the operation of each Cryologger at the same time in order to better troubleshoot any issues that may be encoutnered.
+
 - Launch the Arduino IDE
-- Connect to the Cryologger using a mini-USB cable
+- Connect to the ITB using a mini-USB cable
+- Connect the battery to the ITB
 - Open the Serial Monitor in Arduino IDE
 - Observe the serial output as the Cryologger initalizes its sensors and attempts an initial transmission
-- Once the transmission is complete, copy all of the serial output to a .txt file 
+- Once the transmission is complete, copy the complete the serial output to a .txt file 
   - Use the format: `cryologger_itb_2023_X.txt`, where X is the unit number of the Cryologger
-- Note the presenece of any errors encountered and report them as soon as possible
+- Also Note the presenece of any errors encountered and report them as soon as possible
 
-### Perform Tests
-It is necssary to test the Cryologger ITBs, ideally for as long as possible, prior to deployment to ensure their proper operation. 
+### Long-Duration Test
+Next, a long-duration test of all of the Cryologger ITBs can be conducted. This is an important step to ensure their proper operation prior to deployment. The tests should be run for a minimum of 24 hours and ideally can continue for up to 1 week. 
 - Place the ITBs in an area with a good view of the sky
 - Secure the ITBs they do not roll or blow away using a rope to lash all Nanuk enclosures together, and then tied off to the deck of the ship
 <p align="center">
@@ -51,5 +59,3 @@ It is necssary to test the Cryologger ITBs, ideally for as long as possible, pri
 
 ## Troubleshooting
 Document any issues that arise so that they can be addressed as needed.
-
-
