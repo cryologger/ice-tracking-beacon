@@ -53,6 +53,7 @@ Next, a long-duration test of all of the Cryologger ITBs can be conducted. This 
   <img width="360" src="https://github.com/adamgarbo/cryologger-ice-tracking-beacon/blob/main/Images/cryologger-itb-test-1.jpeg">
   <img width="360" src="https://github.com/adamgarbo/cryologger-ice-tracking-beacon/blob/main/Images/cryologger-itb-test-2.jpeg">
 </p>
+
 - Power on each ITB one at a time and observe the LED blink patterns
 - Document the time each Cryologger is turned on.
 - Review the data on the Cryologger website: https://cryologger.org/amundsen-2023
