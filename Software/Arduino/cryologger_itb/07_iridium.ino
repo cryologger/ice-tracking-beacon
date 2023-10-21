@@ -99,7 +99,7 @@ void transmitData()
           printMtSbd(); // Print MT-SBD message stored in union/structure
 
           // Check if MT-SBD message data is valid and update variables
-          if ((mtSbdMessage.sampleInterval    >= 1  &&  mtSbdMessage.sampleInterval   <= 60)  &&
+          if ((mtSbdMessage.sampleInterval    >= 1  &&  mtSbdMessage.sampleInterval   <= 10080)  &&
               (mtSbdMessage.averageInterval   >= 1  &&  mtSbdMessage.averageInterval  <= 24)  &&
               (mtSbdMessage.transmitInterval  >= 1  &&  mtSbdMessage.transmitInterval <= 24)  &&
               (mtSbdMessage.retransmitLimit   >= 0  &&  mtSbdMessage.retransmitLimit  <= 24)  &&
