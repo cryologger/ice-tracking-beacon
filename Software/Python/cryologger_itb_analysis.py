@@ -6,21 +6,17 @@ Created on Tue Jan 17 10:25:21 2023
 @author: adam
 """
 
-
-
 # -----------------------------------------------------------------------------
 # Load librarires
 # -----------------------------------------------------------------------------
  
 import pandas as pd
-import geopandas as gpd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import matplotlib.dates as mdates
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-import cartopy.io.img_tiles as cimgt
 import pyproj
 import seaborn as sns
 from cartopy.mpl.ticker import (LongitudeFormatter, 
@@ -30,7 +26,26 @@ from cartopy.mpl.ticker import (LongitudeFormatter,
 import xarray as xr
 
 # -----------------------------------------------------------------------------
-# Configuration
+# Plotting attributes
+# -----------------------------------------------------------------------------
+
+# Seaborn configuration
+sns.set_theme(style="ticks")
+sns.set_context("talk") # talk, paper, poster
+
+# Set colour palette
+sns.set_palette("colorblind")
+
+# Graph attributes
+lw = 1
+interval = 30
+date_format = "%Y-%m-%d"
+
+# Figure DPI
+dpi = 300
+
+# -----------------------------------------------------------------------------
+# Mapping attributes
 # -----------------------------------------------------------------------------
 
 # Add Natural Earth coastline
@@ -45,38 +60,15 @@ coastline = cfeature.NaturalEarthFeature("physical", "coastline", "10m",
                                          facecolor="none",
                                          lw=0.75)
 
-# Create a Stamen terrain background instance
-stamen_terrain = cimgt.Stamen("terrain-background")
-
 # -----------------------------------------------------------------------------
 # Folder paths
 # -----------------------------------------------------------------------------
 
-path_data = "/Users/adam/Documents/GitHub/cryologger-ice-tracking-beacon/Software/Python/Data/"
+# Data directory
+path_data = "/Users/adam/Documents/GitHub/cryologger-ice-tracking-beacon/Software/Python/"
+
+# Figure directory
 path_figures = "/Users/adam/Documents/GitHub/cryologger-ice-tracking-beacon/Software/Python/Figures/"
-
-# -----------------------------------------------------------------------------
-# Plotting attributes
-# -----------------------------------------------------------------------------
-
-# Seaborn configuration
-sns.set_theme(style="ticks")
-sns.set_context("talk") # talk, paper, poster
-
-# Global plot parameters
-plt.rc("legend", fancybox=True, framealpha=1, edgecolor="black")
-
-# Set colour palette
-sns.palplot(sns.color_palette("colorblind"))
-colours = sns.color_palette("colorblind", 10).as_hex()
-sns.set_palette("colorblind")
-
-# Figure DPI
-dpi = 300
-
-lw = 2
-interval = 30
-date_format = "%Y-%m-%d"
 
 
 # -----------------------------------------------------------------------------
@@ -86,8 +78,10 @@ date_format = "%Y-%m-%d"
 # Load most recent output file exported directly from MariaDB
 df = pd.read_csv(path_data + "2022_itb_milne_fiord.csv", index_col=False)
 
+df = pd.read_csv("/Users/adam/Downloads/cryologger_itb.csv", index_col=False)
+
 # Convert unixtime to datetime
-#df["datetime"] = pd.to_datetime(df["unixtime"], unit="s")
+df["datetime"] = pd.to_datetime(df["unixtime"], unit="s")
 
 # Remove datetime outliers
 df = df[df["datetime"] > "2018-01-01 00:00:00"]
@@ -123,7 +117,12 @@ hue_order = ["300434063298940",
 # -----------------------------------------------------------------------------
 
 # Load most recent output file downloaded from WordPress
-df = pd.read_csv(path_data + "2022_itb_milne_fiord.csv", index_col=False)
+df = pd.read_csv(path_data + "2022_itb_grise_fiord.csv", index_col=False)
+
+df = pd.read_csv("/Users/adam/Downloads/2022_itb_grise_fiord.csv", index_col=False)
+
+df = pd.read_csv("/Users/adam/Downloads/2023_itb_amundsen.csv", index_col=False)
+
 
 # Convert unixtime datetime
 df["datetime"] = pd.to_datetime(df["unixtime"].astype(str), format="%Y-%m-%d %H:%M:%S")
@@ -135,20 +134,19 @@ df["imei"] = df["imei"].astype(str)
 df["transmit_duration"].replace(0, np.nan, inplace=True)
 
 # -----------------------------------------------------------------------------
-# Subset data according to deployment time of beacon
+# Subset data
 # -----------------------------------------------------------------------------
 
-# Beacon: 1 - Deployed: ???
-df1 = df[df["imei"].isin(["300434063298940"])]
-df1 = df1[(df1["datetime"] > "2022-08-21 18:00")]
+# Subset by IMEI
+df = df[df["imei"].isin(["300434063298940"])]
 
-# Beacon: 2 - Deployed: ???
-df2 = df[df["imei"].isin(["300434063392080"])]
-df2 = df2[(df2["datetime"] > "2022-07-01 23:21")]
+# Subset by datetime
+df = df[(df["datetime"] > "2023-09-01 00:00")]
+
 
 # Convert pressure to float
-df["pressure"] = df["pressure"].replace({",":""},regex=True).apply(pd.to_numeric,1)
-df["pressure"] = df["pressure"] / 10 # Convert to kPa
+df["pressure_int"] = df["pressure_int"].replace({",":""},regex=True).apply(pd.to_numeric,1)
+df["pressure_int"] = df["pressure_int"] / 10 # Convert to kPa
 
 # Concat dataset
 df0 = pd.concat([df1, df2])
@@ -170,6 +168,123 @@ df0 = pd.concat([df1, df2])
 # Plot maps on distance axis
 plot_distance(df1, 1)
 plot_distance(df2, 2)
+
+# -----------------------------------------------------------------------------
+# Plots
+# -----------------------------------------------------------------------------
+
+# Temperature
+fig, ax = plt.subplots(figsize=(10,5))
+ax.grid(ls="dotted")
+sns.lineplot(x="datetime", y="temperature_int", data=df, errorbar=None, lw=lw, hue="uid")
+ax.set(xlabel=None, ylabel="Temperature (°C)")
+plt.xticks(rotation=45, horizontalalignment="right")
+ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
+#ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
+ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="UID")
+fig.savefig(path_figures + "01_temperature.png", dpi=dpi, transparent=False, bbox_inches="tight")
+
+# Humidity
+fig, ax = plt.subplots(figsize=(10,5))
+ax.grid(ls="dotted")
+sns.lineplot(x="datetime", y="humidity_int", data=df, errorbar=None, lw=lw, hue="uid")
+ax.set(xlabel=None, ylabel="Humidity (%)")
+plt.xticks(rotation=45, horizontalalignment="right")
+ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
+#ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
+ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="UID")
+fig.savefig(path_figures + "02_humidity.png", dpi=dpi, transparent=False, bbox_inches="tight")
+
+
+# Pressure
+fig, ax = plt.subplots(figsize=(10,5))
+ax.grid(ls="dotted")
+sns.lineplot(x="datetime", y="pressure_int", data=df, errorbar=None, lw=lw, hue="uid")
+ax.set(xlabel=None, ylabel="Pressure (kPa)")
+plt.xticks(rotation=45, horizontalalignment="right")
+ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
+#ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
+ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="UID")
+fig.savefig(path_figures + "03_pressure.png", dpi=dpi, transparent=False, bbox_inches="tight")
+
+# Pitch
+fig, ax = plt.subplots(figsize=(10,5))
+sns.lineplot(x="datetime", y="pitch", data=df, ci=None, lw=lw, hue="uid")
+ax.set(xlabel=None, ylabel="Pitch (°)")
+ax.grid(ls="dotted")
+ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
+#ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
+plt.xticks(rotation=45, horizontalalignment="right")
+ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="UID")
+fig.savefig(path_figures + "04_pitch.png", dpi=dpi, transparent=False, bbox_inches="tight")
+
+# Roll
+fig, ax = plt.subplots(figsize=(10,5))
+sns.lineplot(x="datetime", y="roll", data=df, ci=None, lw=lw, hue="uid")
+ax.set(xlabel="Datetime", ylabel="Roll (°)")
+ax.grid(ls="dotted")
+ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
+#ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
+plt.xticks(rotation=45, horizontalalignment="right")
+ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="UID")
+fig.savefig(path_figures + "05_roll.png", dpi=dpi, transparent=False, bbox_inches="tight")
+
+# Heading
+fig, ax = plt.subplots(figsize=(10,5))
+sns.scatterplot(x="datetime", y="heading", data=df,  hue="uid")
+ax.set(xlabel="Datetime", ylabel="Heading (°)")
+ax.grid(ls="dotted")
+ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
+#ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
+plt.xticks(rotation=45, horizontalalignment="right")
+ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="IMEI")
+fig.savefig(path_figures + "06_heading.png", dpi=dpi, transparent=False, bbox_inches="tight")
+
+# Satellites
+fig, ax = plt.subplots(figsize=(10,5))
+sns.lineplot(x="datetime", y="satellites", data=df, ci=None, lw=lw, hue="uid")
+ax.set(xlabel="Datetime", ylabel="Satellites")
+ax.grid(ls="dotted")
+ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
+#ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
+plt.xticks(rotation=45, horizontalalignment="right")
+ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="UID")
+fig.savefig(path_figures + "07_satellites.png", dpi=dpi, transparent=False, bbox_inches="tight")
+
+# Voltage
+fig, ax = plt.subplots(figsize=(10,5))
+sns.lineplot(x="datetime", y="voltage", data=df, ci=None, lw=lw, hue="uid")
+ax.set(xlabel=None, ylabel="Voltage (V)") #, ylim=(7,7.3)
+ax.grid(ls="dotted")
+ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
+#ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
+plt.xticks(rotation=45, horizontalalignment="right")
+ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="UID")
+fig.savefig(path_figures + "08_voltage.png", dpi=dpi, transparent=False, bbox_inches="tight")
+
+# Transmit Duration
+fig, ax = plt.subplots(figsize=(10,5))
+sns.scatterplot(x="datetime", y="transmit_duration", data=df, hue="uid")
+ax.set(xlabel=None, ylabel="Transmit Duration (s)",)
+ax.grid(ls="dotted")
+ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
+#ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
+plt.xticks(rotation=45, horizontalalignment="right")
+ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="UID")
+fig.savefig(path_figures + "09_transmit_duration.png", dpi=dpi, transparent=False, bbox_inches="tight")
+
+# Counter
+fig, ax = plt.subplots(figsize=(10,5))
+ax.grid(ls="dotted")
+sns.lineplot(x="datetime", y="message_counter", data=df, errorbar=None, lw=lw, hue="uid")
+ax.set(xlabel=None, ylabel="Message Counter")
+plt.xticks(rotation=45, horizontalalignment="right")
+ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
+#ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
+ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="UID")
+fig.savefig(path_figures + "10_counter.png", dpi=dpi, transparent=False, bbox_inches="tight")
+
+
 
 # -----------------------------------------------------------------------------
 # Map of 2021 Cryologger deployments
@@ -270,98 +385,6 @@ ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="IMEI")
 
 plt.savefig(path_figures + "01_map.png", dpi=dpi, transparent=False, bbox_inches="tight")
 
-
-# -----------------------------------------------------------------------------
-# Plots
-# -----------------------------------------------------------------------------
-
-# Temperature
-fig, ax = plt.subplots(figsize=(10,5))
-ax.grid(ls="dotted")
-sns.lineplot(x="datetime", y="temperature", data=df, ci=None, lw=lw, hue="imei")
-ax.set(xlabel=None, ylabel="Temperature (°C)")
-plt.xticks(rotation=45, horizontalalignment="right")
-ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
-ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
-ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="IMEI")
-fig.savefig(path_figures + "temperature.png", dpi=dpi, transparent=False, bbox_inches="tight")
-
-# Pressure
-fig, ax = plt.subplots(figsize=(10,5))
-ax.grid(ls="dotted")
-sns.lineplot(x="datetime", y="pressure", data=df, errorbar=None, lw=lw, hue="imei")
-ax.set(xlabel=None, ylabel="Pressure (kPa)")
-plt.xticks(rotation=45, horizontalalignment="right")
-ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
-ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
-ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="IMEI")
-fig.savefig(path_figures + "2021_pressure.png", dpi=dpi, transparent=False, bbox_inches="tight")
-
-# Pitch
-fig, ax = plt.subplots(figsize=(10,5))
-sns.lineplot(x="datetime", y="pitch", data=df, ci=None, lw=lw, hue="imei")
-ax.set(xlabel=None, ylabel="Pitch (°)")
-ax.grid(ls="dotted")
-ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
-ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
-plt.xticks(rotation=45, horizontalalignment="right")
-ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="IMEI")
-fig.savefig(path_figures + "pitch.png", dpi=dpi, transparent=False, bbox_inches="tight")
-
-# Roll
-fig, ax = plt.subplots(figsize=(10,5))
-sns.lineplot(x="datetime", y="roll", data=df, ci=None, lw=lw, hue="imei")
-ax.set(xlabel="Datetime", ylabel="Roll (°)")
-ax.grid(ls="dotted")
-ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
-ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
-plt.xticks(rotation=45, horizontalalignment="right")
-ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="IMEI")
-fig.savefig(path_figures + "roll.png", dpi=dpi, transparent=False, bbox_inches="tight")
-
-# Heading
-fig, ax = plt.subplots(figsize=(10,5))
-sns.lineplot(x="datetime", y="heading", data=df, ci=None, lw=lw, hue="imei")
-ax.set(xlabel="Datetime", ylabel="Heading (°)")
-ax.grid(ls="dotted")
-ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
-ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
-plt.xticks(rotation=45, horizontalalignment="right")
-ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="IMEI")
-fig.savefig(path_figures + "heading.png", dpi=dpi, transparent=False, bbox_inches="tight")
-
-# Satellites
-fig, ax = plt.subplots(figsize=(10,5))
-sns.lineplot(x="datetime", y="satellites", data=df, ci=None, lw=lw, hue="imei")
-ax.set(xlabel="Datetime", ylabel="Satellites")
-ax.grid(ls="dotted")
-ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
-ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
-plt.xticks(rotation=45, horizontalalignment="right")
-ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="IMEI")
-fig.savefig(path_figures + "satellites.png", dpi=dpi, transparent=False, bbox_inches="tight")
-
-# Voltage
-fig, ax = plt.subplots(figsize=(10,5))
-sns.lineplot(x="datetime", y="voltage", data=df, ci=None, lw=lw, hue="imei")
-ax.set(xlabel=None, ylabel="Voltage (V)", ylim=(7,7.3))
-ax.grid(ls="dotted")
-ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
-ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
-plt.xticks(rotation=45, horizontalalignment="right")
-ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="IMEI")
-fig.savefig(path_figures + "voltage.png", dpi=dpi, transparent=False, bbox_inches="tight")
-
-# Transmit Duration
-fig, ax = plt.subplots(figsize=(10,5))
-sns.scatterplot(x="datetime", y="transmit_duration", data=df, hue="imei")
-ax.set(xlabel=None, ylabel="Transmit Duration (s)",)
-ax.grid(ls="dotted")
-ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
-ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
-plt.xticks(rotation=45, horizontalalignment="right")
-ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="IMEI")
-fig.savefig(path_figures + "transmit_duration.png", dpi=dpi, transparent=False, bbox_inches="tight")
 
 
 # -----------------------------------------------------------------------------
