@@ -69,10 +69,9 @@ Another major change in v3.0 is a custom carrier board PCB that designed to grea
 
 #### Photos
 
-<p align="center"><img src="https://github.com/adamgarbo/cryologger-ice-tracking-beacon/blob/main/Images/IMG_5407.jpeg" width="480"></p>
+<p align="center"><img src="https://github.com/adamgarbo/cryologger-ice-tracking-beacon/blob/main/Images/cryologger-itb-2.jpeg" width="480"></p>
 <p align="center"><b>Figure 2:</b> Assembled Cryologger ice drift tracking beacon housed in Nanuk case and 3D-printed case lid removed.</p>
-
-
+2
 ### 2.3 Measurements
 
 **Table 2.** Variables recorded and transmitted by the Cryologger iceberg drift tracking beacon.
@@ -96,7 +95,7 @@ Another major change in v3.0 is a custom carrier board PCB that designed to grea
 
 ## 3.0 Deployments
 
-A total of 10 Cryologger iceberg drift tracking beacons were deployed during the 2021 Amundsen Expedition between August 21st to September 3rd, 2021. Deployments were made by helicopter from the CCGS Amundsen on icebergs and ice islands along the coasts of Ellesmere Island, Baffin Island and Greenland (Figure 3). The overall suitability of potential targets was determined by assessing the iceberg’s size, shape, and location. Where possible, icebergs selected to be instrumented with a tracking beacon were large enough to survive drifting south to the Grand Banks of Newfoundland and far enough away from the coast to increase the chances of being carried southward by the currents and avoid becoming grounded in shallow coastal areas.
+A total of 16 Cryologger iceberg drift tracking beacons were deployed during the 2021 and 2023 Amundsen Expeditions. Deployments were made by helicopter from the CCGS Amundsen on icebergs and ice islands along the coasts of Ellesmere Island, Baffin Island and Greenland (Figure 3). The overall suitability of potential targets was determined by assessing the iceberg’s size, shape, and location. Where possible, icebergs selected to be instrumented with a tracking beacon were large enough to survive drifting south to the Grand Banks of Newfoundland and far enough away from the coast to increase the chances of being carried southward by the currents and avoid becoming grounded in shallow coastal areas.
 
 <p align="center"><img width="720" src="https://user-images.githubusercontent.com/22924092/133437548-ac2ced2f-60ad-4eab-820c-647c70e01970.png"></p>
 <p align="left"><b>Figure 3:</b> Map of Cryologger iceberg drift tracking beacons deployed during the 2021 Amundsen Expedition.</p>
