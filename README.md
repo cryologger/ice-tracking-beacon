@@ -22,13 +22,11 @@ The Cryologger ITB is based on the open-source Arduino platform (www.arduino.cc)
 
 Planned for extended deployments in harsh Arctic conditions, the Cryologger ITB provides long-term measurements of GNSS position, temperature, pressure, pitch, roll, tilt-compensated heading and battery voltage. Data are transmitted over the Iridium satellite network at specified intervals and can be remotely updated based on the desired sampling frequency. Collected data are made available in near-real time at https://cryologger.org.
 
-#### 2.1.1 Design iterations
+#### 2.1.1 Design Iterations
 
-Version 1.0
+More information about versions 1.0 and 2.0 of the Cryologger ITB can be found in the following publication:
 
-Version 2.0 
-
-Version 3.0 of the Cryologger ITB builds on the successes of v1.0 and v2.0 and is also based on the Adafruit ecosystem of components. A number of improvements to the design were made, including:
+Version 3.0 of the Cryologger ITB builds on the successes of v1.0/v2.0 and is also based on the Adafruit ecosystem of components. A number of improvements to the design were made, including:
 * 3.3 V power is now provided directly from a Pololu 3.3 V step-down voltage regulator, bypassing the Feather M0's onboard AP2112 LDO regulator (-55 μA).
 * A dedicated 5 V step-down voltage regulator was added to power the RockBLOCK Iridium transceiver.
 * The DS3231 real-time clock (RTC) was removed in favour of the SAMD21's internal RTC for all timekeeping and alarm functionality with periodic time synchronizations with the GPS.
@@ -62,7 +60,7 @@ One of the major change in v3.0 is a custom carrier board PCB that is designed t
 | Power connector |	[Phoenix Contact MSTB 2,5/ 2-ST-5,08 - 1757019](https://mou.sr/47HAA0B) | 1 | $0.60 |
 | Power connector	| [Phoenix Contact MSTBA 2,5/ 2-G-5,08 - 1757242](https://mou.sr/3R27Ick) | 1 | $1.81 |
 | Connector |	[Molex PicoBlade PCB Header](https://mou.sr/3qLrmgc) | 1| $0.55 |
-| Connector |	[Molex PicoBlade Crimp Housing(https://mou.sr/3lXOY2x])| 2| $0.36 |
+| Connector |	[Molex PicoBlade Crimp Housing](https://mou.sr/3lXOY2x])| 2| $0.36 |
 | Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Yellow | 1 | |
 | Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Orange | 1 | |
 | Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Black | 1 | |
@@ -108,9 +106,6 @@ A case study of deployments from the 2021 Amundsen Expedition is presented below
 <p align="left"><b>Figure 3:</b> Map of Cryologger ice drift tracking beacons deployed between 2018 and 2023.</p>
 
 ### 3.1 2021 Amundsen Expedition
-
-
-
 <p align="center"><img width="640" src="https://user-images.githubusercontent.com/22924092/133437548-ac2ced2f-60ad-4eab-820c-647c70e01970.png"></p>
 
 <p align="center"><img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Images/2021_300434065869240.JPG" width="360" >
@@ -120,7 +115,6 @@ A case study of deployments from the 2021 Amundsen Expedition is presented below
 <p align="left"><b>Figure 4:</b> Examples of icebergs instrumented with Cryologger iceberg tracking beacons during the 2021 Amundsen Expedition.</p>
 
 ## 4.0 Results
-
 
 As of December 2023, Cryologger ITBs deployments made on icebergs and ice islands have achieved up to 1530 days of continuous operation. Collectively, these ITBs transmitted more than 125,000 GNSS positions and travelled a combined distance of over 12,000 km. The recorded iceberg drift tracks of all Cryologger ITB deployments can be viewed at: https://cryologger.org/tracking
 
