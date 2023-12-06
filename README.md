@@ -12,7 +12,7 @@
 ## 1.0 Introduction
 Icebergs and ice islands represent significant hazards to marine navigation and offshore infrastructure at a time when demand for access to Canada’s Arctic waters is increasing. There is a growing demand for in situ iceberg tracking data to monitor their drift trajectory and improve predictions of ice hazard occurrence and behaviour, yet the high cost of commercial tracking devices often prevents monitoring at optimal spatial and temporal resolutions.
 
-The goal of this project is to demonstrate that the Cryologger ice tracking beacon (ITB), built using inexpensive, open-source hardware and software, can provide a reliable and cost-effective platform for monitoring the drift of icebergs and ice islands in the Canadian Arctic.
+The Cryologger Ice Tracking Beacon (ITB), built using inexpensive, open-source hardware and software, can provide a reliable and cost-effective platform for monitoring the drift of icebergs and ice islands in the Canadian Arctic.
 
 ## 2.0 Methods
 
@@ -28,7 +28,7 @@ Version 1.0
 
 Version 2.0 
 
-Version 3.0 of the Cryologger ITB builds on the success of v2.0 and is also based on the Adafruit ecosystem of components. A number of improvements to the design were made, including:
+Version 3.0 of the Cryologger ITB builds on the successes of v1.0 and v2.0 and is also based on the Adafruit ecosystem of components. A number of improvements to the design were made, including:
 * 3.3 V power is now provided directly from a Pololu 3.3 V step-down voltage regulator, bypassing the Feather M0's onboard AP2112 LDO regulator (-55 μA).
 * A dedicated 5 V step-down voltage regulator was added to power the RockBLOCK Iridium transceiver.
 * The DS3231 real-time clock (RTC) was removed in favour of the SAMD21's internal RTC for all timekeeping and alarm functionality with periodic time synchronizations with the GPS.
@@ -37,39 +37,39 @@ Version 3.0 of the Cryologger ITB builds on the success of v2.0 and is also base
 * A 10MΩ + 1 MΩ resistor divider is now used to measured the battery voltage (+2.4 μA).
 
 #### 2.1.2 Custom PCB
-Another major change in v3.0 is a custom carrier board PCB that designed to greatly simplify the assembly process. The PCB was designed in KiCad and fabricated by JLCPCB. 
+One of the major change in v3.0 is a custom carrier board PCB that is designed to greatly simplify the assembly process. The PCB was designed in KiCad and fabricated by JLCPCB. 
 
 <p align="center"><img src="https://user-images.githubusercontent.com/22924092/222990941-2d50d191-8055-475c-9464-4d9a1b2d12a2.png" width="720"></p>  
 <p align="center"><b>Figure 1:</b> 3D rendering of Cryologger iceberg drift tracking beacon carrier board designed in KiCad.</p>
 
 ### 2.2 Bill of Materials 
 
-**Table 1.** Bill of materials and associated costs for components used in the Cryologger iceberg tracking beacon v3.1. Warning: BoM is a work in progress and does not include all components. Please contact for more information. Component costs current as of March 2023.
+**Table 1.** Bill of materials and associated costs for components used in the Cryologger ITB v3.1. Prices are listed in USD and are current as of December 2023. Taxes and shipping not included. <sup>1</sup>Denotes optional component. Please note bill of materials is a work in progress.
 | Component | Product | Quantity | Cost (USD) |
 | --- | --- | :---: | :---: |
-| Satellite transceiver | [Rock7 RockBLOCK 9603](https://www.groundcontrol.com/us/product/rockblock-9603-compact-plug-and-play-satellite-transmitter/) | 1 | $302.00 |
-| Satellite antenna (optional) | [Maxtena M1621HCT-P-SMA](https://maxtena.com/products/f-passive/m1621hct-p-sma-iridium-passive-antenna/) | 1 | $50.00 |
+| PCB | [Custom Cryologger Printed Circuit Board](https://jlcpcb.com) | 1 | $5.00 | 
+| Satellite transceiver | [Rock7 RockBLOCK 9603](https://www.groundcontrol.com/us/product/rockblock-9603-compact-plug-and-play-satellite-transmitter/) | 1 | $267.50 |
+| Satellite antenna<sup>1</sup> | [Maxtena M1621HCT-P-SMA](https://maxtena.com/products/f-passive/m1621hct-p-sma-iridium-passive-antenna/) | 1 | $54.00 |
 | Microcontroller | [Adafruit Feather M0 Basic Proto](https://www.adafruit.com/product/2772) | 1 | $19.95 |
 | GNSS Receiver | [Adafruit Ultimate GPS FeatherWing](https://www.adafruit.com/product/3133) | 1 | $24.95 |
 | IMU | [Adafruit LSM303AGR Accelerometer Magnetometer](https://www.adafruit.com/product/4413) | 1 | $12.50 |
 | Sensor | [Adafruit BME280 Temperature Humidity Pressure Sensor](https://www.adafruit.com/product/2652) | 1 | $14.95 |
-| Voltage regulator | [Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3791) | 1 | $16.95 |
-| Voltage regulator | [Pololu D36V6F5 5V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3792) | 1 | $16.95 |
+| Voltage regulator | [Pololu D36V6F3 3.3V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3791) | 1 | $6.95 |
+| Voltage regulator | [Pololu D36V6F5 5V 600mA Step-Down Voltage Regulator](https://www.pololu.com/product/3792) | 1 | $6.95 |
 | Resistor | [10 M 1% 0.6 W resistor](https://www.mouser.ca/ProductDetail/594-MBB02070C1005FCT) | 1 | $0.29 |
 | Resistor | [1 M 1% 0.6 W resistor](https://www.mouser.ca/ProductDetail/594-B0207C1M000F5T) | 1 | $0.20 |
-| Capacitor | [0.1 uF Capacitor](https://www.mouser.ca/ProductDetail/Vishay-BC-Components/K104K15X7RF53L2?qs=mWFvmKOfYW8KbAXlf9eSQA%3D%3D) | 1 | $0.29 |
-| Power connector |	[Phoenix Contact MSTB 2,5/ 2-ST-5,08 - 1757019](https://www.mouser.ca/ProductDetail/Phoenix-Contact/1757242?qs=%2Fha2pyFadugVjodGKkrF4xNq%252BZEVHysqCHlL2cTnJ%252B8%3D) | 1 | $0.99 |
-| Power connector	| [Phoenix Contact MSTBA 2,5/ 2-G-5,08 - 1757242](https://www.mouser.ca/ProductDetail/Phoenix-Contact/1757019?qs=sGAEpiMZZMvlX3nhDDO4AGmxTE5dWGQY3FmaBdjJUN0%3D) | 1 | $2.98 |
-| Connector |	[Molex PicoBlade PCB Header](https://www.mouser.ca/ProductDetail/Molex/53047-1010?qs=dvxwXVM4mZUfJg3FKCXbvw%3D%3D) | 1| $0.64 |
-| Connector |	Molex PicoBlade Crimp Housing | 2|  |
+| Capacitor | [0.1 uF Capacitor](https://mou.sr/481ILov) | 1 | $0.23 |
+| Power connector |	[Phoenix Contact MSTB 2,5/ 2-ST-5,08 - 1757019](https://mou.sr/47HAA0B) | 1 | $0.60 |
+| Power connector	| [Phoenix Contact MSTBA 2,5/ 2-G-5,08 - 1757242](https://mou.sr/3R27Ick) | 1 | $1.81 |
+| Connector |	[Molex PicoBlade PCB Header](https://mou.sr/3qLrmgc) | 1| $0.55 |
+| Connector |	[Molex PicoBlade Crimp Housing(https://mou.sr/3lXOY2x])| 2| $0.36 |
 | Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Yellow | 1 | |
 | Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Orange | 1 | |
 | Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Black | 1 | |
 | Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Slate | 1 | |
 | Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Red | 1 | |
-| Enclosure | [Nanuk 904](https://nanukcases.ca/products/nanuk-904) | 1 | $50.00 |
-| Battery | [Tadiran TLP93121](https://www.tadiranbat.com/assets/tlp-93121-b-al1.pdf) | 1 | $145.00 |
-| PCB | JLCPCB | 1 | $5.00 | 
+| Enclosure | [Nanuk 904](https://nanukcases.ca/products/nanuk-904) | 1 | $47.95 |
+| Battery | [Tadiran TLP93121](https://www.tadiranbat.com/assets/tlp-93121-b-al1.pdf) | 1 | $145.50 |
 | **Total** | | | |
 
 #### Photos
