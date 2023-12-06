@@ -98,15 +98,13 @@ One of the major change in v3.0 is a custom carrier board PCB that is designed t
 
 ## 3.0 Deployments
 
-A total of 37 Cryologger iceberg drift tracking beacons have been deployed between 2018 and 2023 (Figure X), primarily during the annual Amundsen Expedition. Deployments are performed by helicopter from the CCGS Amundsen on icebergs and ice islands along the coasts of Ellesmere Island, Baffin Island and Greenland (Figure 3). The overall suitability of potential targets was determined by assessing the iceberg’s size, shape, and location. Where possible, icebergs selected to be instrumented with a tracking beacon were large enough to survive drifting south to the Grand Banks of Newfoundland and far enough away from the coast to increase the chances of being carried southward by the currents and avoid becoming grounded in shallow coastal areas. 
-
-A case study of deployments from the 2021 Amundsen Expedition is presented below in 3.1. 
+A total of 37 Cryologger iceberg drift tracking beacons have been deployed between 2018 and 2023 (Figure X), primarily during the annual Amundsen Expedition. Deployments are performed by helicopter from the CCGS Amundsen on icebergs and ice islands along the coasts of Ellesmere Island, Baffin Island and Greenland (Figure 3). At the time of deployment, a compass heading of the tracking beacon was recorded. Where possible, a 360° aerial photo survey of the iceberg was performed for use with Structure-from-Motion photogrammetry in order to create 3D models of the iceberg.
 
 <p align="center"><img width="480" src="https://github.com/cryologger/ice-tracking-beacon/blob/main/Images/cryologger-itb-deployments.png"></p>
 <p align="left"><b>Figure 3:</b> Map of Cryologger ice drift tracking beacons deployed between 2018 and 2023.</p>
 
-### 3.1 2021 Amundsen Expedition
-<p align="center"><img width="640" src="https://user-images.githubusercontent.com/22924092/133437548-ac2ced2f-60ad-4eab-820c-647c70e01970.png"></p>
+The overall suitability of potential targets was determined by assessing the iceberg’s size, shape, and location. Where possible, icebergs selected to be instrumented with a tracking beacon were large enough to survive drifting south to the Grand Banks of Newfoundland and far enough away from the coast to increase the chances of being carried southward by the currents and avoid becoming grounded in shallow coastal areas. 
+
 
 <p align="center"><img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Images/2021_300434065869240.JPG" width="360" >
 <img width="360" src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Images/2021_300434063497310.JPG"></p>
@@ -116,10 +114,9 @@ A case study of deployments from the 2021 Amundsen Expedition is presented below
 
 ## 4.0 Results
 
-As of December 2023, Cryologger ITBs deployments made on icebergs and ice islands have achieved up to 1530 days of continuous operation. Collectively, these ITBs transmitted more than 125,000 GNSS positions and travelled a combined distance of over 12,000 km. The recorded iceberg drift tracks of all Cryologger ITB deployments can be viewed at: https://cryologger.org/tracking
+The iceberg drift tracks of all Cryologger ITB deployments can be viewed at: https://cryologger.org/tracking
 
-### 4.1 2021 Amundsen Expedition
-
+As of December 2023, Cryologger ITB deployment have transmitted more than 125,000 GNSS positions and travelled a combined distance of over 15,000 km. The maximum achieved lifespan has reached 1530 days of continuous operation. 
 
 
 ## 5.0 Conclusion
