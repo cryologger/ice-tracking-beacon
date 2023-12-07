@@ -127,21 +127,14 @@ The overall success of the Cryologger deployments has demonstrated that it can p
 
 ## Repository Contents
 
-* **/Archive** - Contains information on previous versions of the Cryologger design
+* **/Documentation** - Assembly, deployment and troubleshoting guides, as well as information of components used and associated costs.
 
-* **/Software** - Contains the Arduino code
+* **/Hardware** - KiCad PCB schematic and design files.
 
-* **/Bill of Materials** - Information on all components used construction and their associated costs
-
-* **/Documentation** - All project documents
-
-* **/Hardware** - KiCad schematics and Fusion 360 design files
-
-## Documentation
-* Currently in progress
+* **/Software** -  Arduino code and Python data analysis scripts.
 
 ## License Information
-This project is distributed under the GNU General Public License v3.0
+This project is released under the GNU General Public License v3.0 (https://www.gnu.org/licenses/gpl-3.0.en.html).
 
 Cheers,
 
