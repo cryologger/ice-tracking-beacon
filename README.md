@@ -40,9 +40,9 @@ One of the major change in v3.0 is a custom carrier board PCB that is designed t
 <p align="center"><img src="https://user-images.githubusercontent.com/22924092/222990941-2d50d191-8055-475c-9464-4d9a1b2d12a2.png" width="720"></p>  
 <p align="center"><b>Figure 1:</b> 3D rendering of Cryologger iceberg drift tracking beacon carrier board designed in KiCad.</p>
 
-### 2.2 Bill of Materials 
+### 2.2 Bill of Materials (BOM)
 
-**Table 1.** Bill of materials and associated costs for components used in the Cryologger ITB v3.1. Prices are listed in USD and are current as of December 2023. Taxes and shipping not included. <sup>1</sup>Denotes optional component. Please note bill of materials is a work in progress.
+**Table 1.** Bill of materials and associated costs for components used in the Cryologger ITB v3.1. Prices are listed in USD and are current as of December 2023. Taxes and shipping not included. <sup>1</sup>Denotes optional component. Please note BOM is a work in progress.
 | Component | Product | Quantity | Cost (USD) |
 | --- | --- | :---: | :---: |
 | PCB | [Custom Cryologger Printed Circuit Board](https://jlcpcb.com) | 1 | $5.00 | 
