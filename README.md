@@ -12,7 +12,7 @@
 ## 1.0 Introduction
 Icebergs and ice islands represent significant hazards to marine navigation and offshore infrastructure at a time when demand for access to Canada’s Arctic waters is increasing. There is a growing demand for in situ iceberg tracking data to monitor their drift trajectory and improve predictions of ice hazard occurrence and behaviour, yet the high cost of commercial tracking devices often prevents monitoring at optimal spatial and temporal resolutions.
 
-The Cryologger Ice Tracking Beacon (ITB), built using inexpensive, open-source hardware and software, can provide a reliable and cost-effective platform for monitoring the drift of icebergs and ice islands in the Canadian Arctic.
+The Cryologger Ice Tracking Beacon (ITB), built using inexpensive, open-source hardware and software, provides a reliable and cost-effective platform for monitoring the drift of icebergs and ice islands in the Canadian Arctic.
 
 ## 2.0 Methods
 
@@ -24,9 +24,9 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger ITB 
 
 #### 2.1.1 Design Iterations
 
-More information about versions 1.0 and 2.0 of the Cryologger ITB can be found in the following publication:
+More information about versions 1.0 and 2.0 of the Cryologger ITB can be found in a forthcoming publication in 2024.
 
-Version 3.0 of the Cryologger ITB builds on the successes of v1.0/v2.0 and is also based on the Adafruit ecosystem of components. A number of improvements to the design were made, including:
+Version 3.0 of the Cryologger ITB builds on the successes of versions 1.0 and 2.0. A number of improvements to the design were made, including:
 * 3.3 V power is now provided directly from a Pololu 3.3 V step-down voltage regulator, bypassing the Feather M0's onboard AP2112 LDO regulator (-55 μA).
 * A dedicated 5 V step-down voltage regulator was added to power the RockBLOCK Iridium transceiver.
 * The DS3231 real-time clock (RTC) was removed in favour of the SAMD21's internal RTC for all timekeeping and alarm functionality with periodic time synchronizations with the GPS.
@@ -35,7 +35,7 @@ Version 3.0 of the Cryologger ITB builds on the successes of v1.0/v2.0 and is al
 * A 10MΩ + 1 MΩ resistor divider is now used to measured the battery voltage (+2.4 μA).
 
 #### 2.1.2 Custom PCB
-One of the major change in v3.0 is a custom carrier board PCB that is designed to greatly simplify the assembly process. The PCB was designed in KiCad and fabricated by JLCPCB. 
+One of the major changes in v3.0 is a custom carrier board PCB that is designed to greatly simplify the assembly process. The PCB was designed in KiCad and fabricated by JLCPCB. 
 
 <p align="center"><img src="https://user-images.githubusercontent.com/22924092/222990941-2d50d191-8055-475c-9464-4d9a1b2d12a2.png" width="720"></p>  
 <p align="center"><b>Figure 1:</b> 3D rendering of Cryologger iceberg drift tracking beacon carrier board designed in KiCad.</p>
@@ -81,24 +81,24 @@ The programming logic of the Cryologger ITB optimizes sleep and wake cycles to m
 
 #### 2.2.1 Measurements
 
-**Table 2.** Variables recorded and transmitted by the Cryologger ice drift tracking beacon.
-| Variable | Unit | Comments |
-| --- | :---: | --- |
-| Datetime  |   | YYYY-MM-DD HH:MM:SS |
-| Temperature | °C  | Internal temperature |
-| Humidity | %  | Internal humidity |
-| Pressure | hPa | Internal pressure |
-| Pitch | °|  |
-| Roll | ° |  |
-| Heading | °  | Tilt-compensated heading (0-360°) |
-| Latitude | DD |  |
-| Longitude | DD |  |
-| Satellites | # | Number of satellites in view  |
-| HDOP |  | Horizonal dilution of precision |
-| Voltage | V | Battery voltage |
-| Transmit duration  | s | Length of Iridium transmission  |
-| Transmit status | | Iridium error return code |
-| Iteration counter |  | Number of program iterations |
+**Table 2.** Measurements recorded and transmitted by the Cryologger ITB v3.0, including variable sizes.
+|     Variable             |     Unit    |     Description                                   |     Size (bytes)    |
+|--------------------------|-------------|---------------------------------------------------|---------------------|
+|     unixtime             |     s       |     Unix time (seconds since 1970-01-01)          |     4               |
+|     temperature_int      |     °C      |     Internal temperature                          |     2               |
+|     humidity_int         |     %       |     Internal humidity                             |     2               |   
+|     pressure_int         |     hPa     |     Internal pressure                             |     2               |   
+|     pitch                |     °       |     Pitch angle                                   |     2               |   
+|     roll                 |     °       |     Roll angle                                    |     2               |   
+|     heading              |     °       |     Tilt-compensated magnetic heading (0-360°)    |     2               |   
+|     latitude             |     °       |     GNSS latitude                                 |     4               |   
+|     longitude            |     °       |     GNSS longitude                                |     4               |   
+|     satellites           |             |     Number of GNSS satellites in view             |     2               |   
+|     hdop                 |             |     GNSS horizontal dilution of precision         |     2               |   
+|     voltage              |     V       |     Battery voltage                               |     2               |   
+|     transmit_duration    |     s       |     Transmission time of SBD message              |     2               |   
+|     transmit_status      |             |     Iridium return code                           |     1               |   
+|     message_counter      |             |     Number of transmitted messages                |     2               |   
 
 #### 2.2.2 Data transmission and processing
 The Cryologger ITB records its position and sensor measurements nominally on an hourly basis and transmits at an interval of 3 hours. Data are transmitted via the Iridium satellite network as a Short Burst Data (SBD) message. The ITB attempts to transmit each message for up to 180 seconds, and if unsuccessful, the message is stored in a temporary buffer and reattempted at the next transmission interval. Both the sampling and transmission frequency of individual Cryologgers can be remotely modified by the end-user. Successfully transmitted SBD messages are received by an Iridium ground station and sent to Ground Control's server. These data are then forwarded to Amazon Web Services (AWS), where they are decoded using a Python script, stored in a database, and visualized on the Cryologger website: https://cryologger.org.
