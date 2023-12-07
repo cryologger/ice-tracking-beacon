@@ -112,11 +112,11 @@ A total of 37 Cryologger iceberg drift tracking beacons have been deployed betwe
 
 The overall suitability of potential targets was determined by assessing the iceberg’s size, shape, and location. Where possible, icebergs selected to be instrumented with a tracking beacon were large enough to survive drifting south to the Grand Banks of Newfoundland and far enough away from the coast to increase the chances of being carried southward by the currents and avoid becoming grounded in shallow coastal areas. 
 
-<p align="center"><img src="https://github.com/cryologger/ice-tracking-beacon/blob/main/Images/Images/2021_300434065869240.JPG" width="360" >
+<p align="center"><img src="https://github.com/cryologger/ice-tracking-beacon/blob/main/Images/2021_300434065869240.JPG" width="360" >
 <img width="360" src="https://github.com/cryologger/ice-tracking-beacon/blob/main/Images/2021_300434063497310.JPG"></p>
 <p align="center"><img width="360" src="https://github.com/cryologger/ice-tracking-beacon/blob/main/Images/2021_300434063291950.JPG">
-<img width="360" src="https://github.com/cryologger/ice-tracking-beacon/blob/main/Images/Images/2021_300434065864290.JPG"></p>
-<p align="left"><b>Figure 4:</b> Examples of icebergs instrumented with Cryologger iceberg tracking beacons during the 2021 Amundsen Expedition.</p>
+<img width="360" src="https://github.com/cryologger/ice-tracking-beacon/blob/main/Images/2021_300434065864290.JPG"></p>
+<p align="center"><b>Figure 4:</b> Examples of icebergs instrumented with Cryologger iceberg tracking beacons during the 2021 Amundsen Expedition.</p>
 
 ## 4.0 Results
 
@@ -127,7 +127,7 @@ The iceberg drift tracks of all Cryologger ITB deployments can be viewed at: htt
 
 Results have shown that the drift patterns and speeds differed considerably between targets, with a maximum measured drift speed of 6.0 km/h and a median drift speed for all beacons of 0.3 km/h.
 <p align="center"><img width="480" src="https://github.com/cryologger/ice-tracking-beacon/assets/22924092/225039bd-b640-42a6-af0c-1c30aa13ba80"></p>
-<p align="left"><b>Figure 5:</b> Map of Cryologger iceberg drift track tracks from beacons deployed between 2018 and 2023.</p>
+<p align="center"><b>Figure 5:</b> Map of Cryologger iceberg drift track tracks from beacons deployed between 2018 and 2023.</p>
 
 ## 5.0 Conclusion
 
