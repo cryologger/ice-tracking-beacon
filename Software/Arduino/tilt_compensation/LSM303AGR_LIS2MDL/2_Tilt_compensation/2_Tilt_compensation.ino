@@ -17,17 +17,17 @@
   - Facing vector p is the direction of travel and allows reassigning these directions.
   - It should be defined as pointing forward, parallel to the ground,
   with coordinates {X, Y, Z} (in magnetometer frame of reference).
-  
+
   From Caleb:
   - Returns the angular difference in the horizontal plane between the
   "from" vector and north, in degrees.
   Description of heading algorithm:
   - Shift and scale the magnetic reading based on calibration data to find
   the North vector. Use the acceleration readings to determine the Up
-  vector (gravity is measured as an upward acceleration). 
-  - The cross product of North and Up vectors is East. 
-  - The vectors East and North form a basis for the horizontal plane. 
-  - The From vector is projected into the horizontal plane and the angle between 
+  vector (gravity is measured as an upward acceleration).
+  - The cross product of North and Up vectors is East.
+  - The vectors East and North form a basis for the horizontal plane.
+  - The From vector is projected into the horizontal plane and the angle between
   the projected vector and horizontal north is returned.
 */
 
@@ -49,19 +49,29 @@ Adafruit_LSM303_Accel_Unified lsm303agr = Adafruit_LSM303_Accel_Unified(54321);
   {0, 0, 1}    // Align to Z+
   {0, 0, -1}   // Align to Z-
 */
-float p[] = {1, 0, 0};  // X marking on sensor board points toward yaw = 0
+float p[] = {0, -1, 0};  // X marking on sensor board points toward yaw = 0
 
 // Min/max magnetometer values
 float m_min[3] = {
-  -75.60, -62.25, -52.35
+  //0,0,0
+  -78.90, -44.25, -63.00
+  //-75.60, -62.25, -52.35
+  //-71.55, -39.45, -61.35
 };
 
 float m_max[3] = {
-  51.75, 72.60, 78.30
+  //0,0,0
+  24.90, 52.95, 29.85
+  //18.15, 45.00, 24.75
+  //51.75, 72.60, 78.30
 };
+
+
 
 void setup()
 {
+  pinMode(A3, OUTPUT);
+  digitalWrite(A3, HIGH);
   pinMode(A4, OUTPUT);
   digitalWrite(A4, HIGH);
 
@@ -137,7 +147,7 @@ void readLsm303agr()
     heading = getHeading(Axyz, Mxyz, p);
     delay(100);
   }
-  Serial.println(heading);
+  Serial.print(pitch); Serial.print(","); Serial.print(roll); Serial.print(","); Serial.println(heading);
 }
 
 // Returns a heading (°) given an acceleration vector a due to gravity, a magnetic vector m, and a facing vector p (global)
