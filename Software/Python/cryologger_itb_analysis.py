@@ -23,7 +23,7 @@ from cartopy.mpl.ticker import (LongitudeFormatter,
                                 LatitudeFormatter,
                                 LongitudeLocator,
                                 LatitudeLocator)
-import xarray as xr
+#import xarray as xr
 
 # -----------------------------------------------------------------------------
 # Plotting attributes
@@ -125,7 +125,7 @@ df = pd.read_csv("/Users/adam/Downloads/2023_itb_amundsen.csv", index_col=False)
 
 
 # Convert unixtime datetime
-df["datetime"] = pd.to_datetime(df["unixtime"].astype(str), format="%Y-%m-%d %H:%M:%S")
+df["datetime"] = pd.to_datetime(df["unixtime"].astype(str), format="%Y-%m-%d %H:%M")
 
 # Convert IMEI to string
 df["imei"] = df["imei"].astype(str)
@@ -143,6 +143,8 @@ df = df[df["imei"].isin(["300434063298940"])]
 # Subset by datetime
 df = df[(df["datetime"] > "2023-09-01 00:00")]
 
+# Subset by latitude
+df = df[(df["latitude"] > 0)]
 
 # Convert pressure to float
 df["pressure_int"] = df["pressure_int"].replace({",":""},regex=True).apply(pd.to_numeric,1)
@@ -284,6 +286,23 @@ ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
 ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="UID")
 fig.savefig(path_figures + "10_counter.png", dpi=dpi, transparent=False, bbox_inches="tight")
 
+# Latitude
+fig, ax = plt.subplots(figsize=(10,5))
+ax.grid(ls="dotted")
+sns.lineplot(x="datetime", y="latitude", data=df, errorbar=None, lw=lw, hue="uid")
+ax.set(xlabel=None, ylabel="Latitude")
+plt.xticks(rotation=45, horizontalalignment="right")
+ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
+#ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
+ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="UID")
+fig.savefig(path_figures + "10_counter.png", dpi=dpi, transparent=False, bbox_inches="tight")
+
+
+
+
+
+
+
 
 
 # -----------------------------------------------------------------------------
@@ -291,10 +310,10 @@ fig.savefig(path_figures + "10_counter.png", dpi=dpi, transparent=False, bbox_in
 # -----------------------------------------------------------------------------
 
 # Load deployment
-df = pd.read_csv("/Users/adam/Google Drive/Fieldwork/2021 - Amundsen/Cryologger ITB/Deployments/deployments_2021.csv", index_col=False)
+df = pd.read_csv("/Users/adam/Downloads/metadata.csv", index_col=False)
 
 # Convert from int64 to object
-df["imei_short"] = df["imei_short"].astype(str)
+df["imei"] = df["imei"].astype(str)
 df["beacon"] = df["beacon"].astype(str)
 df["year"] = df["year"].astype(str)
 
@@ -332,9 +351,9 @@ gl.ylocator = mticker.FixedLocator(np.arange(60,90,1))
 gl.xformatter = LongitudeFormatter()
 gl.yformatter = LatitudeFormatter()
 gl.xpadding=10
-sns.scatterplot(x="longitude", y="latitude", hue="beacon",
+sns.scatterplot(x="Longitude Start", y="Latitude Start", hue="UID",
                 markers=True, marker="o",
-                data=df, ci=None, zorder=10, 
+                data=df, zorder=10, 
                 s=500, linewidth=1, edgecolor="black", legend="full",
                 transform=ccrs.PlateCarree())
 ax.legend(loc=1, title="Beacon")
