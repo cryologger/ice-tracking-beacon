@@ -40,7 +40,7 @@ One of the major change in v3.0 is a custom carrier board PCB that is designed t
 <p align="center"><img src="https://user-images.githubusercontent.com/22924092/222990941-2d50d191-8055-475c-9464-4d9a1b2d12a2.png" width="720"></p>  
 <p align="center"><b>Figure 1:</b> 3D rendering of Cryologger iceberg drift tracking beacon carrier board designed in KiCad.</p>
 
-### 2.2 Bill of Materials (BOM)
+### 2.1.2 Bill of Materials (BOM)
 
 **Table 1.** Bill of materials and associated costs for components used in the Cryologger ITB v3.1. Prices are listed in USD and are current as of December 2023. Taxes and shipping not included. <sup>1</sup>Denotes optional component. Please note BOM is a work in progress.
 | Component | Product | Quantity | Cost (USD) |
@@ -75,9 +75,13 @@ One of the major change in v3.0 is a custom carrier board PCB that is designed t
 <p align="center"><img src="https://github.com/adamgarbo/cryologger-ice-tracking-beacon/blob/main/Images/cryologger-itb-2.jpeg" width="480" ></p>
 <p align="center"><b>Figure 2:</b> Assembled Cryologger ice drift tracking beacon housed in Nanuk case and 3D-printed case lid removed.</p>
 
-### 2.3 Measurements
+### 2.2 Operation
 
-**Table 2.** Variables recorded and transmitted by the Cryologger iceberg drift tracking beacon.
+The programming logic of the Cryologger ITB optimizes sleep and wake cycles to minimize overall power consumption. When initially powered on, the system attempts to acquire a signal from the GNSS receiver and synchronizes the RTC with the current date and time. It then sets an alarm for the initial sampling interval and enters a low-power, deep-sleep mode. When the alarm triggers, the system wakes, records the time, and acquires a GNSS position. Next, measurements of all onboard sensors are collected (Table 2). These data are stored into memory and when the software determines the appropriate transmission interval has been met, it attempts to transmit the data using the RockBLOCK satellite transceiver. The software then disables power to all components, sets the next alarm, and returns to sleep.
+
+#### 2.2.1 Measurements
+
+**Table 2.** Variables recorded and transmitted by the Cryologger ice drift tracking beacon.
 | Variable | Unit | Comments |
 | --- | :---: | --- |
 | Datetime  |   | YYYY-MM-DD HH:MM:SS |
@@ -96,6 +100,9 @@ One of the major change in v3.0 is a custom carrier board PCB that is designed t
 | Transmit status | | Iridium error return code |
 | Iteration counter |  | Number of program iterations |
 
+#### 2.2.2 Data transmission and processing
+The Cryologger ITB records its position and sensor measurements nominally on an hourly basis and transmits at an interval of 3 hours. Data are transmitted via the Iridium satellite network as a Short Burst Data (SBD) message. The ITB attempts to transmit each message for up to 180 seconds, and if unsuccessful, the message is stored in a temporary buffer and reattempted at the next transmission interval. Both the sampling and transmission frequency of individual Cryologgers can be remotely modified by the end-user. Successfully transmitted SBD messages are received by an Iridium ground station and sent to Ground Control's server. These data are then forwarded to Amazon Web Services (AWS), where they are decoded using a Python script, stored in a database, and visualized on the Cryologger website: https://cryologger.org.
+
 ## 3.0 Deployments
 
 A total of 37 Cryologger iceberg drift tracking beacons have been deployed between 2018 and 2023 (Figure X), primarily during the annual Amundsen Expedition. Deployments are performed by helicopter from the CCGS Amundsen on icebergs and ice islands along the coasts of Ellesmere Island, Baffin Island and Greenland (Figure 3). At the time of deployment, a compass heading of the tracking beacon was recorded. Where possible, a 360° aerial photo survey of the iceberg was performed for use with Structure-from-Motion photogrammetry in order to create 3D models of the iceberg.
@@ -104,7 +111,6 @@ A total of 37 Cryologger iceberg drift tracking beacons have been deployed betwe
 <p align="left"><b>Figure 3:</b> Map of Cryologger ice drift tracking beacons deployed between 2018 and 2023.</p>
 
 The overall suitability of potential targets was determined by assessing the iceberg’s size, shape, and location. Where possible, icebergs selected to be instrumented with a tracking beacon were large enough to survive drifting south to the Grand Banks of Newfoundland and far enough away from the coast to increase the chances of being carried southward by the currents and avoid becoming grounded in shallow coastal areas. 
-
 
 <p align="center"><img src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Images/2021_300434065869240.JPG" width="360" >
 <img width="360" src="https://github.com/adamgarbo/Cryologger_Iceberg_Tracking_Beacon/blob/main/Images/2021_300434063497310.JPG"></p>
