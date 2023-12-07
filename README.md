@@ -35,7 +35,7 @@ Version 3.0 of the Cryologger ITB builds on the successes of versions 1.0 and 2.
 * A 10MΩ + 1 MΩ resistor divider is now used to measured the battery voltage (+2.4 μA).
 
 #### 2.1.2 Custom PCB
-One of the major changes in v3.0 is a custom carrier board PCB that is designed to greatly simplify the assembly process. The PCB was designed in KiCad and fabricated by JLCPCB. 
+A major changes in v3.0 is a custom carrier board PCB that is designed to greatly simplify the assembly process. The PCB was designed in KiCad and fabricated by JLCPCB. 
 
 <p align="center"><img src="https://user-images.githubusercontent.com/22924092/222990941-2d50d191-8055-475c-9464-4d9a1b2d12a2.png" width="720"></p>  
 <p align="center"><b>Figure 1:</b> 3D rendering of Cryologger iceberg drift tracking beacon carrier board designed in KiCad.</p>
@@ -61,16 +61,10 @@ One of the major changes in v3.0 is a custom carrier board PCB that is designed 
 | Power connector	| [Phoenix Contact MSTBA 2,5/ 2-G-5,08 - 1757242](https://mou.sr/3R27Ick) | 1 | $1.81 |
 | Connector |	[Molex PicoBlade PCB Header](https://mou.sr/3qLrmgc) | 1| $0.55 |
 | Connector |	[Molex PicoBlade Crimp Housing](https://mou.sr/3lXOY2x])| 2| $0.36 |
-| Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Yellow | 1 | |
-| Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Orange | 1 | |
-| Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Black | 1 | |
-| Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Slate | 1 | |
-| Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wire 2" Red | 1 | |
+| Cable Assembly |	Molex PicoBlade Pre-crimped Jumper Wires | 5 | |
 | Enclosure | [Nanuk 904](https://nanukcases.ca/products/nanuk-904) | 1 | $47.95 |
 | Battery | [Tadiran TLP93121](https://www.tadiranbat.com/assets/tlp-93121-b-al1.pdf) | 1 | $145.50 |
 | **Total** | | | |
-
-#### Photos
 
 <p align="center"><img src="https://github.com/adamgarbo/cryologger-ice-tracking-beacon/blob/main/Images/cryologger-itb-2.jpeg" width="480" ></p>
 <p align="center"><b>Figure 2:</b> Assembled Cryologger ice drift tracking beacon housed in Nanuk case and 3D-printed case lid removed.</p>
@@ -101,11 +95,12 @@ The programming logic of the Cryologger ITB optimizes sleep and wake cycles to m
 |     message_counter      |             |     Number of transmitted messages                |     2               |   
 
 #### 2.2.2 Data Transmission and Processing
+
 The Cryologger ITB records its position and sensor measurements nominally on an hourly basis and transmits at an interval of 3 hours. Data are transmitted via the Iridium satellite network as a Short Burst Data (SBD) message. The ITB attempts to transmit each message for up to 180 seconds, and if unsuccessful, the message is stored in a temporary buffer and reattempted at the next transmission interval. Both the sampling and transmission frequency of individual Cryologgers can be remotely modified by the end-user. Successfully transmitted SBD messages are received by an Iridium ground station and sent to Ground Control's server. These data are then forwarded to Amazon Web Services (AWS), where they are decoded using a Python script, stored in a database, and visualized on the Cryologger website: https://cryologger.org.
 
 ## 3.0 Deployments
 
-A total of 37 Cryologger iceberg drift tracking beacons have been deployed between 2018 and 2023 (Figure X), primarily during the annual Amundsen Expedition. Deployments are performed by helicopter from the CCGS Amundsen on icebergs and ice islands along the coasts of Ellesmere Island, Baffin Island and Greenland (Figure 3). At the time of deployment, a compass heading of the tracking beacon was recorded. Where possible, a 360° aerial photo survey of the iceberg was performed for use with Structure-from-Motion photogrammetry in order to create 3D models of the iceberg.
+A total of 37 Cryologger iceberg drift tracking beacons have been deployed between 2018 and 2023 (Figure 3), primarily during the annual Amundsen Expedition. Deployments are performed by helicopter from the CCGS Amundsen on icebergs and ice islands along the coasts of Ellesmere Island, Baffin Island and Greenland (Figure 3). At the time of deployment, a compass heading of the tracking beacon was recorded. Where possible, a 360° aerial photo survey of the iceberg was performed for use with Structure-from-Motion photogrammetry in order to create 3D models of the iceberg.
 
 <p align="center"><img width="480" src="https://github.com/cryologger/ice-tracking-beacon/blob/main/Images/cryologger-itb-deployments.png"></p>
 <p align="left"><b>Figure 3:</b> Map of Cryologger ice drift tracking beacons deployed between 2018 and 2023.</p>
@@ -123,9 +118,8 @@ The overall suitability of potential targets was determined by assessing the ice
 The operation of the Cryologger ITBs greatly exceeded expectations, with the operational lifespans of deployments made in 2018 ranging from 310 to 1530 days, and those in 2019 ranging from 333 to 615 days. The most frequent causes of loss of communication with the ITBs was due to the eventual deterioration (calving or rolling) or catastrophic break-up of the iceberg and subsequent destruction of the beacon. In many cases, it was possible to use remote sensing imagery to observe major break-up events of icebergs that immediately resulted in transmissions from the beacon to cease.
 
 ### 4.1 Iceberg Drift
-The iceberg drift tracks of all Cryologger ITB deployments can be viewed at: https://cryologger.org/tracking
+A snapshot of iceberg drift tracks recorded from all Cryologger ITB deployments as of December 2023 is shown in Figure 4. This data can also be viewed in real-time at: https://cryologger.org/tracking
 
-Results have shown that the drift patterns and speeds differed considerably between targets, with a maximum measured drift speed of 6.0 km/h and a median drift speed for all beacons of 0.3 km/h.
 <p align="center"><img width="480" src="https://github.com/cryologger/ice-tracking-beacon/assets/22924092/225039bd-b640-42a6-af0c-1c30aa13ba80"></p>
 <p align="center"><b>Figure 5:</b> Map of Cryologger iceberg drift track tracks from beacons deployed between 2018 and 2023.</p>
 
