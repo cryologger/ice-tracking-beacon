@@ -100,7 +100,7 @@ The programming logic of the Cryologger ITB optimizes sleep and wake cycles to m
 |     transmit_status      |             |     Iridium return code                           |     1               |   
 |     message_counter      |             |     Number of transmitted messages                |     2               |   
 
-#### 2.2.2 Data transmission and processing
+#### 2.2.2 Data Transmission and Processing
 The Cryologger ITB records its position and sensor measurements nominally on an hourly basis and transmits at an interval of 3 hours. Data are transmitted via the Iridium satellite network as a Short Burst Data (SBD) message. The ITB attempts to transmit each message for up to 180 seconds, and if unsuccessful, the message is stored in a temporary buffer and reattempted at the next transmission interval. Both the sampling and transmission frequency of individual Cryologgers can be remotely modified by the end-user. Successfully transmitted SBD messages are received by an Iridium ground station and sent to Ground Control's server. These data are then forwarded to Amazon Web Services (AWS), where they are decoded using a Python script, stored in a database, and visualized on the Cryologger website: https://cryologger.org.
 
 ## 3.0 Deployments
