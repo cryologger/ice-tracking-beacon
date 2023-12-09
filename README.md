@@ -34,13 +34,12 @@ Version 3.0 of the Cryologger ITB builds on the successes of versions 1.0 and 2.
 * The temperature/pressure and IMU sensors are now powered directly through SAMD21 GPIO pins, allowing for power to be completely removed during sleep.
 * A 10MΩ + 1 MΩ resistor divider is now used to measured the battery voltage (+2.4 μA).
 
-#### 2.1.2 Custom PCB
-A major changes in v3.0 is a custom carrier board PCB that is designed to greatly simplify the assembly process. The PCB was designed in KiCad and fabricated by JLCPCB. 
+A major change in v3.0 is a custom carrier board PCB that is designed to greatly simplify the assembly process. The PCB was designed in KiCad and fabricated by JLCPCB. 
 
 <p align="center"><img src="https://user-images.githubusercontent.com/22924092/222990941-2d50d191-8055-475c-9464-4d9a1b2d12a2.png" width="720"></p>  
 <p align="center"><b>Figure 1:</b> 3D rendering of Cryologger iceberg drift tracking beacon carrier board designed in KiCad.</p>
 
-### 2.1.2 Bill of Materials (BOM)
+#### 2.1.2 Bill of Materials (BOM)
 
 **Table 1.** Bill of materials and associated costs for components used in the Cryologger ITB v3.1. Prices are listed in USD and are current as of December 2023. Taxes and shipping not included. <sup>1</sup>Denotes optional component. Please note BOM is a work in progress.
 | Component | Product | Quantity | Cost (USD) |
