@@ -2,6 +2,7 @@
   Title:    Cryologger Ice Tracking Beacon (ITB) - v3.3.3
   Date:     October 21, 2023
   Author:   Adam Garbo
+  License:  GPLv3. See license file for more information.
 
   Components:
   - Rock7 RockBLOCK 9603
