@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+title: Cryologger Ice Tracking Beacon
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Adam
+    family-names: Garbo
+    email: adam@cryologger.org
+    orcid: 'https://orcid.org/0000-0002-7312-7390'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.10522231
+repository-code: 'https://github.com/cryologger/ice-tracking-beacon'
+url: 'https://cryologger.org'
+abstract: >-
+  A low-cost, robust, and user-friendly ice drift tracking
+  beacon based on the open-source electronics Arduino
+  platform capable of providing long-term cryospheric
+  observations.
+keywords:
+  - iceberg
+  - tracking beacon
+  - drift
+  - open-source
+  - low-cost
+license: GPL-3.0+
+version: 3.3.4
+date-released: '2024-01-17'
