@@ -3,6 +3,7 @@
 <img alt="GitHub" src="https://img.shields.io/github/license/adamgarbo/Cryologger_Iceberg_Tracking_Beacon">
 <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/adamgarbo/Cryologger_Iceberg_Tracking_Beacon">
 <img alt="GitHub issues" src="https://img.shields.io/github/issues/adamgarbo/Cryologger_Iceberg_Tracking_Beacon">
+<img alt="DOI" src="https://zenodo.org/badge/163880339.svg">
 </p>
 
 ### Note: This project is under active development. 
@@ -143,4 +144,4 @@ This project is released under the GNU General Public License v3.0 (https://www.
 
 Cheers,
 
-**Adam**
+**Adam Garbo**
