@@ -1,6 +1,6 @@
 /*
-  Title:    Cryologger Ice Tracking Beacon (ITB) - v3.3.3
-  Date:     October 21, 2023
+  Title:    Cryologger Ice Tracking Beacon (ITB) - v3.3.4
+  Date:     January 17, 2024
   Author:   Adam Garbo
   License:  GPLv3. See license file for more information.
 
@@ -15,25 +15,26 @@
   - TN0702 N-Channel FET
 
   Comments:
-  - Intended for deployment during the 2023 Amundsen Expedition.
+  - Intended for deployment during the 2023 Amundsen Expedition
   - TN0702 N-Channel FET used for On/Off operation of RockBLOCK v3.F
+  - Additional license information included
 */
 
 // ------------------------------------------------------------------------------------------------
-// Libraries
+// Library                            Version License       URL/Comments
 // ------------------------------------------------------------------------------------------------
-#include <Adafruit_BME280.h>        // http://librarymanager/All#Adafruit_BME280 (v2.2.2)
-#include <Adafruit_LSM303_Accel.h>  // http://librarymanager/All#Adafruit_LSM303_Accel (v1.1.6)
-#include <Adafruit_LIS2MDL.h>       // http://librarymanager/All#Adafruit_LIS2MDL (v2.1.4)
-#include <Adafruit_Sensor.h>        // http://librarymanager/All#Adafruit_Sensor (v1.1.6)
-#include <Arduino.h>                // Required for creating new Serial instance. Must be included before <wiring_private.h>
-#include <ArduinoLowPower.h>        // http://librarymanager/All#ArduinoLowPower (v1.2.2)
-#include <IridiumSBD.h>             // http://librarymanager/All#SparkFun_IridiumSBD_I2C_Arduino_Library (v3.0.5)
-#include <RTCZero.h>                // http://librarymanager/All#RTCZero (v1.6.0)
-#include <TimeLib.h>                // http://librarymanager/All#Timelib (v1.6.1)
-#include <TinyGPS++.h>              // http://librarymanager/All#TinyGPSPlus (v1.0.3)
-#include <Wire.h>                   // https://www.arduino.cc/en/Reference/Wire
-#include <wiring_private.h>         // Required for creating new Serial instance
+#include <Adafruit_BME280.h>        // 2.2.2  BSD license   http://librarymanager/All#Adafruit_BME280
+#include <Adafruit_LSM303_Accel.h>  // 1.1.6  BSD License   http://librarymanager/All#Adafruit_LSM303_Accel
+#include <Adafruit_LIS2MDL.h>       // 2.1.4  BSD License   http://librarymanager/All#Adafruit_LIS2MDL 
+#include <Adafruit_Sensor.h>        // 1.1.6  Apache-2.0    http://librarymanager/All#Adafruit_Sensor 
+#include <Arduino.h>                //        LGPLv2.1      Required for creating new Serial instance. Must be included before <wiring_private.h>
+#include <ArduinoLowPower.h>        // 1.2.2  LGPLv2.1      http://librarymanager/All#ArduinoLowPower 
+#include <IridiumSBD.h>             // 3.0.5  LGPLv2.1      http://librarymanager/All#SparkFun_IridiumSBD_I2C_Arduino_Library
+#include <RTCZero.h>                // 1.6.0  LGPLv2.1      http://librarymanager/All#RTCZero 
+#include <TimeLib.h>                // 1.6.1  LGPLv2.1      http://librarymanager/All#Timelib
+#include <TinyGPS++.h>              // 1.0.3  LGPLv2.1      http://librarymanager/All#TinyGPSPlus 
+#include <Wire.h>                   //        LGPLv2.1      https://www.arduino.cc/en/Reference/Wire 
+#include <wiring_private.h>         //        LGPLv2.1      Required for creating new Serial instance
 
 // ----------------------------------------------------------------------------
 // Define unique identifier
