@@ -29,7 +29,7 @@ More information about the design of versions 1.0 and 2.0 of the Cryologger ITB 
 
 [Garbo, A., & Mueller, D. (2024). Cryologger Ice Tracking Beacon: A Low-Cost, Open-Source Platform for Tracking Icebergs and Ice Islands. _Sensors_, _24_(4), Article 4. https://doi.org/10.3390/s24041044](https://www.mdpi.com/1424-8220/24/4/1044)
 
-Version 3.0 of the Cryologger ITB builds on the successes of previous versions and features a number of improvements to the design were made, including:
+Version 3.0 of the Cryologger ITB builds on the successes of previous versions and features a number of improvements to the design, including:
 * 3.3 V power is now provided directly from a Pololu 3.3 V step-down voltage regulator, bypassing the Feather M0's onboard AP2112 LDO regulator (-55 μA).
 * A dedicated 5 V step-down voltage regulator was added to power the RockBLOCK Iridium transceiver.
 * The DS3231 real-time clock (RTC) was removed in favour of the SAMD21's internal RTC for all timekeeping and alarm functionality with periodic time synchronizations with the GPS.
