@@ -25,7 +25,7 @@ Planned for extended deployments in harsh Arctic conditions, the Cryologger ITB 
 
 #### 2.1.1 Design Iterations
 
-More information about the design of versions 1.0 and 2.0 of the Cryologger ITB can be found in the following publiation:
+More information about the design of versions 1.0 and 2.0 of the Cryologger ITB can be found in the following publication:
 
 [Garbo, A., & Mueller, D. (2024). Cryologger Ice Tracking Beacon: A Low-Cost, Open-Source Platform for Tracking Icebergs and Ice Islands. _Sensors_, _24_(4), Article 4. https://doi.org/10.3390/s24041044](https://www.mdpi.com/1424-8220/24/4/1044)
 
