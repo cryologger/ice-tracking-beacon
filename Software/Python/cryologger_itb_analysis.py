@@ -65,10 +65,10 @@ coastline = cfeature.NaturalEarthFeature("physical", "coastline", "10m",
 # -----------------------------------------------------------------------------
 
 # Data directory
-path_data = "/Users/adam/Documents/GitHub/cryologger-ice-tracking-beacon/Software/Python/"
+path_data = "/Users/adam/Documents/GitHub/ice-tracking-beacon/Software/Python/"
 
 # Figure directory
-path_figures = "/Users/adam/Documents/GitHub/cryologger-ice-tracking-beacon/Software/Python/Figures/"
+path_figures = "/Users/adam/Documents/GitHub/ice-tracking-beacon/Software/Python/Figures/"
 
 
 # -----------------------------------------------------------------------------
@@ -76,9 +76,10 @@ path_figures = "/Users/adam/Documents/GitHub/cryologger-ice-tracking-beacon/Soft
 # -----------------------------------------------------------------------------
 
 # Load most recent output file exported directly from MariaDB
-df = pd.read_csv(path_data + "2022_itb_milne_fiord.csv", index_col=False)
 
-df = pd.read_csv("/Users/adam/Downloads/cryologger_itb.csv", index_col=False)
+df = pd.read_csv(path_data + "2019_itb_amundsen.csv", index_col=False)
+df = pd.read_csv(path_data + "2023_itb_amundsen.csv", index_col=False)
+
 
 # Convert unixtime to datetime
 df["datetime"] = pd.to_datetime(df["unixtime"], unit="s")
@@ -112,6 +113,10 @@ df.sort_values(by="datetime", ascending = True, inplace=True)
 hue_order = ["300434063298940",
              "300434063392080"]
 
+
+
+
+
 # -----------------------------------------------------------------------------
 # Optional: Download and clean data exported from WordPress
 # -----------------------------------------------------------------------------
@@ -138,7 +143,7 @@ df["transmit_duration"].replace(0, np.nan, inplace=True)
 # -----------------------------------------------------------------------------
 
 # Subset by IMEI
-df = df[df["imei"].isin(["300434063298940"])]
+df = df[df["imei"].isin(["300434068347730"])]
 
 # Subset by datetime
 df = df[(df["datetime"] > "2023-09-01 00:00")]
@@ -253,6 +258,19 @@ plt.xticks(rotation=45, horizontalalignment="right")
 ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="UID")
 fig.savefig(path_figures + "07_satellites.png", dpi=dpi, transparent=False, bbox_inches="tight")
 
+
+# HDOP
+fig, ax = plt.subplots(figsize=(10,5))
+sns.lineplot(x="datetime", y="hdop", data=df, ci=None, lw=lw, hue="uid")
+ax.set(xlabel="Datetime", ylabel="Satellites")
+ax.grid(ls="dotted")
+ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
+#ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
+plt.xticks(rotation=45, horizontalalignment="right")
+ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="UID")
+fig.savefig(path_figures + "07_satellites.png", dpi=dpi, transparent=False, bbox_inches="tight")
+
+
 # Voltage
 fig, ax = plt.subplots(figsize=(10,5))
 sns.lineplot(x="datetime", y="voltage", data=df, ci=None, lw=lw, hue="uid")
@@ -297,11 +315,20 @@ ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
 ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="UID")
 fig.savefig(path_figures + "10_counter.png", dpi=dpi, transparent=False, bbox_inches="tight")
 
+# Coordinates
+fig, ax = plt.subplots(figsize=(5,5))
+ax.grid(ls="dotted")
+sns.scatterplot(x="latitude", y="longitude", data=df, s=5, hue="uid")
+ax.set(xlabel="Latitude", ylabel="Longitude")
+
+plt.xticks(rotation=45, horizontalalignment="right")
+#ax.xaxis.set_major_locator(mdates.MonthLocator(interval=interval)) 
+ax.legend(loc="center left", bbox_to_anchor=(1.0, 0.5), title="UID")
+fig.savefig(path_figures + "10_counter.png", dpi=dpi, transparent=False, bbox_inches="tight")
 
 
 
-
-
+sns.histplot(data=df, x="hdop")
 
 
 
