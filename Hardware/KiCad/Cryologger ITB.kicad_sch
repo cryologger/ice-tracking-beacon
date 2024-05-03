@@ -6,8 +6,10 @@
 	(paper "A4")
 	(title_block
 		(title "Cryologger Ice Tracking Beacon")
-		(date "2023-03-05")
-		(rev "3.1")
+		(date "2024-05-01")
+		(rev "3.2")
+		(comment 1 "© 2024. This work is openly licensed via CC BY-NC-SA 4.0.")
+		(comment 2 "Designed by: Adam Garbo")
 	)
 	(lib_symbols
 		(symbol "Connector:Screw_Terminal_01x02"
@@ -450,27 +452,29 @@
 				)
 			)
 		)
-		(symbol "Cryologger:Adafruit_LSM303AGR"
+		(symbol "Cryologger:Adafruit_LSM6DSOX"
 			(exclude_from_sim no)
 			(in_bom yes)
 			(on_board yes)
-			(property "Reference" "U"
-				(at -6.35 7.62 0)
+			(property "Reference" "U1"
+				(at 1.9559 -8.89 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(justify left)
 				)
 			)
-			(property "Value" "Adafruit_LSM303AGR"
-				(at 12.7 7.62 0)
+			(property "Value" "Adafruit_LSM6DSOX"
+				(at 1.9559 -11.43 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
+					(justify left)
 				)
 			)
-			(property "Footprint" ""
+			(property "Footprint" "Cryologger:Adafruit_LSM6DSOX"
 				(at 0 0 0)
 				(effects
 					(font
@@ -497,7 +501,7 @@
 					(hide yes)
 				)
 			)
-			(symbol "Adafruit_LSM303AGR_0_1"
+			(symbol "Adafruit_LSM6DSOX_0_1"
 				(rectangle
 					(start -6.35 6.35)
 					(end 6.35 -6.35)
@@ -510,7 +514,7 @@
 					)
 				)
 			)
-			(symbol "Adafruit_LSM303AGR_1_1"
+			(symbol "Adafruit_LSM6DSOX_1_1"
 				(pin power_in line
 					(at 1.27 8.89 270)
 					(length 2.54)
@@ -7429,6 +7433,85 @@
 		)
 	)
 	(symbol
+		(lib_id "Cryologger:Adafruit_LSM6DSOX")
+		(at 251.46 41.91 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "27f29b65-dd42-4385-8997-937ec56ccf32")
+		(property "Reference" "U1"
+			(at 259.08 40.6399 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "Adafruit_LSM6DSOX"
+			(at 259.08 43.1799 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "Cryologger:Adafruit_LSM6DS0X"
+			(at 251.46 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 251.46 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 251.46 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "4"
+			(uuid "14a16fbf-8180-453c-b14d-1504be9bb193")
+		)
+		(pin "5"
+			(uuid "0c0791f8-9207-4cfa-a44b-24933b387481")
+		)
+		(pin "3"
+			(uuid "3fb6ed4d-1841-4a1e-9d38-856c7a5e6045")
+		)
+		(pin "1"
+			(uuid "ac6fba44-f265-40df-b4ac-88b2ce37b9e9")
+		)
+		(pin "2"
+			(uuid "8bff466f-401f-459e-b133-4218a0370299")
+		)
+		(instances
+			(project "Cryologger ITB"
+				(path "/ac73d61e-8e75-480c-9a5b-4c36169649bf"
+					(reference "U1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Cryologger:Pololu_D36V6x")
 		(at 182.88 144.78 0)
 		(unit 1)
@@ -8016,85 +8099,6 @@
 			(project "Cryologger ITB"
 				(path "/ac73d61e-8e75-480c-9a5b-4c36169649bf"
 					(reference "A2")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Cryologger:Adafruit_LSM303AGR")
-		(at 251.46 41.91 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "79d555f7-a3c7-4024-a918-cb03e15e497f")
-		(property "Reference" "U1"
-			(at 253.4159 50.8 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "Adafruit_LSM303AGR"
-			(at 253.4159 53.34 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "Cryologger:Adafruit_LSM303AGR"
-			(at 251.46 41.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 251.46 41.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 251.46 41.91 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "f56ea7af-7141-4ae1-a8a5-36eecf8987de")
-		)
-		(pin "2"
-			(uuid "623ddcbf-dadb-4257-a255-b94cd9992bd2")
-		)
-		(pin "3"
-			(uuid "5c77bea0-157e-4325-9769-9442634c56b9")
-		)
-		(pin "4"
-			(uuid "08d82119-746c-4dde-835b-491ca8d7c451")
-		)
-		(pin "5"
-			(uuid "7f5f1464-40d2-4418-b852-384cb82494ac")
-		)
-		(instances
-			(project "Cryologger ITB"
-				(path "/ac73d61e-8e75-480c-9a5b-4c36169649bf"
-					(reference "U1")
 					(unit 1)
 				)
 			)

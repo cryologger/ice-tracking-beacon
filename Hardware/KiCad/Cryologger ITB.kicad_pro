@@ -498,7 +498,7 @@
       "gencad": "",
       "idf": "",
       "netlist": "Cryologger ITB - Adafruit.net",
-      "plot": "",
+      "plot": "../Gerber/",
       "pos_files": "",
       "specctra_dsn": "",
       "step": "Cryologger ITB.step",

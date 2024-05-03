@@ -1,4 +1,4 @@
-23051869867475666
+23053764401227627
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -52387,6 +52387,13 @@ Adafruit_Feather_Header_Double
 0
 58
 28
+Cryologger
+Adafruit_LSM6DS0X
+
+
+0
+12
+6
 Cryologger
 Adafruit_LSM303AGR
 
