@@ -35,7 +35,7 @@ Version 3.0 of the Cryologger ITB builds on the successes of previous versions a
 * The DS3231 real-time clock (RTC) was removed in favour of the SAMD21's internal RTC for all timekeeping and alarm functionality with periodic time synchronizations with the GPS.
 * The LSM303 accelerometer/magnetometer was replaced with the LSM6DS33 + LIS3MDL IMU due to the sensor reaching its end-of-life (EOL).
 * The temperature/pressure and IMU sensors are now powered directly through SAMD21 GPIO pins, allowing for power to be completely removed during sleep.
-* A 10MΩ + 1 MΩ resistor divider is now used to measured the battery voltage (+2.4 μA).
+* A 10MΩ + 1 MΩ resistor divider is now used to measure the battery voltage (+2.4 μA).
 
 A major change in v3.0 is a custom carrier board PCB that is designed to greatly simplify the assembly process. The PCB was designed in KiCad and fabricated by JLCPCB. 
 
@@ -102,7 +102,7 @@ The Cryologger ITB records its position and sensor measurements nominally on an 
 
 ## 3.0 Deployments
 
-A total of 37 Cryologger ITBs have been deployed between 2018 and 2023 (Figure 3), primarily during the annual Amundsen Expedition. Deployments are performed by helicopter from the CCGS Amundsen on icebergs and ice islands along the coasts of Ellesmere Island, Baffin Island and Greenland (Figure 3). At the time of deployment, a compass heading of the tracking beacon was recorded. Where possible, a 360° aerial photo survey of the iceberg was performed for use with Structure-from-Motion photogrammetry in order to create 3D models of the iceberg.
+A total of 37 Cryologger ITBs have been deployed between 2018 and 2023 (Figure 3), primarily during the annual Amundsen Expedition. Deployments are performed by helicopter from the CCGS Amundsen on icebergs and ice islands along the coasts of Ellesmere Island, Baffin Island and Greenland (Figure 3). At the time of deployment, a compass heading of the tracking beacon was recorded. Where possible, a 360° aerial photo survey of the iceberg was performed for use with Structure-from-Motion photogrammetry to create 3D models of the iceberg.
 
 <p align="center"><img width="480" src="https://github.com/cryologger/ice-tracking-beacon/blob/main/Images/cryologger-itb-deployments.png"></p>
 <p align="left"><b>Figure 3:</b> Map of Cryologger ice drift tracking beacons deployed between 2018 and 2023.</p>
@@ -117,7 +117,7 @@ The overall suitability of potential targets was determined by assessing the ice
 
 ## 4.0 Results
 
-The operation of the Cryologger ITBs greatly exceeded expectations, with the operational lifespans of deployments made in 2018 ranging from 310 to 1530 days, and those in 2019 ranging from 333 to 615 days. The most frequent causes of loss of communication with the ITBs was due to the eventual deterioration (calving or rolling) or catastrophic break-up of the iceberg and subsequent destruction of the beacon. In many cases, it was possible to use remote sensing imagery to observe major break-up events of icebergs that immediately resulted in transmissions from the beacon to cease.
+The operation of the Cryologger ITBs greatly exceeded expectations, with the operational lifespans of deployments made in 2018 ranging from 310 to 1530 days, and those in 2019 ranging from 333 to 615 days. The most frequent causes of loss of communication with the ITBs was due to the eventual deterioration (calving or rolling) or catastrophic break-up of the iceberg and subsequent destruction of the beacon. In many cases, it was possible to use remote sensing imagery to observe major break-up events of icebergs that immediately resulted in transmissions from the beacon ceasing.
 
 ### 4.1 Iceberg Drift
 A snapshot of iceberg drift tracks recorded from all Cryologger ITB deployments as of December 2023 is shown in Figure 4. This data can also be viewed in real-time at: https://cryologger.org/tracking
@@ -127,15 +127,15 @@ A snapshot of iceberg drift tracks recorded from all Cryologger ITB deployments 
 
 ## 5.0 Conclusion
 
-The overall success of the Cryologger ITB has demonstrated that it can provide a robust platform for the collection of in-situ iceberg tracking data. With a total cost of of approximately $700 USD in materials each, this represents a cost-effective alternative to existing proprietary commercial systems. 
+The overall success of the Cryologger ITB has demonstrated that it can provide a robust platform for the collection of in-situ iceberg tracking data. With a total cost of approximately $700 USD in materials each, this represents a cost-effective alternative to existing proprietary commercial systems. 
 
-The development and deployment of these novel iceberg tracking beacons was intended to enhance and supplement existing iceberg observation networks within the Canadian Arctic and data collected from the Cryologgers has already contributed to a database of iceberg tracking beacon tracks compiled by the Canadian Ice Service (CIS). Most importantly, this research demonstrates to the scientific community that inexpensive, open-source hardware and software can provide a viable solution for the monitoring of icebergs and ice island drift patterns within the Canadian Arctic and beyond!
+The development and deployment of these novel iceberg tracking beacons were intended to enhance and supplement existing iceberg observation networks within the Canadian Arctic and data collected from the Cryologgers has already contributed to a database of iceberg tracking beacon tracks compiled by the Canadian Ice Service (CIS). Most importantly, this research demonstrates to the scientific community that inexpensive, open-source hardware and software can provide a viable solution for the monitoring of icebergs and ice island drift patterns within the Canadian Arctic and beyond!
 
-Development of the next iteration of the Cryologger ITB is currently underway, which is focused on improving overall reliability, exploring the use of environmentally friendly materials, and improvements that will allow the it to transform into an ocean drifter buoys once breakup of the icebergs occurs. 
+Development of the next iteration of the Cryologger ITB is currently underway, which is focused on improving overall reliability, exploring the use of environmentally friendly materials, and improvements that will allow it to transform into an ocean drifter buoy once the breakup of the icebergs occurs. 
 
 ## Repository Contents
 
-* **/Documentation** - Assembly, deployment and troubleshoting guides, as well as information of components used and associated costs.
+* **/Documentation** - Assembly, deployment and troubleshooting guides, as well as information on components used and associated costs.
 
 * **/Hardware** - KiCad PCB schematic and design files.
 
