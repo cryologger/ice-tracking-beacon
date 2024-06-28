@@ -1,7 +1,8 @@
 /*
-  Title:    Cryologger Ice Tracking Beacon (ITB) - v3.3.4
-  Date:     January 17, 2024
+  Title:    Cryologger Ice Tracking Beacon (ITB)
+  Date:     June 28, 2024
   Author:   Adam Garbo
+  Version:  3.3.5
   License:  GPLv3. See license file for more information.
 
   Components:
@@ -14,32 +15,42 @@
   - Pololu 5V, 600mA Step-Down Voltage Regulator D36V6F5
   - TN0702 N-Channel FET
 
+  Board Definitions:
+  - Arduino SAMD Boards v1.8.14
+  - Adafruit SAMD Boards v1.7.16
+
   Comments:
-  - Intended for deployment during the 2023 Amundsen Expedition
-  - TN0702 N-Channel FET used for On/Off operation of RockBLOCK v3.F
-  - Additional license information included
+  - TN0702 N-Channel FET now required for On/Off operation with RockBLOCK v3.F and higher
+  - Sketch uses 73800 bytes (28%) of program storage space. Maximum is 262144 bytes.
 */
 
 // ------------------------------------------------------------------------------------------------
-// Library                            Version License       URL/Comments
+// Library                            Version   License       URL/Comments
 // ------------------------------------------------------------------------------------------------
-#include <Adafruit_BME280.h>        // 2.2.2  BSD license   http://librarymanager/All#Adafruit_BME280
-#include <Adafruit_LSM303_Accel.h>  // 1.1.6  BSD License   http://librarymanager/All#Adafruit_LSM303_Accel
-#include <Adafruit_LIS2MDL.h>       // 2.1.4  BSD License   http://librarymanager/All#Adafruit_LIS2MDL 
-#include <Adafruit_Sensor.h>        // 1.1.6  Apache-2.0    http://librarymanager/All#Adafruit_Sensor 
-#include <Arduino.h>                //        LGPLv2.1      Required for creating new Serial instance. Must be included before <wiring_private.h>
-#include <ArduinoLowPower.h>        // 1.2.2  LGPLv2.1      http://librarymanager/All#ArduinoLowPower 
-#include <IridiumSBD.h>             // 3.0.5  LGPLv2.1      http://librarymanager/All#SparkFun_IridiumSBD_I2C_Arduino_Library
-#include <RTCZero.h>                // 1.6.0  LGPLv2.1      http://librarymanager/All#RTCZero 
-#include <TimeLib.h>                // 1.6.1  LGPLv2.1      http://librarymanager/All#Timelib
-#include <TinyGPS++.h>              // 1.0.3  LGPLv2.1      http://librarymanager/All#TinyGPSPlus 
-#include <Wire.h>                   //        LGPLv2.1      https://www.arduino.cc/en/Reference/Wire 
-#include <wiring_private.h>         //        LGPLv2.1      Required for creating new Serial instance
+#include <Adafruit_BME280.h>        // 2.2.4    BSD license   http://librarymanager/All#Adafruit_BME280
+#include <Adafruit_LSM303_Accel.h>  // 1.1.8    BSD License   http://librarymanager/All#Adafruit_LSM303_Accel
+#include <Adafruit_LIS2MDL.h>       // 2.1.7    BSD License   http://librarymanager/All#Adafruit_LIS2MDL 
+#include <Adafruit_Sensor.h>        // 1.1.14   Apache-2.0    http://librarymanager/All#Adafruit_Sensor 
+#include <Arduino.h>                //          LGPLv2.1      Required for creating new Serial instance. Must be included before <wiring_private.h>
+#include <ArduinoLowPower.h>        // 1.2.2    LGPLv2.1      http://librarymanager/All#Arduino_Low_Power 
+#include <IridiumSBD.h>             // 3.0.6    LGPLv2.1      http://librarymanager/All#IridiumSBDi2c
+#include <RTCZero.h>                // 1.6.0    LGPLv2.1      http://librarymanager/All#RTCZero 
+#include <TimeLib.h>                // 1.6.1    LGPLv2.1      http://librarymanager/All#Timelib
+#include <TinyGPS++.h>              // 1.0.3    LGPLv2.1      http://librarymanager/All#TinyGPSPlus 
+#include <Wire.h>                   //          LGPLv2.1      https://www.arduino.cc/en/Reference/Wire 
+#include <wiring_private.h>         //          LGPLv2.1      Required for creating new Serial instance
+
+// ----------------------------------------------------------------------------
+// Define hardware and software versions
+// ----------------------------------------------------------------------------
+#define SOFTWARE_VERSION      "3.3.5"
+#define HARDWARE_VERSION      "3.1"
+#define ROCKBLOCK_VERSION_3F  true
 
 // ----------------------------------------------------------------------------
 // Define unique identifier
 // ----------------------------------------------------------------------------
-#define CRYOLOGGER_ID 0
+#define SERIAL "300434000000000" // IMEI
 
 // ------------------------------------------------------------------------------------------------
 // Debugging macros
@@ -163,8 +174,15 @@ tmElements_t  tm;                         // Variable for converting time elemen
 // https://learn.adafruit.com/lsm303-accelerometer-slash-compass-breakout/calibration?view=all#calibration
 // https://gist.github.com/CalebFenton/a97444750eb43e3354fd2d0196a2ebcf
 // https://github.com/jremington/LSM9DS1-AHRS
-
-float p[] = {1, 0, 0};  // X marking on sensor board points toward yaw = 0 (N)
+/*
+  {1, 0, 0});    // Align to X+
+  {-1, 0, 0});   // Align to X-
+  {0, 1, 0});    // Align to Y+
+  {0, -1, 0});   // Align to Y-
+  {0, 0, 1});    // Align to Z+
+  {0, 0, -1});   // Align to Z-
+*/
+float p[] = {1, 0, 0};
 
 // Min/max magnetometer values
 float m_min[3] = {
@@ -260,7 +278,11 @@ void setup()
   digitalWrite(PIN_GNSS_EN, HIGH);        // Disable power to GNSS
   digitalWrite(PIN_IMU_EN, LOW);          // Disable power to IMU
   digitalWrite(PIN_5V_EN, LOW);           // Disable power to RockBLOCK 9603
-  digitalWrite(PIN_IRIDIUM_SLEEP, HIGH);  // Set N-FET controlling RockBLOCK On/Off pin to HIGH (no voltage)
+#ifdef ROCKBLOCK_VERSION_3F
+  digitalWrite(PIN_IRIDIUM_SLEEP, HIGH); // RockBLOCK v3.F and above: Set N-FET controlling RockBLOCK On/Off pin to HIGH (no voltage)
+#else
+  digitalWrite(PIN_IRIDIUM_SLEEP, LOW); // RockBLOCK v3.D and below: Set On/Off pin LOW to disable power to Iridium
+#endif
 
   // Configure analog-to-digital (ADC) converter
   configureAdc();
@@ -275,7 +297,13 @@ void setup()
 
   DEBUG_PRINTLN();
   printLine();
-  DEBUG_PRINT("Cryologger - Ice Tracking Beacon #"); DEBUG_PRINTLN(CRYOLOGGER_ID);
+  DEBUG_PRINTLN("Cryologger - Ice Tracking Beacon");
+  printLine();
+  DEBUG_PRINT("Serial:");             printTab(3);  DEBUG_PRINTLN(SERIAL);
+  DEBUG_PRINT("Software Version:");   printTab(1);  DEBUG_PRINTLN(SOFTWARE_VERSION);
+  DEBUG_PRINT("Hardware Version:");   printTab(1);  DEBUG_PRINTLN(HARDWARE_VERSION);
+  DEBUG_PRINT("Datetime:");           printTab(2);  printDateTime();
+  DEBUG_PRINT("Battery Voltage:");    printTab(1);  DEBUG_PRINTLN(readBattery());
   printLine();
 
   // Configure devices
@@ -373,7 +401,7 @@ void loop()
       // Check if number of samples collected has been reached and calculate statistics (if enabled)
       if ((sampleCounter == averageInterval) || firstTimeFlag)
       {
-        calculateStats(); // Calculate statistics of variables to be transmitted
+        calculateStats(); // Calculate statistics of variables to be transmitted (to be implemented)
         writeBuffer();    // Write data to transmit buffer
 
         // Check if data transmission interval has been reached
