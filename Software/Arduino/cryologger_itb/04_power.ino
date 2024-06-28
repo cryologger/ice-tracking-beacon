@@ -1,10 +1,8 @@
 // Read battery voltage from voltage divider
-void readBattery()
+float readBattery()
 {
   // Start loop timer
   unsigned long loopStartTime = millis();
-
-  myDelay(1000);
 
   // Measure external battery voltage across 10/1 MΩ resistor divider (1/10 divider)
   (void)analogRead(PIN_VBAT);
@@ -17,8 +15,7 @@ void readBattery()
   //float voltage = analogRead(A7);
   //voltage = voltage * 3.3 * 2 / 4096.0;
 
-  // Write data to union
-  moSbdMessage.voltage = voltage * 100;
+  return voltage;
 
   // Stop loop timer
   timer.readBattery = millis() - loopStartTime;
