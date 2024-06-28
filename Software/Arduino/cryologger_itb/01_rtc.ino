@@ -32,7 +32,7 @@ void configureRtc()
 
   DEBUG_PRINT("Info: RTC initialized "); printDateTime();
   DEBUG_PRINT("Info: Initial alarm "); printAlarm();
-  DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_SS);
+  DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_MMSS);
 }
 
 // Read RTC
