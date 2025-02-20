@@ -7,7 +7,7 @@
 	(title_block
 		(title "Cryologger Ice Tracking Beacon")
 		(date "2024-05-01")
-		(rev "3.2")
+		(rev "v3.2")
 		(comment 1 "© 2024. This work is openly licensed via CC BY-NC-SA 4.0.")
 		(comment 2 "Designed by: Adam Garbo")
 	)
