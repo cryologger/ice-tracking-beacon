@@ -1,141 +1,170 @@
-// Read battery voltage from voltage divider
+/*
+  Power Module
+
+  This module provides control over power for hardware components,
+  including battery voltage measurement, toggling serial communication,
+  and enabling/disabling power to GNSS, IMU, sensors, and RockBLOCK 9603.
+  It also includes a non-blocking LED blink function, a non-blocking delay
+  for watchdog resets, and routines to prepare or recover from deep sleep.
+*/
+
+// ----------------------------------------------------------------------------
+// Measure battery voltage from the 10/1 MΩ divider.
+// ----------------------------------------------------------------------------
 float readBattery() {
-  // Start loop timer
-  unsigned long loopStartTime = millis();
+  // Start execution timer.
+  unsigned long startTime = millis();
 
-  // Measure external battery voltage across 10/1 MΩ resistor divider (1/10 divider)
-  (void)analogRead(PIN_VBAT);
+  // Measure external battery voltage across 10/1 MΩ resistor divider (1/10).
+  (void)analogRead(PIN_VBAT);  // Dummy read
   voltage = analogRead(PIN_VBAT);
-  voltage *= ((10000000.0 + 1000000.0) / 1000000.0);  // Multiply back 1 MOhm / (10 MOhm + 1 MOhm)
-  voltage *= 3.3;                                     // Multiply by 3.3V reference voltage
-  voltage /= 4096;                                    // Convert to voltage
+  voltage *= ((10000000.0 + 1000000.0) / 1000000.0);
+  voltage *= 3.3;   // Multiply by 3.3V reference
+  voltage /= 4096;  // Convert raw ADC count to actual voltage
 
-  // Measure LiPo battery voltage across 100 kΩ/100 kΩ onboard resistor divider (1/2 divider)
-  //float voltage = analogRead(A7);
-  //voltage = voltage * 3.3 * 2 / 4096.0;
-
+  // Record elapsed execution time.
+  timer.readBattery = millis() - startTime;
   return voltage;
-
-  // Stop loop timer
-  timer.readBattery = millis() - loopStartTime;
 }
 
-// Disable serial port
+// ----------------------------------------------------------------------------
+// Disable the serial port.
+// ----------------------------------------------------------------------------
 void disableSerial() {
 #if DEBUG
-  SERIAL_PORT.end();   // Close serial port
-  USBDevice.detach();  // Safely detach USB prior to sleeping
+  SERIAL_PORT.end();   // Close the Serial port
+  USBDevice.detach();  // Detach the USB interface prior to sleeping
 #endif
 }
 
-// Enable serial port
+// ----------------------------------------------------------------------------
+// Enable the serial port.
+// ----------------------------------------------------------------------------
 void enableSerial() {
 #if DEBUG
-  USBDevice.attach();  // Re-attach USB
-  SERIAL_PORT.begin(115200);
-  //myDelay(3000); // Non-blocking delay to allow user to open Serial Monitor
+  USBDevice.attach();         // Attach the USB interface
+  SERIAL_PORT.begin(115200);  // Open the Serial port
+  // myDelay(3000);
 #endif
 }
 
-// Enable power to IMU
+// ----------------------------------------------------------------------------
+// Enable power to the IMU.
+// Includes a short non-blocking delay for sensor stabilization.
+// ----------------------------------------------------------------------------
 void enableImuPower() {
   digitalWrite(PIN_IMU_EN, HIGH);
   myDelay(500);
 }
 
-// Disable power to IMU
+// ----------------------------------------------------------------------------
+// Disable power to the IMU.
+// ----------------------------------------------------------------------------
 void disableImuPower() {
   digitalWrite(PIN_IMU_EN, LOW);
 }
 
-// Enable power to sensors
+// ----------------------------------------------------------------------------
+// Enable power to the sensors.
+// Includes a short non-blocking delay for sensor stabilization.
+// ----------------------------------------------------------------------------
 void enableSensorPower() {
   digitalWrite(PIN_SENSOR_EN, HIGH);
   myDelay(500);
 }
 
-// Disable power to sensors
+// ----------------------------------------------------------------------------
+// Disable power to the sensors.
+// ----------------------------------------------------------------------------
 void disableSensorPower() {
   digitalWrite(PIN_SENSOR_EN, LOW);
 }
 
-// Enable power to GNSS
+// ----------------------------------------------------------------------------
+// Enable power to GNSS.
+// Includes a longer non-blocking delay to ensure GNSS module is fully powered.
+// ----------------------------------------------------------------------------
 void enableGnssPower() {
   digitalWrite(PIN_GNSS_EN, LOW);
   myDelay(1000);
 }
 
-// Disable power to GNSS
+// ----------------------------------------------------------------------------
+// Disable power to GNSS.
+// ----------------------------------------------------------------------------
 void disableGnssPower() {
   digitalWrite(PIN_GNSS_EN, HIGH);
 }
 
-// Enable power to RockBLOCK 9603
+// ----------------------------------------------------------------------------
+// Enable 5V power to the RockBLOCK 9603.
+// ----------------------------------------------------------------------------
 void enable5V() {
   digitalWrite(PIN_5V_EN, HIGH);
   myDelay(500);
 }
 
-// Disable power to RockBLOCK 9603
+// ----------------------------------------------------------------------------
+// Disable 5V power to the RockBLOCK 9603.
+// ----------------------------------------------------------------------------
 void disable5V() {
   digitalWrite(PIN_5V_EN, LOW);
 }
 
-// Prepare system for sleep
+// ----------------------------------------------------------------------------
+// Prepare the system for deep sleep.
+// ----------------------------------------------------------------------------
 void prepareForSleep() {
-  // Disable serial
   disableSerial();
-
-  // Clear online union
   memset(&online, 0, sizeof(online));
-
-  // Clear timer union
   memset(&timer, 0, sizeof(timer));
 }
 
-// Enter deep sleep
+// ----------------------------------------------------------------------------
+// Enter deep sleep until an RTC or WDT interrupt occurs.
+// ----------------------------------------------------------------------------
 void goToSleep() {
-  // Clear first-time flag after initial power-down
   if (firstTimeFlag) {
     firstTimeFlag = false;
   }
-
-  // Enter deep sleep
   LowPower.deepSleep();
-
-  /* Code sleeps here and awaits RTC or WDT interrupt */
+  /*
+     Execution halts here until an RTC/WDT interrupt wakes the device
+  */
 }
 
-// Wake from deep sleep
+// ----------------------------------------------------------------------------
+// Wake up from deep sleep.
+// ----------------------------------------------------------------------------
 void wakeUp() {
-  // Enable serial port
-  enableSerial();
+  enableSerial();  // Re-enable the serial port
 }
 
-// Non-blocking blink LED (https://forum.arduino.cc/index.php?topic=503368.0)
-void blinkLed(byte ledPin, byte ledFlashes, unsigned int ledDelay) {
+// ----------------------------------------------------------------------------
+// Non-blocking LED blink routine.
+// Flashes the built-in LED a specified number of times with the given delay.
+// ----------------------------------------------------------------------------
+void blinkLed(byte ledFlashes, unsigned int ledDelay) {
   byte i = 0;
   while (i < ledFlashes * 2) {
     unsigned long currentMillis = millis();
     if (currentMillis - previousMillis >= ledDelay) {
-      digitalWrite(ledPin, !digitalRead(ledPin));
+      digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
       previousMillis = currentMillis;
       i++;
     }
   }
-  // Ensure LED is off at end of blink cycle
-  digitalWrite(ledPin, LOW);
+  digitalWrite(LED_BUILTIN, LOW);  // Ensure LED is off after blinking
 }
 
-// Non-blocking delay (milliseconds)
-// https://arduino.stackexchange.com/questions/12587/how-can-i-handle-the-millis-rollover
+// ----------------------------------------------------------------------------
+// Non-blocking delay function that continues to reset the Watchdog Timer.
+// This function delays for a specified duration (in milliseconds) while
+// calling petDog() to prevent unintended WDT resets.
+// ----------------------------------------------------------------------------
 void myDelay(unsigned long ms) {
-  unsigned long start = millis();  // Start: timestamp
-  for (;;) {
-    petDog();                             // Reset watchdog timer
-    unsigned long now = millis();         // Now: timestamp
-    unsigned long elapsed = now - start;  // Elapsed: duration
-    if (elapsed >= ms)                    // Comparing durations: OK
-      return;
+  unsigned long start = millis();
+  while (millis() - start < ms) {
+    resetWdt();  // Reset the WDT during the delay
   }
 }
