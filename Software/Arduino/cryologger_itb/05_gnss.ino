@@ -41,7 +41,7 @@ void readGnss() {
   GNSS_PORT.println("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28");
   myDelay(100);
 
-  // Optional antenna updates.
+  // Optional antenna update configuration.
   // GNSS_PORT.println("$PGCMD,33,1*6C"); // Enable antenna updates
   // GNSS_PORT.println("$PGCMD,33,0*6D"); // Disable antenna updates
 
@@ -58,8 +58,9 @@ void readGnss() {
         if ((gnssFix.value() > 0 && gnssFix.age() < 1000)
             && (String(gnssValidity.value()) == "A" && gnssValidity.age() < 1000)
             && gnss.satellites.value() > 0) {
-          DEBUG_PRINT("[GNSS] Info: Pass");
-          fixCounter++;  // Increment fix counter
+
+          DEBUG_PRINT(" Pass");  // Debugging only
+          fixCounter++;          // Increment fix counter
 
           // Wait until enough consecutive fixes have been collected.
           if (fixCounter >= 10) {
@@ -73,9 +74,9 @@ void readGnss() {
             tm.Month = gnss.date.month();
             tm.Year = gnss.date.year() - 1970;  // Offset from 1970
 
-            unsigned long gnssEpoch = makeTime(tm);   // Change the tm structure into time_t (seconds since epoch)
-            unsigned long rtcEpoch = rtc.getEpoch();  // Get RTC epoch time
-            long rtcDrift = rtcEpoch - gnssEpoch;     // Calculate RTC drift
+            gnssEpoch = makeTime(tm);         // Change the tm structure into time_t (seconds since epoch)
+            rtcEpoch = rtc.getEpoch();        // Get RTC epoch time
+            rtcDrift = rtcEpoch - gnssEpoch;  // Calculate RTC drift
 
             DEBUG_PRINTLN();
             DEBUG_PRINT("[GNSS] Info: gnssEpoch = ");
@@ -105,7 +106,7 @@ void readGnss() {
             blinkLed(5, 100);
           }
         } else {
-          DEBUG_PRINT("[GNSS] Info: Fail");
+          DEBUG_PRINT("Fail");  // Debugging only
         }
       }
     }
