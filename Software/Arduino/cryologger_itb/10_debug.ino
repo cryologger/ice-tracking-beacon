@@ -26,40 +26,94 @@ void printTab(byte _times) {
 }
 
 // ----------------------------------------------------------------------------
-// Prints user-defined beacon settings, including any global variables
-// that define transmit intervals, counters, and system voltage.
+// Prints user-defined beacon configuration settings.
 // ----------------------------------------------------------------------------
 void printSettings() {
   printLine();
   DEBUG_PRINTLN("Current Settings");
   printLine();
 
-  DEBUG_PRINT("retransmitCounter: ");
+  DEBUG_PRINT("Transmit Interval: ");
   printTab(1);
   DEBUG_PRINTLN(transmitInterval);
 
-  DEBUG_PRINT("retransmitCounter: ");
+  DEBUG_PRINT("Retransmit Counter: ");
   printTab(1);
   DEBUG_PRINTLN(retransmitCounter);
 
-  DEBUG_PRINT("retransmitLimit: ");
+  DEBUG_PRINT("Retransmit Limit: ");
   printTab(1);
   DEBUG_PRINTLN(retransmitLimit);
 
-  DEBUG_PRINT("resetFlag: ");
+  DEBUG_PRINT("Reset Flag: ");
   printTab(2);
   DEBUG_PRINTLN(resetFlag);
 
-  DEBUG_PRINT("voltage: ");
+  DEBUG_PRINT("Battery Voltage: ");
+  printTab(1);
+  DEBUG_PRINTLN(voltage);
+
+  printLine();
+}
+
+
+// ----------------------------------------------------------------------------
+// Prints sensor measurements.
+// ----------------------------------------------------------------------------
+void printSensors() {
+  printLine();
+  DEBUG_PRINTLN("Sensor Measurements");
+  printLine();
+
+  DEBUG_PRINT("Temperature: ");
+  printTab(1);
+  DEBUG_PRINTLN(temperatureInt);
+
+  DEBUG_PRINT("Humidity: ");
+  printTab(1);
+  DEBUG_PRINTLN(humidityInt);
+
+  DEBUG_PRINT("Pressure: ");
+  printTab(1);
+  DEBUG_PRINTLN(pressureInt);
+
+  DEBUG_PRINT("Pitch: ");
   printTab(2);
+  DEBUG_PRINTLN(pitch);
+
+  DEBUG_PRINT("Roll: ");
+  printTab(2);
+  DEBUG_PRINTLN(roll);
+
+  DEBUG_PRINT("Heading: ");
+  printTab(1);
+  DEBUG_PRINTLN(heading);
+
+  DEBUG_PRINT("Latitude: ");
+  printTab(1);
+  DEBUG_PRINTLN(latitude);
+
+  DEBUG_PRINT("Longitude: ");
+  printTab(1);
+  DEBUG_PRINTLN(longitude);
+
+  DEBUG_PRINT("Satellites: ");
+  printTab(1);
+  DEBUG_PRINTLN(satellites);
+
+  DEBUG_PRINT("HDOP: ");
+  printTab(2);
+  DEBUG_PRINTLN(hdop);
+
+  DEBUG_PRINT("Battery: ");
+  printTab(1);
   DEBUG_PRINTLN(voltage);
 
   printLine();
 }
 
 // ----------------------------------------------------------------------------
-// Prints function execution timers stored in the global 'timer' structure.
-// Displays how long various sensor reads and operations took.
+// Prints function execution timers.
 // ----------------------------------------------------------------------------
 void printTimers() {
   //printLine();
@@ -89,10 +143,6 @@ void printTimers() {
   DEBUG_PRINT("transmitData: ");
   printTab(1);
   DEBUG_PRINTLN(timer.iridium);
-
-  DEBUG_PRINT("freeRam(): ");
-  printTab(1);
-  DEBUG_PRINTLN(freeRam());
 
   printLine();
 }

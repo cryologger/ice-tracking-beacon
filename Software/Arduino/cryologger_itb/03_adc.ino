@@ -1,10 +1,9 @@
 /*
-  ADC Module
+  Analog-to-digital Converter (ADC) Module
 
-  This module configures the SAMD21 analog-to-digital converter (ADC),
-  provides a helper function to map raw ADC values to a floating-point
-  range, and includes a calibration function for debugging or accuracy
-  checks.
+  This module configures the SAMD21 ADC, provides a helper function to map raw 
+  ADC values to a floating-point range, and includes a calibration function for
+  debugging or accuracy checks.
 */
 
 // ----------------------------------------------------------------------------
@@ -65,10 +64,10 @@ void calibrateAdc() {
   // Direct scaling: 3.3 V / 4095 counts.
   float voltage1 = sensorValue * (3.3 / 4095.0);
 
-  // Divider-based scaling.
-  float voltage2 = sensorValue * ((10000000.0 + 1000000.0) / 1000000.0);  // Factor for 10 MΩ + 1 MΩ.
-  voltage2 *= 3.3;                                                        // 3.3 V reference.
-  voltage2 /= 4096.0;                                                     // Convert to voltage.
+  // Voltage divider-based scaling.
+  float voltage2 = sensorValue * ((10.0 + 1.0) / 1.0);  // Factor for 10 MΩ + 1 MΩ
+  voltage2 *= 3.3;                                      // 3.3 V reference
+  voltage2 /= 4096.0;                                   // Convert to voltage
 
   DEBUG_PRINTLN(F("[ADC] Info: sensorValue, voltage1, voltage2"));
   DEBUG_PRINT(F("[ADC] Info:"));
