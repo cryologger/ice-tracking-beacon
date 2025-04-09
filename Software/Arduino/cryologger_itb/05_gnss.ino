@@ -106,7 +106,7 @@ void readGnss() {
             blinkLed(5, 100);
           }
         } else {
-          DEBUG_PRINT("Fail");  // Debugging only
+          DEBUG_PRINT(" Fail");  // Debugging only
         }
       }
     }

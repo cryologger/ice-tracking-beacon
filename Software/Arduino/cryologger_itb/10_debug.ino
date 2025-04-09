@@ -26,12 +26,44 @@ void printTab(byte _times) {
 }
 
 // ----------------------------------------------------------------------------
+// Prints system information.
+// ----------------------------------------------------------------------------
+void printSystemInfo() {
+  printLine();
+  DEBUG_PRINTLN("System Information");
+  printLine();
+  DEBUG_PRINT("Serial:");
+  printTab(3);
+  DEBUG_PRINTLN(uid);
+  DEBUG_PRINT("Software Version:");
+  printTab(1);
+  DEBUG_PRINTLN(SOFTWARE_VERSION);
+  DEBUG_PRINT("Hardware Version:");
+  printTab(1);
+  DEBUG_PRINTLN(HARDWARE_VERSION);
+  DEBUG_PRINT("Datetime:");
+  printTab(2);
+  printDateTime();
+  DEBUG_PRINT("Battery:");
+  printTab(2);
+  DEBUG_PRINTLN(readBattery());
+  DEBUG_PRINT("Free Ram: ");
+  printTab(2);
+  DEBUG_PRINTLN(freeRam());
+  printLine();
+}
+
+// ----------------------------------------------------------------------------
 // Prints user-defined beacon configuration settings.
 // ----------------------------------------------------------------------------
 void printSettings() {
   printLine();
-  DEBUG_PRINTLN("Current Settings");
+  DEBUG_PRINTLN("System Configuration");
   printLine();
+
+  DEBUG_PRINT("Transmit Interval: ");
+  printTab(1);
+  DEBUG_PRINTLN(transmitInterval);
 
   DEBUG_PRINT("Transmit Interval: ");
   printTab(1);
@@ -39,23 +71,18 @@ void printSettings() {
 
   DEBUG_PRINT("Retransmit Counter: ");
   printTab(1);
-  DEBUG_PRINTLN(retransmitCounter);
+  DEBUG_PRINTLN(transmitReattemptCounter);
 
-  DEBUG_PRINT("Retransmit Limit: ");
+  DEBUG_PRINT("Transmit Reattempt Limit: ");
   printTab(1);
-  DEBUG_PRINTLN(retransmitLimit);
+  DEBUG_PRINTLN(transmitReattempts);
 
   DEBUG_PRINT("Reset Flag: ");
   printTab(2);
   DEBUG_PRINTLN(resetFlag);
 
-  DEBUG_PRINT("Battery Voltage: ");
-  printTab(1);
-  DEBUG_PRINTLN(voltage);
-
   printLine();
 }
-
 
 // ----------------------------------------------------------------------------
 // Prints sensor measurements.
@@ -242,7 +269,7 @@ void printMtSbd() {
 
   DEBUG_PRINT("retransmitLimit:");
   printTab(1);
-  DEBUG_PRINTLN(mtSbdMessage.retransmitLimit);
+  DEBUG_PRINTLN(mtSbdMessage.transmitReattempts);
 
   DEBUG_PRINT("resetFlag:");
   printTab(2);

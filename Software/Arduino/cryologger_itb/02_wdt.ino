@@ -49,6 +49,9 @@ void configureWdt() {
   NVIC_ClearPendingIRQ(WDT_IRQn);
   NVIC_SetPriority(WDT_IRQn, 0);  // Top priority
   NVIC_EnableIRQ(WDT_IRQn);
+
+  DEBUG_PRINTLN("[WDT] Info: WDT initialized.");
+
 }
 
 // ----------------------------------------------------------------------------

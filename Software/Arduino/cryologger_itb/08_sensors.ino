@@ -27,7 +27,7 @@ void readBme280() {
     online.bme280 = true;
     DEBUG_PRINTLN("success!");
 
-    DEBUG_PRINT("[Sensors] Info: Reading BME280.");
+    DEBUG_PRINTLN("[Sensors] Info: Reading BME280.");
     myDelay(250);  // Short delay for stable readings
 
     // Read raw sensor data.
