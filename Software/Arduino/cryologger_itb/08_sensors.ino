@@ -17,12 +17,12 @@
 // pressure data.
 // ----------------------------------------------------------------------------
 void readBme280() {
-  // Start execution timer.
+  // Start execution timer
   unsigned long startTime = millis();
 
   DEBUG_PRINT("[Sensors] Info: Initializing BME280...");
 
-  // Attempt to initialize the BME280 sensor.
+  // Attempt to initialize the BME280 sensor
   if (bme280.begin()) {
     online.bme280 = true;
     DEBUG_PRINTLN("success!");
@@ -30,12 +30,12 @@ void readBme280() {
     DEBUG_PRINTLN("[Sensors] Info: Reading BME280.");
     myDelay(250);  // Short delay for stable readings
 
-    // Read raw sensor data.
+    // Read raw sensor data
     temperatureInt = bme280.readTemperature();
     humidityInt = bme280.readHumidity();
     pressureInt = bme280.readPressure() / 100.0F;
 
-    // Write data to SBD structure.
+    // Write data to SBD structure
     moSbdMessage.temperatureInt = temperatureInt * 100;    // °C * 100
     moSbdMessage.humidityInt = humidityInt * 100;          // % * 100
     moSbdMessage.pressureInt = (pressureInt - 850) * 100;  // Offset by 850 hPa * 100

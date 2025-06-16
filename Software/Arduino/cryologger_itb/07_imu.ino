@@ -34,27 +34,29 @@ void configureLsm6dsox() {
   }
 }
 
-
+// ----------------------------------------------------------------------------
+// Reads the Adafruit LSM6DSOX + LIS3MDL - Precision 9 DoF IMU
+// ----------------------------------------------------------------------------
 void readLsm6dsox() {
-  // Start execution timer.
+  // Start execution timer
   unsigned long loopStartTime = millis();
 
-  // Initialize IMU.
+  // Initialize IMU
   configureLsm6dsox();
 
-  // Centered and scaled accelerometer/magnetomer data initialized to zero.
+  // Centered and scaled accelerometer/magnetomer data initialized to zero
   float Axyz[3] = {};
   float Mxyz[3] = {};
   int heading = 0;
 
-  // Check if IMU initialized successfully.
+  // Check if IMU initialized successfully
   if (online.lsm6dsox && online.lis3mdl) {
     DEBUG_PRINTLN("Info: Reading LSM6DSOX + LIS3MDL.");
 
-    // Read scaled magnetometer data.
+    // Read scaled magnetometer data
     readLis3mdl(Mxyz);
 
-    // Read accelerometer data.
+    // Read accelerometer data
     sensors_event_t accel;
     sensors_event_t gyro;
     sensors_event_t temp;
@@ -64,7 +66,7 @@ void readLsm6dsox() {
     Axyz[1] += accel.acceleration.y;
     Axyz[2] += accel.acceleration.z;
 
-    // Calculate pitch, roll and tilt-compensated heading.
+    // Calculate pitch, roll and tilt-compensated heading
     pitch = atan2(-Axyz[0], sqrt(Axyz[1] * Axyz[1] + Axyz[2] * Axyz[2])) * 180 / PI;
     roll = atan2(Axyz[1], Axyz[2]) * 180 / PI;
 
@@ -73,7 +75,7 @@ void readLsm6dsox() {
       myDelay(100);
     }
 
-    // Write orientation data to union.
+    // Write orientation data to union
     moSbdMessage.pitch = pitch * 100;
     moSbdMessage.roll = roll * 100;
     moSbdMessage.heading = heading;
@@ -82,10 +84,10 @@ void readLsm6dsox() {
     DEBUG_PRINTLN("[IMU] Warning: LSM6DSOX + LIS3MDL offline!");
   }
 
-  // Disable power to IMU.
+  // Disable power to IMU
   disableImuPower();
 
-  // Record elapsed execution time.
+  // Record elapsed execution time
   timer.readLsm6dsox = millis() - loopStartTime;
 }
 
@@ -106,29 +108,32 @@ void readLis3mdl(float Mxyz[3]) {
   Mxyz[2] -= (m_min[2] + m_max[2]) / 2;
 }
 
-// Returns a heading (°) given an acceleration vector a due to gravity, a magnetic vector m, and a facing vector p (global)
+// ----------------------------------------------------------------------------
+// Returns a heading [0..359] (degrees given an acceleration vector a due to 
+// gravity, a magnetic vector m, and a facing vector p.
+// ----------------------------------------------------------------------------
 int getHeading(float acc[3], float mag[3], float p[3]) {
-  float E[3], N[3];  // Derived direction vectors
+  float W[3], N[3];  // Derived direction vectors
 
-  // Compute east vector
-  // D x M = E, cross acceleration vector Down with M (magnetic north + inclination)
-  vectorCross(mag, acc, E);  // Accel vector is up when horizontal
-  vectorNormalize(E);
+  // "Up" is 'acc', "mag" is Earth's magnetic field
+  // cross(Up, mag) => "West"
+  vectorCross(acc, mag, W);
+  vectorNormalize(W);
 
-  // Compute north vector
-  // E x D = N, cross "East" with "Down" to produce "North" (parallel to the ground)
-  vectorCross(acc, E, N);  // Up x East
+  // Cross(West, Up) => "North" (parallel to ground)
+  vectorCross(W, acc, N);
   vectorNormalize(N);
 
-  // Compute heading in horizontal plane. Get Y and X components of heading from E dot p and N dot p
-  int heading = round(atan2(vectorDot(E, p), vectorDot(N, p)) * 180 / M_PI);
-  heading = -heading;               // Conventional navigation, heading increases North to East
-  heading = (heading + 720) % 360;  // Apply compass wrap
+  // Compute heading in horizontal plane. Correct for local magnetic declination.
+  int heading = round(atan2(vectorDot(W, p), vectorDot(N, p)) * 180.0 / M_PI + declination);
+  heading = -heading;               // Conventional nav: heading increases clockwise
+  heading = (heading + 720) % 360;  // Apply compass wrap to [0..359]
   return heading;
 }
 
-
-// Basic vector operations
+// ----------------------------------------------------------------------------
+// Vector math helpers
+// ----------------------------------------------------------------------------
 void vectorCross(float a[3], float b[3], float out[3]) {
   out[0] = a[1] * b[2] - a[2] * b[1];
   out[1] = a[2] * b[0] - a[0] * b[2];
@@ -140,8 +145,10 @@ float vectorDot(float a[3], float b[3]) {
 }
 
 void vectorNormalize(float a[3]) {
-  float mag = sqrt(vectorDot(a, a));
-  a[0] /= mag;
-  a[1] /= mag;
-  a[2] /= mag;
+  float m = sqrt(vectorDot(a, a));
+  if (m != 0) {
+    a[0] /= m;
+    a[1] /= m;
+    a[2] /= m;
+  }
 }
