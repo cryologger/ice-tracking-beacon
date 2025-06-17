@@ -51,7 +51,7 @@ void readLsm6dsox() {
 
   // Check if IMU initialized successfully
   if (online.lsm6dsox && online.lis3mdl) {
-    DEBUG_PRINTLN("Info: Reading LSM6DSOX + LIS3MDL.");
+    DEBUG_PRINTLN("[IMU] Reading LSM6DSOX + LIS3MDL.");
 
     // Read scaled magnetometer data
     readLis3mdl(Mxyz);
@@ -93,7 +93,7 @@ void readLsm6dsox() {
 
 // Returns a set of scaled magnetic readings from the LIS3MDL
 void readLis3mdl(float Mxyz[3]) {
-  float temp[3];
+  //float temp[3];
 
   // Read magnetometer
   sensors_event_t event;
@@ -125,7 +125,7 @@ int getHeading(float acc[3], float mag[3], float p[3]) {
   vectorNormalize(N);
 
   // Compute heading in horizontal plane. Correct for local magnetic declination.
-  int heading = round(atan2(vectorDot(W, p), vectorDot(N, p)) * 180.0 / M_PI + declination);
+  int heading = round(atan2(vectorDot(W, p), vectorDot(N, p)) * 180.0 / M_PI ); // + declination
   heading = -heading;               // Conventional nav: heading increases clockwise
   heading = (heading + 720) % 360;  // Apply compass wrap to [0..359]
   return heading;

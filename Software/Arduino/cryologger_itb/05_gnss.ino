@@ -14,38 +14,38 @@
 // update moSbdMessage with GNSS data, and log RTC drift.
 // ----------------------------------------------------------------------------
 void readGnss() {
-  // Start execution timer.
+  // Start execution timer
   unsigned long startTime = millis();
 
   // Clear flags.
   bool fixFound = false;
   bool charsSeen = false;
 
-  // Reset GNSS fix counter.
+  // Reset GNSS fix counter
   byte fixCounter = 0;
 
-  // Enable power to GNSS.
+  // Enable power to GNSS
   enableGnssPower();
 
   DEBUG_PRINTLN("[GNSS] Info: Beginning to listen for GNSS traffic...");
 
-  // Initialize GNSS serial port.
+  // Initialize GNSS serial port
   GNSS_PORT.begin(9600);
   myDelay(1000);
 
-  // Configure GNSS update/output rates.
+  // Configure GNSS update/output rates
   GNSS_PORT.println("$PMTK220,1000*1F");  // Set NMEA update rate to 1 Hz
   myDelay(100);
 
-  // Set NMEA sentence output frequencies to GGA and RMC.
+  // Set NMEA sentence output frequencies to GGA and RMC
   GNSS_PORT.println("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28");
   myDelay(100);
 
-  // Optional antenna update configuration.
+  // Optional antenna update configuration
   // GNSS_PORT.println("$PGCMD,33,1*6C"); // Enable antenna updates
   // GNSS_PORT.println("$PGCMD,33,0*6D"); // Disable antenna updates
 
-  // Look for GNSS signal up to gnssTimeout seconds.
+  // Look for GNSS signal up to gnssTimeout seconds
   while (!fixFound && (millis() - startTime < gnssTimeout * 1000UL)) {
     if (GNSS_PORT.available()) {
       charsSeen = true;
@@ -55,18 +55,18 @@ void readGnss() {
 #endif
       if (gnss.encode(c)) {
         // Valid fix if fix quality > 0, not stale, and satellites > 0.
-        if ((gnssFix.value() > 0 && gnssFix.age() < 1000)
+        if ((atoi(gnssFix.value()) > 0 && gnssFix.age() < 1000)
             && (String(gnssValidity.value()) == "A" && gnssValidity.age() < 1000)
             && gnss.satellites.value() > 0) {
 
           DEBUG_PRINT(" Pass");  // Debugging only
           fixCounter++;          // Increment fix counter
 
-          // Wait until enough consecutive fixes have been collected.
+          // Wait until enough consecutive fixes have been collected
           if (fixCounter >= 10) {
             fixFound = true;
 
-            // Convert GNSS date/time to epoch.
+            // Convert GNSS date/time to epoch
             tm.Hour = gnss.time.hour();
             tm.Minute = gnss.time.minute();
             tm.Second = gnss.time.second();
@@ -84,7 +84,7 @@ void readGnss() {
             DEBUG_PRINT("[GNSS] Info: rtcEpoch  = ");
             DEBUG_PRINTLN(rtcEpoch);
 
-            // Sync RTC if gnssEpoch is newer.
+            // Sync RTC if gnssEpoch is newer
             if ((gnssEpoch > unixtime) || firstTimeFlag) {
               rtc.setEpoch(gnssEpoch);
               DEBUG_PRINT("[GNSS] Info: RTC synced ");
@@ -94,7 +94,7 @@ void readGnss() {
               printDateTime();
             }
 
-            // Store GNSS data in moSbdMessage.
+            // Store GNSS data in moSbdMessage
             moSbdMessage.latitude = gnss.location.lat() * 1000000;
             moSbdMessage.longitude = gnss.location.lng() * 1000000;
             moSbdMessage.satellites = gnss.satellites.value();
@@ -111,10 +111,10 @@ void readGnss() {
       }
     }
 
-    // Call callback during acquisition.
+    // Call callback during acquisition
     ISBDCallback();
 
-    // If no data after ~5 seconds, break.
+    // If no data after ~5 seconds, break
     if ((millis() - startTime) > 5000 && gnss.charsProcessed() < 10) {
       DEBUG_PRINTLN("[GNSS] Warning: No GNSS data received. Please check wiring.");
       break;
@@ -125,12 +125,12 @@ void readGnss() {
     DEBUG_PRINTLN("[GNSS] Warning: No GNSS fix found!");
   }
 
-  // Close GNSS Serial port.
+  // Close GNSS Serial port
   GNSS_PORT.end();
 
-  // Disable power to GNSS.
+  // Disable power to GNSS
   disableGnssPower();
 
-  // Record elapsed execution time.
+  // Record elapsed execution time
   timer.readGnss = millis() - startTime;
 }

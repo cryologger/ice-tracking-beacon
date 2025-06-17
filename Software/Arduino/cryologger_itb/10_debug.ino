@@ -65,15 +65,11 @@ void printSettings() {
   printTab(1);
   DEBUG_PRINTLN(transmitInterval);
 
-  DEBUG_PRINT("Transmit Interval: ");
-  printTab(1);
-  DEBUG_PRINTLN(transmitInterval);
-
   DEBUG_PRINT("Retransmit Counter: ");
   printTab(1);
   DEBUG_PRINTLN(transmitReattemptCounter);
 
-  DEBUG_PRINT("Transmit Reattempt Limit: ");
+  DEBUG_PRINT("Transmit Reattempts: ");
   printTab(1);
   DEBUG_PRINTLN(transmitReattempts);
 
@@ -81,7 +77,7 @@ void printSettings() {
   printTab(2);
   DEBUG_PRINTLN(resetFlag);
 
-  printLine();
+  //printLine();
 }
 
 // ----------------------------------------------------------------------------
@@ -136,7 +132,7 @@ void printSensors() {
   printTab(1);
   DEBUG_PRINTLN(voltage);
 
-  printLine();
+  //printLine();
 }
 
 // ----------------------------------------------------------------------------
