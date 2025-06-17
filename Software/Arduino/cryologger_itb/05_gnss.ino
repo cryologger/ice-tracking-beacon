@@ -55,9 +55,7 @@ void readGnss() {
 #endif
       if (gnss.encode(c)) {
         // Valid fix if fix quality > 0, not stale, and satellites > 0.
-        if ((atoi(gnssFix.value()) > 0 && gnssFix.age() < 1000)
-            && (String(gnssValidity.value()) == "A" && gnssValidity.age() < 1000)
-            && gnss.satellites.value() > 0) {
+        if (isValidGnssFix()) {
 
           DEBUG_PRINT(" Pass");  // Debugging only
           fixCounter++;          // Increment fix counter
@@ -133,4 +131,18 @@ void readGnss() {
 
   // Record elapsed execution time
   timer.readGnss = millis() - startTime;
+}
+
+// ----------------------------------------------------------------------------
+// Check for valid GNSS fix.
+// ----------------------------------------------------------------------------
+bool isValidGnssFix() {
+  return (
+    gnssFix.value()
+    && atoi(gnssFix.value()) > 0
+    && gnssFix.age() < 1000
+    && gnssValidity.value()
+    && strcmp(gnssValidity.value(), "A") == 0
+    && gnssValidity.age() < 1000
+    && gnss.satellites.isValid() && gnss.satellites.value() > 0);
 }
