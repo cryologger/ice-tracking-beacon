@@ -12,17 +12,17 @@
 // Measure battery voltage from the 10/1 MΩ divider.
 // ----------------------------------------------------------------------------
 float readBattery() {
-  // Start execution timer.
+  // Start execution timer
   unsigned long startTime = millis();
 
-  // Measure external battery voltage across 10/1 MΩ resistor divider (1/10).
+  // Measure external battery voltage across 10/1 MΩ resistor divider (1/10)
   (void)analogRead(PIN_VBAT);  // Dummy read
   voltage = analogRead(PIN_VBAT);
   voltage *= ((10000000.0 + 1000000.0) / 1000000.0);
   voltage *= 3.3;   // Multiply by 3.3V reference
   voltage /= 4096;  // Convert raw ADC count to actual voltage
 
-  // Record elapsed execution time.
+  // Record elapsed execution time
   timer.readBattery = millis() - startTime;
   return voltage;
 }
@@ -116,8 +116,10 @@ void disable5V() {
 // ----------------------------------------------------------------------------
 void prepareForSleep() {
   disableSerial();
-  memset(&online, 0, sizeof(online));
-  memset(&timer, 0, sizeof(timer));
+
+  // Clear structures
+  online = {};
+  timer = {};
 }
 
 // ----------------------------------------------------------------------------

@@ -3,7 +3,7 @@
 
   This module provides debugging utilities to print user-defined system
   settings, function execution timers, Iridium SBD message data, and available
-  memory. 
+  memory.
 */
 
 // ----------------------------------------------------------------------------
@@ -50,7 +50,7 @@ void printSystemInfo() {
   DEBUG_PRINT("Free Ram: ");
   printTab(2);
   DEBUG_PRINTLN(freeRam());
-  printLine();
+  //printLine();
 }
 
 // ----------------------------------------------------------------------------
@@ -77,7 +77,7 @@ void printSettings() {
   printTab(2);
   DEBUG_PRINTLN(resetFlag);
 
-  //printLine();
+  printLine();
 }
 
 // ----------------------------------------------------------------------------
@@ -324,8 +324,8 @@ void printMtSbdBuffer() {
     sprintf(tempData, "%d\t0x%02X", i, mtSbdBuffer[i]);
     DEBUG_PRINTLN(tempData);
   }
+  printLine();
 }
-
 // ----------------------------------------------------------------------------
 // Computes and returns the amount of free RAM, in bytes.
 // ----------------------------------------------------------------------------
