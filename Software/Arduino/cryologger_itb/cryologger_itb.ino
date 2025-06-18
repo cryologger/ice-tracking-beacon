@@ -1,6 +1,6 @@
 /*
   Title:    Cryologger Ice Tracking Beacon (ITB)
-  Date:     April 1, 2025
+  Date:     June 16, 2025
   Author:   Adam Garbo
   Version:  3.4
   License:  GPLv3. See license file for more information.
@@ -25,35 +25,46 @@
 */
 
 // ----------------------------------------------------------------------------
+// USER CONFIGURATION
+// ----------------------------------------------------------------------------
+
+// Device identifier.
+#define UID "ITB_25_01"  // Unique identifier (UID)
+
+// Alarm parameters.
+#define ALARM_MODE HOURLY        // Alarm mode (MINUTE, HOURLY, DAILY)
+#define ALARM_INTERVAL_DAY 0     // Alarm day interval (days)
+#define ALARM_INTERVAL_HOUR 1    // Alarm hour interval (hours)
+#define ALARM_INTERVAL_MINUTE 0  // Alarm minute interval (minutes)
+
+// Transmission parameters.
+#define TRANSMIT_INTERVAL 1;    // Number of messages to include in each Iridium transmission (340-byte limit). Default: 1
+#define TRANSMIT_REATTEMPTS 3;  // Number of attempts to retransmit failed Iridium messages (340-byte limit). Default: 3
+
+// GNSS and Iridium parameters. Do not change unless debugging.
+#define GNSS_TIMEOUT 1;     // Timeout for GNSS signal acquisition (seconds). Default: 180
+#define IRIDIUM_TIMEOUT 180;  // Timeout for Iridium send/receive commands (seconds). Default: 180
+#define IRIDIUM_STARTUP 120;  // Timeout for Iridium modem startup (seconds). Default: 120
+
+// ----------------------------------------------------------------------------
+//  END OF USER CONFIGURATION
+// ----------------------------------------------------------------------------
+
+// ----------------------------------------------------------------------------
 // Libraries                    Version
 // ----------------------------------------------------------------------------
-#include <Adafruit_BME280.h>    // 2.2.4
+#include <Adafruit_BME280.h>    // 2.3.0
 #include <Adafruit_LIS3MDL.h>   // 1.2.4
-#include <Adafruit_LSM6DSOX.h>  // 4.74
-#include <Adafruit_Sensor.h>    // 1.1.14
+#include <Adafruit_LSM6DSOX.h>  // 4.7.4
+#include <Adafruit_Sensor.h>    // 1.1.15
 #include <Arduino.h>            // Must precede <wiring_private.h>
 #include <ArduinoLowPower.h>    // 1.2.2
 #include <IridiumSBD.h>         // 3.0.6
 #include <RTCZero.h>            // 1.6.0
 #include <TimeLib.h>            // 1.6.1
 #include <TinyGPS++.h>          // 1.0.3
-#include <Wire.h>               //
+#include <Wire.h>               // 
 #include <wiring_private.h>     // Required for creating new Serial instance
-
-// ----------------------------------------------------------------------------
-// USER CONFIGURATION
-// ----------------------------------------------------------------------------
-
-#define UID "ITB_25_TST"      // Unique identifier (UID)
-#define ALARM_INTERVAL 3600;  // Duration between samples (seconds)
-#define TRANSMIT_INTERVAL 1;  // Messages to transmit in each Iridium transmission (340-byte limit)
-#define RETRANSMIT_LIMIT 3;   // Failed message transmission reattempts
-#define GNSS_TIMEOUT 5;       // Timeout for GNSS signal acquisition (seconds)
-#define IRIDIUM_TIMEOUT 180;  // Timeout for Iridium transmission (seconds)
-
-// ----------------------------------------------------------------------------
-//  END OF USER CONFIGURATION
-// ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
 // Software & Hardware Versions
@@ -101,6 +112,13 @@
 #define PIN_IRIDIUM_SLEEP 12  // RockBLOCK 9603 OnOff (Grey)
 
 // ----------------------------------------------------------------------------
+// Alarm Mode Definitions
+// ----------------------------------------------------------------------------
+#define MINUTE 0
+#define HOURLY 1
+#define DAILY 2
+
+// ----------------------------------------------------------------------------
 // Seria/UART Configuration
 // ----------------------------------------------------------------------------
 // Create a new UART instance on pins 10 (RX) and 11 (TX).
@@ -133,91 +151,9 @@ TinyGPSPlus gnss;
 TinyGPSCustom gnssFix(gnss, "GNGGA", 6);       // Fix quality
 TinyGPSCustom gnssValidity(gnss, "GNRMC", 2);  // Validity
 
-// ------------------------------------------------------------------------------------------------
-// User defined global variable declarations
-// ------------------------------------------------------------------------------------------------
-char uid[20] = UID;                                 // Unique identifier (UID)
-unsigned long alarmInterval = ALARM_INTERVAL;       // Sleep duration in seconds
-unsigned int transmitInterval = TRANSMIT_INTERVAL;  // Messages to transmit in each Iridium transmission (340-byte limit)
-unsigned int retransmitLimit = RETRANSMIT_LIMIT;    // Failed message transmission reattempts
-unsigned int gnssTimeout = GNSS_TIMEOUT;            // Timeout for GNSS signal acquisition (seconds)
-unsigned int iridiumTimeout = IRIDIUM_TIMEOUT;      // Timeout for Iridium transmission (seconds)
-
-// ----------------------------------------------------------------------------
-// Global Variables
-// ----------------------------------------------------------------------------
-// Flags
-volatile bool alarmFlag = false;  // Flag for alarm interrupt service routine
-volatile bool wdtFlag = false;    // Flag for Watchdog Timer interrupt service routine
-bool firstTimeFlag = true;        // Flag to determine if program is running for the first time
-bool resetFlag = 0;               // Flag to force system reset using Watchdog Timer
-
-// Counters
-volatile int wdtCounter = 0;        // Watchdog Timer interrupt counter
-unsigned int iterationCounter = 0;  // Counter to track total number of program iterations (zero indicates a reset)
-
-// Iridium SBD buffers and counters
-uint8_t moSbdBuffer[340];         // Buffer for Mobile Originated SBD (MO-SBD) message (340 bytes max)
-uint8_t mtSbdBuffer[270];         // Buffer for Mobile Terminated SBD (MT-SBD) message (270 bytes max)
-size_t moSbdBufferSize;           // Size of MO-SBD message
-size_t mtSbdBufferSize;           // size of MT-SBD message
-byte retransmitCounter = 0;       // Retry attempts for failed Iridium SBD transmissions
-byte transmitCounter = 0;         // Counter to track Iridium SBD transmission intervals
-unsigned int failureCounter = 0;  // Counter to track consecutive failed Iridium SBD transmission attempts
-
-// RTC and timers
-unsigned long unixtime = 0;        // Global epoch time variable
-unsigned long alarmTime = 0;       // Global epoch alarm time variable
-unsigned long gnssEpoch = 0;       // Seconds GNSS epoch time
-unsigned long rtcEpoch = 0;        // Global RTC epoch time
-long rtcDrift = 0;                 // Global RTC drift
-tmElements_t tm;                   // Variable for converting time elements to time_t
-unsigned long previousMillis = 0;  // Global millis() timer
-
-// Measurement varaibles
-float temperatureInt = 0.0;  // Internal temperature (°C)
-float humidityInt = 0.0;     // Internal humidity (%)
-float pressureInt = 0.0;     // Internal pressure (hPa)
-float pitch = 0.0;           // Pitch (°)
-float roll = 0.0;            // Roll (°)
-int heading = 0;             // Tilt-compensated heading (°)
-float latitude = 0.0;        // GNSS latitude (DD)
-float longitude = 0.0;       // GNSS longitude (DD)
-byte satellites = 0;         // GNSS satellites
-float hdop = 0.0;            // GNSS HDOP
-float voltage = 0.0;         // Battery voltage
-
-// ----------------------------------------------------------------------------
-// Magnetometer min/max calibration
-// ----------------------------------------------------------------------------
-// Based on:
-// https://learn.adafruit.com/lsm303-accelerometer-slash-compass-breakout/calibration?view=all#calibration
-// https://gist.github.com/CalebFenton/a97444750eb43e3354fd2d0196a2ebcf
-// https://github.com/jremington/LSM9DS1-AHRS
-/*
-  {1, 0, 0});    // Align to X+
-  {-1, 0, 0});   // Align to X-
-  {0, 1, 0});    // Align to Y+
-  {0, -1, 0});   // Align to Y-
-  {0, 0, 1});    // Align to Z+
-  {0, 0, -1});   // Align to Z-
-*/
-float p[] = { 1, 0, 0 };
-
-// Min/max magnetometer values
-float m_min[3] = {
-  0, 0, 0  // Test unit
-
-};
-
-float m_max[3] = {
-  0, 0, 0  // Test unit
-};
-
 // ----------------------------------------------------------------------------
 // Structures for Iridium SBD Transmission
 // ----------------------------------------------------------------------------
-
 // Union to store Iridium Short Burst Data (SBD) Mobile Originated (MO) messages.
 typedef union {
   struct
@@ -247,15 +183,21 @@ SBD_MO_MESSAGE moSbdMessage;
 typedef union {
   struct
   {
-    uint32_t alarmInterval;
+    uint8_t alarmMode;
+    uint8_t alarmIntervalDay;
+    uint8_t alarmIntervalHour;
+    uint8_t alarmIntervalMinute;
     uint8_t transmitInterval;
-    uint8_t retransmitLimit;
+    uint8_t transmitReattempts;
     uint8_t resetFlag;
   };
   uint8_t bytes[7];  // Size of message to be received in bytes
 } SBD_MT_MESSAGE;
 
 SBD_MT_MESSAGE mtSbdMessage;
+
+// Add this line to declare the function prototype
+bool validateMtSbdMessage(const SBD_MT_MESSAGE& msg);
 
 // ----------------------------------------------------------------------------
 // Structures for System Status and Timers
@@ -277,6 +219,90 @@ struct Timer {
   unsigned long readGnss;
   unsigned long iridium;
 } timer;
+
+
+// ------------------------------------------------------------------------------------------------
+// User defined global variable declarations
+// ------------------------------------------------------------------------------------------------
+char uid[20] = UID;
+uint8_t alarmMode = ALARM_MODE;                    // Alarm match mode
+byte alarmIntervalDay = ALARM_INTERVAL_DAY;        // Alarm day interval
+byte alarmIntervalHour = ALARM_INTERVAL_HOUR;      // Alarm hour interval
+byte alarmIntervalMinute = ALARM_INTERVAL_MINUTE;  // Alarm minute interval
+
+unsigned int transmitInterval = TRANSMIT_INTERVAL;      // Messages to transmit in each Iridium transmission (340-byte limit)
+unsigned int transmitReattempts = TRANSMIT_REATTEMPTS;  // Failed message transmission reattempts
+unsigned int gnssTimeout = GNSS_TIMEOUT;                // Timeout for GNSS signal acquisition (seconds)
+unsigned int iridiumTimeout = IRIDIUM_TIMEOUT;          // Timeout for Iridium transmission (seconds)
+unsigned int IridiumStartup = IRIDIUM_STARTUP;          // Timeout for Iridium startup (seconds)
+
+// ----------------------------------------------------------------------------
+// Global Variables
+// ----------------------------------------------------------------------------
+// Flags
+volatile bool alarmFlag = false;  // Flag for alarm interrupt service routine
+volatile bool wdtFlag = false;    // Flag for Watchdog Timer interrupt service routine
+bool firstTimeFlag = true;        // Flag to determine if program is running for the first time
+bool resetFlag = 0;               // Flag to force system reset using Watchdog Timer
+
+// Counters
+volatile int wdtCounter = 0;        // Watchdog Timer interrupt counter
+unsigned int iterationCounter = 0;  // Counter to track total number of program iterations (zero indicates a reset)
+
+// Iridium SBD buffers and counters
+uint8_t moSbdBuffer[340];           // Buffer for Mobile Originated SBD (MO-SBD) message (340 bytes max)
+uint8_t mtSbdBuffer[270];           // Buffer for Mobile Terminated SBD (MT-SBD) message (270 bytes max)
+size_t moSbdBufferSize;             // Size of MO-SBD message
+size_t mtSbdBufferSize;             // size of MT-SBD message
+byte transmitCounter = 0;           // Counter to track Iridium SBD transmission intervals
+byte transmitReattemptCounter = 0;  // Retry attempts for failed Iridium SBD transmissions
+unsigned int failureCounter = 0;    // Counter to track consecutive failed Iridium SBD transmission attempts
+
+// RTC and timers
+unsigned long unixtime = 0;        // Global epoch time variable
+unsigned long alarmTime = 0;       // Global epoch alarm time variable
+unsigned long gnssEpoch = 0;       // Seconds GNSS epoch time
+unsigned long rtcEpoch = 0;        // Global RTC epoch time
+long rtcDrift = 0;                 // Global RTC drift
+tmElements_t tm;                   // Variable for converting time elements to time_t
+unsigned long previousMillis = 0;  // Global millis() timer
+
+// Measurement varaibles
+float temperatureInt = 0.0;  // Internal temperature (°C)
+float humidityInt = 0.0;     // Internal humidity (%)
+float pressureInt = 0.0;     // Internal pressure (hPa)
+float pitch = 0.0;           // Pitch (°)
+float roll = 0.0;            // Roll (°)
+int heading = 0;             // Tilt-compensated heading (°)
+float latitude = 0.0;        // GNSS latitude (DD)
+float longitude = 0.0;       // GNSS longitude (DD)
+byte satellites = 0;         // GNSS satellites
+float hdop = 0.0;            // GNSS HDOP
+float voltage = 0.0;         // Battery voltage
+
+// ----------------------------------------------------------------------------
+// Magnetometer Min/Max Calibration
+// More info:
+// https://learn.adafruit.com/lsm303-accelerometer-slash-compass-breakout/calibration?view=all#calibration
+// https://github.com/jremington/LSM9DS1-AHRS
+//
+// {1, 0, 0});    // Align to X+
+// {-1, 0, 0});   // Align to X-
+// {0, 1, 0});    // Align to Y+
+// {0, -1, 0});   // Align to Y-
+// {0, 0, 1});    // Align to Z+
+// {0, 0, -1});   // Align to Z-
+// ----------------------------------------------------------------------------
+float p[] = { 1, 0, 0 };
+
+// Min/max magnetometer values
+float m_min[3] = {
+  0, 0, 0  // Test unit
+};
+
+float m_max[3] = {
+  0, 0, 0  // Test unit
+};
 
 // ----------------------------------------------------------------------------
 // Setup
@@ -324,33 +350,11 @@ void setup() {
   readRtc();           // Read datetime from RTC
   configureWdt();      // Configure Watchdog Timer (WDT)
   readBattery();       // Read battery voltage
-  printSettings();     // Print configuration settings
   readGnss();          // Synchronize RTC with GNSS
   configureIridium();  // Configure RockBLOCK 9603 modem
 
-  // Output system information.
-  printLine();
-  DEBUG_PRINTLN("System Information");
-  printLine();
-  DEBUG_PRINT("Serial:");
-  printTab(3);
-  DEBUG_PRINTLN(uid);
-  DEBUG_PRINT("Software Version:");
-  printTab(1);
-  DEBUG_PRINTLN(SOFTWARE_VERSION);
-  DEBUG_PRINT("Hardware Version:");
-  printTab(1);
-  DEBUG_PRINTLN(HARDWARE_VERSION);
-  DEBUG_PRINT("Datetime:");
-  printTab(2);
-  printDateTime();
-  DEBUG_PRINT("Battery:");
-  printTab(1);
-  DEBUG_PRINTLN(readBattery());
-  DEBUG_PRINT("Free Ram: ");
-  printTab(2);
-  DEBUG_PRINTLN(freeRam());
-  printLine();
+  printSystemInfo();  // Print system information
+  printSettings();    // Print configuration settings
 
   // Close serial port if immediately entering deep sleep.
   if (!firstTimeFlag) {
@@ -380,7 +384,7 @@ void loop() {
       blinkLed(4, 250);
     }
 
-    DEBUG_PRINT("Info: Alarm trigger ");
+    DEBUG_PRINT("[Main] Alarm trigger ");
     printDateTime();
 
     // Perform measurements
@@ -406,7 +410,7 @@ void loop() {
     // Set the next RTC alarm.
     setRtcAlarm();
 
-    DEBUG_PRINTLN("Info: Entering deep sleep...");
+    DEBUG_PRINTLN("[Main] Entering deep sleep...");
     DEBUG_PRINTLN();
 
     // Prepare system for sleep.
