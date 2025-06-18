@@ -8,6 +8,21 @@
   and satellite data.
 */
 
+void configureGnss() {
+  // Configure GNSS update/output rates
+  GNSS_PORT.println("$PMTK220,1000*1F");  // Set NMEA update rate to 1 Hz
+  myDelay(100);
+
+  // Set NMEA sentence output frequencies to GGA and RMC
+  GNSS_PORT.println("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28");
+  myDelay(100);
+
+  // Optional antenna update configuration
+  // GNSS_PORT.println("$PGCMD,33,1*6C"); // Enable antenna updates
+  // GNSS_PORT.println("$PGCMD,33,0*6D"); // Disable antenna updates
+}
+
+
 // ----------------------------------------------------------------------------
 // Read the GNSS receiver.
 // If a valid fix is found, sync the RTC if newer than the current unixtime,
@@ -33,17 +48,8 @@ void readGnss() {
   GNSS_PORT.begin(9600);
   myDelay(1000);
 
-  // Configure GNSS update/output rates
-  GNSS_PORT.println("$PMTK220,1000*1F");  // Set NMEA update rate to 1 Hz
-  myDelay(100);
-
-  // Set NMEA sentence output frequencies to GGA and RMC
-  GNSS_PORT.println("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28");
-  myDelay(100);
-
-  // Optional antenna update configuration
-  // GNSS_PORT.println("$PGCMD,33,1*6C"); // Enable antenna updates
-  // GNSS_PORT.println("$PGCMD,33,0*6D"); // Disable antenna updates
+  // Configure GNSS
+  configureGnss();
 
   // Look for GNSS signal up to gnssTimeout seconds
   while (!fixFound && (millis() - startTime < gnssTimeout * 1000UL)) {
@@ -113,9 +119,9 @@ void readGnss() {
     ISBDCallback();
 
     // If no data after ~5 seconds, break
-    if ((millis() - startTime) > 5000 && gnss.charsProcessed() < 10) {
+    if ((millis() - startTime) > 5000 && !charsSeen) {
       DEBUG_PRINTLN("[GNSS] Warning: No GNSS data received. Please check wiring.");
-      break;
+      break;      
     }
   }
 
