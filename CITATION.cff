@@ -9,9 +9,6 @@ authors:
     family-names: Garbo
     email: adam@cryologger.org
     orcid: 'https://orcid.org/0000-0002-7312-7390'
-identifiers:
-  - type: doi
-    value: 10.5281/zenodo.10522231
 repository-code: 'https://github.com/cryologger/ice-tracking-beacon'
 url: 'https://cryologger.org'
 abstract: >-
