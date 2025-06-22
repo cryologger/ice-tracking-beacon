@@ -1,6 +1,6 @@
 /*
   Title:    Cryologger Ice Tracking Beacon (ITB)
-  Date:     June 16, 2025
+  Date:     June 22, 2025
   Author:   Adam Garbo
   Version:  3.4
   License:  GPLv3. See license file for more information.
@@ -38,11 +38,11 @@
 #define ALARM_INTERVAL_MINUTE 0  // Alarm minute interval (minutes)
 
 // Transmission parameters.
-#define TRANSMIT_INTERVAL 1;    // Number of messages to include in each Iridium transmission (340-byte limit). Default: 1
-#define TRANSMIT_REATTEMPTS 3;  // Number of attempts to retransmit failed Iridium messages (340-byte limit). Default: 3
+#define TRANSMIT_INTERVAL 1     // Number of messages to include in each Iridium transmission (340-byte limit). Default: 1
+#define TRANSMIT_REATTEMPTS 9;  // Number of attempts to retransmit failed Iridium messages (340-byte limit). Default: 3
 
 // GNSS and Iridium parameters. Do not change unless debugging.
-#define GNSS_TIMEOUT 1;     // Timeout for GNSS signal acquisition (seconds). Default: 180
+#define GNSS_TIMEOUT 180;     // Timeout for GNSS signal acquisition (seconds). Default: 180
 #define IRIDIUM_TIMEOUT 180;  // Timeout for Iridium send/receive commands (seconds). Default: 180
 #define IRIDIUM_STARTUP 120;  // Timeout for Iridium modem startup (seconds). Default: 120
 
@@ -63,7 +63,7 @@
 #include <RTCZero.h>            // 1.6.0
 #include <TimeLib.h>            // 1.6.1
 #include <TinyGPS++.h>          // 1.0.3
-#include <Wire.h>               // 
+#include <Wire.h>               //
 #include <wiring_private.h>     // Required for creating new Serial instance
 
 // ----------------------------------------------------------------------------
@@ -220,21 +220,19 @@ struct Timer {
   unsigned long iridium;
 } timer;
 
-
 // ------------------------------------------------------------------------------------------------
-// User defined global variable declarations
+// User Defined Global Variable Declarations
 // ------------------------------------------------------------------------------------------------
 char uid[20] = UID;
-uint8_t alarmMode = ALARM_MODE;                    // Alarm match mode
-byte alarmIntervalDay = ALARM_INTERVAL_DAY;        // Alarm day interval
-byte alarmIntervalHour = ALARM_INTERVAL_HOUR;      // Alarm hour interval
-byte alarmIntervalMinute = ALARM_INTERVAL_MINUTE;  // Alarm minute interval
-
-unsigned int transmitInterval = TRANSMIT_INTERVAL;      // Messages to transmit in each Iridium transmission (340-byte limit)
-unsigned int transmitReattempts = TRANSMIT_REATTEMPTS;  // Failed message transmission reattempts
-unsigned int gnssTimeout = GNSS_TIMEOUT;                // Timeout for GNSS signal acquisition (seconds)
-unsigned int iridiumTimeout = IRIDIUM_TIMEOUT;          // Timeout for Iridium transmission (seconds)
-unsigned int IridiumStartup = IRIDIUM_STARTUP;          // Timeout for Iridium startup (seconds)
+uint8_t alarmMode = ALARM_MODE;                       // Alarm match mode
+uint8_t alarmIntervalDay = ALARM_INTERVAL_DAY;        // Alarm day interval
+uint8_t alarmIntervalHour = ALARM_INTERVAL_HOUR;      // Alarm hour interval
+uint8_t alarmIntervalMinute = ALARM_INTERVAL_MINUTE;  // Alarm minute interval
+uint8_t transmitInterval = TRANSMIT_INTERVAL;         // Messages to transmit in each Iridium transmission (340-byte limit)
+uint8_t transmitReattempts = TRANSMIT_REATTEMPTS;     // Failed message transmission reattempts
+unsigned int gnssTimeout = GNSS_TIMEOUT;              // Timeout for GNSS signal acquisition (seconds)
+unsigned int iridiumTimeout = IRIDIUM_TIMEOUT;        // Timeout for Iridium transmission (seconds)
+unsigned int IridiumStartup = IRIDIUM_STARTUP;        // Timeout for Iridium startup (seconds)
 
 // ----------------------------------------------------------------------------
 // Global Variables
@@ -252,8 +250,8 @@ unsigned int iterationCounter = 0;  // Counter to track total number of program 
 // Iridium SBD buffers and counters
 uint8_t moSbdBuffer[340];           // Buffer for Mobile Originated SBD (MO-SBD) message (340 bytes max)
 uint8_t mtSbdBuffer[270];           // Buffer for Mobile Terminated SBD (MT-SBD) message (270 bytes max)
-size_t moSbdBufferSize;             // Size of MO-SBD message
-size_t mtSbdBufferSize;             // size of MT-SBD message
+size_t moSbdBufferSize;             // Size of MO-SBD message buffer
+size_t mtSbdBufferSize;             // size of MT-SBD message buffer
 byte transmitCounter = 0;           // Counter to track Iridium SBD transmission intervals
 byte transmitReattemptCounter = 0;  // Retry attempts for failed Iridium SBD transmissions
 unsigned int failureCounter = 0;    // Counter to track consecutive failed Iridium SBD transmission attempts
@@ -338,7 +336,7 @@ void setup() {
   blinkLed(4, 500);  // Non-blocking delay to allow user to open Serial Monitor
 #endif
 
-  // Output startup information.
+  // Output startup information
   DEBUG_PRINTLN();
   printLine();
   DEBUG_PRINTLN("Cryologger - Ice Tracking Beacon");
@@ -356,7 +354,7 @@ void setup() {
   printSystemInfo();  // Print system information
   printSettings();    // Print configuration settings
 
-  // Close serial port if immediately entering deep sleep.
+  // Close serial port if immediately entering deep sleep
   if (!firstTimeFlag) {
     disableSerial();
   }
@@ -366,10 +364,10 @@ void setup() {
 }
 
 // ----------------------------------------------------------------------------
-// Loop
+// Main Loop
 // ----------------------------------------------------------------------------
 void loop() {
-  // Check if RTC alarm triggered or if program is running for first time.
+  // Check if RTC alarm triggered or if program is running for the first time
   if (alarmFlag || firstTimeFlag) {
     // Read the RTC
     readRtc();
@@ -379,12 +377,12 @@ void loop() {
 
     // Check if program is running for the first time.
     if (!firstTimeFlag) {
-      // Wake from deep sleep.
+      // Wake from deep sleep
       wakeUp();
       blinkLed(4, 250);
     }
 
-    DEBUG_PRINT("[Main] Alarm trigger ");
+    DEBUG_PRINT("[Main] Info: Alarm triggered ");
     printDateTime();
 
     // Perform measurements
@@ -399,32 +397,32 @@ void loop() {
     printSensors();        // Display recorded measurements
     writeBuffer();         // Write data to transmit buffer
 
-    // Check if data transmission interval has been reached.
+    // Check if data transmission interval has been reached
     if ((transmitCounter == transmitInterval) || firstTimeFlag) {
       transmitData();
     }
 
-    // Print function execution timers.
+    // Print function execution timers
     printTimers();
 
-    // Set the next RTC alarm.
+    // Set the next RTC alarm
     setRtcAlarm();
 
     DEBUG_PRINTLN("[Main] Entering deep sleep...");
     DEBUG_PRINTLN();
 
-    // Prepare system for sleep.
+    // Prepare system for sleep
     prepareForSleep();
   }
 
-  // Check for WDT interrupts.
+  // Check for WDT interrupts
   if (wdtFlag) {
     resetWdt();
   }
 
-  // Blink LED to indicate normal operation.
+  // Blink LED to indicate normal operation
   blinkLed(1, 25);
 
-  // Enter deep sleep, awaiting RTC or WDT interrupt.
+  // Enter deep sleep, awaiting RTC or WDT interrupt
   goToSleep();
 }

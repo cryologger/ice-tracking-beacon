@@ -9,11 +9,11 @@
 */
 
 // ----------------------------------------------------------------------------
-// Configure RockBLOCK 9603.
+// Configure the RockBLOCK 9603.
 // ----------------------------------------------------------------------------
 void configureIridium() {
   // Configure for battery power
-  // For USB power use: IridiumSBD::USB_POWER_PROFILE)
+  // For USB power use: IridiumSBD::USB_POWER_PROFILE
   modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE);
 
   // Timeout for Iridium send/receive commands (default = 300 s)
@@ -26,26 +26,18 @@ void configureIridium() {
 }
 
 // ----------------------------------------------------------------------------
-// Validate MT SBD message
-// ----------------------------------------------------------------------------
-bool validateMtSbdMessage(const SBD_MT_MESSAGE& msg) {
-  return (
-    msg.alarmMode <= 2
-    && msg.alarmIntervalDay <= 31
-    && msg.alarmIntervalHour >= 1 && msg.alarmIntervalHour < 24
-    && msg.alarmIntervalMinute < 60
-    && msg.transmitInterval >= 1 && msg.transmitInterval <= 24
-    && msg.transmitReattempts <= 24
-    && (msg.resetFlag == 0 || msg.resetFlag == 255));
-}
-
-// ----------------------------------------------------------------------------
-// Write data from the MO-SBD structure to the transmit buffer.
+// Writes current sensor readings and metadata to the MO-SBD buffer.
+// This function prepares the message for the next Iridium transmission.
 // ----------------------------------------------------------------------------
 void writeBuffer() {
   // Increment counters
   iterationCounter++;
   transmitCounter++;
+
+  DEBUG_PRINTLN("[Iridium] Info: Writing new MO-SBD message to buffer...");
+
+  // Write voltage to union
+  moSbdMessage.voltage = readBattery() * 100;
 
   // Write message counter data to union
   moSbdMessage.iterationCounter = iterationCounter;
@@ -59,10 +51,8 @@ void writeBuffer() {
   // Print MO-SBD structure data
   printMoSbd();
   printMoSbdHex();
-  printMoSbdBuffer();
 
-  // Clear the MO-SBD message structure after copying
-  //memset(&moSbdMessage, 0x00, sizeof(moSbdMessage));
+  // Clear MO-SBD message structure after copying
   moSbdMessage = {};
 }
 
@@ -77,6 +67,8 @@ void transmitData() {
   // Enable power to the RockBLOCK 9603
   enable5V();
 
+  DEBUG_PRINTLN("[Iridium] Info: Opening serial connection to modem...");
+
   // Open the Iridium serial port at 19200 baud
   IRIDIUM_PORT.begin(19200);
 
@@ -84,20 +76,20 @@ void transmitData() {
   pinPeripheral(PIN_IRIDIUM_TX, PIO_SERCOM);
   pinPeripheral(PIN_IRIDIUM_RX, PIO_SERCOM);
 
-  // Wake up the modem and begin communications
-  DEBUG_PRINTLN("[Iridium] Info: Starting modem...");
+  // Wake modem and begin communications
+  DEBUG_PRINTLN("[Iridium] Info: Initializing Iridium modem...");
   int returnCode = modem.begin();
 
   if (returnCode != ISBD_SUCCESS) {
-    DEBUG_PRINT("[Iridium] Warning: Begin failed with error ");
-    DEBUG_PRINTLN(returnCode);
-    if (returnCode == ISBD_NO_MODEM_DETECTED) {
-      DEBUG_PRINTLN("[Iridium] Warning: No modem detected! Check wiring.");
-    }
+    DEBUG_PRINTLN("[Iridium] Error: Failed to initialize Iridium modem.");
+    printIridiumError(returnCode);
   } else {
     // Calculate SBD buffer sizes for MO and MT messages
     moSbdBufferSize = sizeof(moSbdMessage) * (transmitCounter + (transmitReattemptCounter * transmitInterval));
     mtSbdBufferSize = sizeof(mtSbdBuffer);
+
+    // Print conents of MO-SBD buffer
+    printMoSbdBuffer();
 
     // Clear MT-SBD buffer prior to receiving
     memset(mtSbdBuffer, 0x00, sizeof(mtSbdBuffer));
@@ -128,7 +120,7 @@ void transmitData() {
         DEBUG_PRINT(mtSbdBufferSize);
         DEBUG_PRINTLN(" bytes.");
 
-        // Check if MT-SBD message is the correct size (7 bytes).
+        // Check if MT-SBD message is correct size (7 bytes)
         if (mtSbdBufferSize == 7) {
           DEBUG_PRINTLN("[Iridium] Info: MT-SBD message correct size.");
 
@@ -143,15 +135,15 @@ void transmitData() {
 
           if (validateMtSbdMessage(mtSbdMessage)) {
             DEBUG_PRINTLN("[Iridium] Info: All received values within accepted ranges.");
-
+            DEBUG_PRINTLN("[Iridium] Info: Updating system parameters from MT-SBD message.");
             // Update config values from MT message
-            transmitInterval = mtSbdMessage.transmitInterval;
-            transmitReattempts = mtSbdMessage.transmitReattempts;
-            resetFlag = mtSbdMessage.resetFlag;
             alarmMode = mtSbdMessage.alarmMode;
             alarmIntervalDay = mtSbdMessage.alarmIntervalDay;
             alarmIntervalHour = mtSbdMessage.alarmIntervalHour;
             alarmIntervalMinute = mtSbdMessage.alarmIntervalMinute;
+            transmitInterval = mtSbdMessage.transmitInterval;
+            transmitReattempts = mtSbdMessage.transmitReattempts;
+            resetFlag = mtSbdMessage.resetFlag;
           } else {
             DEBUG_PRINTLN("[Iridium] Warning: Received values exceed accepted range!");
           }
@@ -161,9 +153,9 @@ void transmitData() {
         }
       }
     } else {
-      DEBUG_PRINT("[Iridium] Warning: Transmission failed with error code ");
+      DEBUG_PRINT("[Iridium] Warning: Transmission failed.");
+      printIridiumError(returnCode);
       blinkLed(5, 1000);
-      DEBUG_PRINTLN(returnCode);
     }
   }
 
@@ -188,15 +180,17 @@ void transmitData() {
     memset(moSbdBuffer, 0x00, sizeof(moSbdBuffer));
   }
 
-  // Put the modem to sleep.
+  // Put modem to sleep
   DEBUG_PRINTLN("[Iridium] Info: Putting modem to sleep...");
   returnCode = modem.sleep();
   if (returnCode != ISBD_SUCCESS) {
-    DEBUG_PRINT("[Iridium] Warning: Sleep failed error ");
-    DEBUG_PRINTLN(returnCode);
+    DEBUG_PRINTLN("[Iridium] Error: Could not put modem to sleep.");
+    printIridiumError(returnCode);
+  } else {
+    DEBUG_PRINT("[Iridium] Info: Modem put to sleep successfullly.");
   }
 
-  // Close the serial port
+  // Close serial port
   IRIDIUM_PORT.end();
 
   // Disable power to the RockBLOCK 9603
@@ -224,9 +218,24 @@ void transmitData() {
 }
 
 // ----------------------------------------------------------------------------
+// Validate the MT SBD message.
+// ----------------------------------------------------------------------------
+bool validateMtSbdMessage(const SBD_MT_MESSAGE& msg) {
+  return (
+    msg.alarmMode <= 2
+    && msg.alarmIntervalDay <= 31
+    && msg.alarmIntervalHour >= 1 && msg.alarmIntervalHour < 24
+    && msg.alarmIntervalMinute < 60
+    && msg.transmitInterval >= 1 && msg.transmitInterval <= 10
+    && msg.transmitReattempts <= 10
+    && (msg.resetFlag == 0 || msg.resetFlag == 255));
+}
+
+// ----------------------------------------------------------------------------
 // Non-blocking callback function invoked during Iridium transmissions or
-// GNSS signal acquisition. Here, we reset the watchdog periodically and
-// optionally blink an LED to show activity.
+// GNSS signal acquisition to avoid watchdog reset.
+// Here, we reset the watchdog periodically and optionally blink an LED to show
+// activity.
 // ----------------------------------------------------------------------------
 bool ISBDCallback() {
   unsigned long currentMillis = millis();
@@ -264,9 +273,59 @@ void ISBDDiagsCallback(IridiumSBD* /*device*/, char c) {
 void IridiumSBD::setSleepPin(uint8_t enable) {
   if (enable == HIGH) {
     digitalWrite(this->sleepPin, LOW);  // LOW = awake (inverted by N-MOSFET)
-    diagprint(F("AWAKE\r\n"));
+    diagprint(F("Modem is awake.\r\n"));
   } else {
     digitalWrite(this->sleepPin, HIGH);  // HIGH = asleep (inverted by N-MOSFET)
-    diagprint(F("ASLEEP\r\n"));
+    diagprint(F("Modem is asleep.\r\n"));
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Prints a formatted Iridium error message with numeric code.
+// Example output:
+// [Iridium] Error: Error 5 (ISBD_NO_MODEM_DETECTED)
+// ----------------------------------------------------------------------------
+void printIridiumError(int code) {
+  DEBUG_PRINT("[Iridium] Error ");
+  DEBUG_PRINT(code);
+  DEBUG_PRINT(": ");
+  DEBUG_PRINTLN(iridiumErrorDescription(code));
+}
+
+// ----------------------------------------------------------------------------
+// Converts Iridium error codes to readable macro names.
+// ----------------------------------------------------------------------------
+const char* iridiumErrorDescription(int code) {
+  switch (code) {
+    case ISBD_SUCCESS:
+      return "Success.";
+    case ISBD_ALREADY_AWAKE:
+      return "Modem already awake.";
+    case ISBD_SERIAL_FAILURE:
+      return "Serial communication failure.";
+    case ISBD_PROTOCOL_ERROR:
+      return "AT command protocol error.";
+    case ISBD_CANCELLED:
+      return "Operation cancelled.";
+    case ISBD_NO_MODEM_DETECTED:
+      return "No modem detected. Check wiring.";
+    case ISBD_SBDIX_FATAL_ERROR:
+      return "Fatal error during SBDIX.";
+    case ISBD_SENDRECEIVE_TIMEOUT:
+      return "Send/receive timed out.";
+    case ISBD_RX_OVERFLOW:
+      return "Receive buffer overflow.";
+    case ISBD_REENTRANT:
+      return "Reentrant call detected.";
+    case ISBD_IS_ASLEEP:
+      return "Modem is asleep.";
+    case ISBD_NO_SLEEP_PIN:
+      return "Sleep pin not configured.";
+    case ISBD_NO_NETWORK:
+      return "No network available.";
+    case ISBD_MSG_TOO_LONG:
+      return "Message too long.";
+    default:
+      return "Unknown error.";
   }
 }

@@ -93,13 +93,13 @@ void setRtcAlarm() {
   // Overflow minutes/hours
   if (minute >= 60) {
     hour += minute / 60;
-    minute = minute % 60;
+    minute %= 60;
   }
 
   // Overflow hours/days
   if (hour >= 24) {
     day += hour / 24;
-    hour = hour % 24;
+    hour %= 24;
   }
 
   // Handle day/month/year overflow
@@ -130,7 +130,7 @@ void setRtcAlarm() {
 
   // Determine RTC alarm match mode
   RTCZero::Alarm_Match match;
-  switch (ALARM_MODE) {
+  switch (alarmMode) {
     case MINUTE:
       match = RTCZero::MATCH_MMSS;
       break;

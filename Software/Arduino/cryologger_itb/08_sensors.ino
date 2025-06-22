@@ -43,7 +43,7 @@ void readBme280() {
   } else {
     online.bme280 = false;
     DEBUG_PRINTLN("failed!");
-    DEBUG_PRINTLN("[Sensors] Warning: BME280 offline!");
+    DEBUG_PRINTLN("[Sensors] Error: BME280 offline!");
   }
 
   // Record elapsed execution time.
