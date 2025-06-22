@@ -70,12 +70,11 @@ void readRtc() {
 // ----------------------------------------------------------------------------
 void setRtcAlarm() {
   // Get current RTC time
-  //int second = rtc.getSeconds();
   int minute = rtc.getMinutes();
-  int hour   = rtc.getHours();
-  int day    = rtc.getDay();
-  int month  = rtc.getMonth();
-  int year   = rtc.getYear();  // Offset from 2000 (e.g., 25 = 2025)
+  int hour = rtc.getHours();
+  int day = rtc.getDay();
+  int month = rtc.getMonth();
+  int year = rtc.getYear();  // Offset from 2000 (e.g., 25 = 2025)
 
   // Align to next hour on first run
   if (firstTimeFlag) {
@@ -87,9 +86,9 @@ void setRtcAlarm() {
   }
 
   // Add user-defined intervals
-  minute += ALARM_INTERVAL_MINUTE;
-  hour   += ALARM_INTERVAL_HOUR;
-  day    += ALARM_INTERVAL_DAY;
+  minute += alarmIntervalMinute;
+  hour += alarmIntervalHour;
+  day += alarmIntervalDay;
 
   // Overflow minutes/hours
   if (minute >= 60) {
@@ -126,7 +125,7 @@ void setRtcAlarm() {
   }
 
   // Set alarm
-  rtc.setAlarmTime(hour, minute, 0); 
+  rtc.setAlarmTime(hour, minute, 0);
   rtc.setAlarmDate(day, month, year);
 
   // Determine RTC alarm match mode
@@ -147,7 +146,7 @@ void setRtcAlarm() {
   rtc.enableAlarm(match);
   alarmFlag = false;
 
-  DEBUG_PRINTLN("[RTC] Info: Alarm set for");
+  DEBUG_PRINT("[RTC] Info: Alarm set for");
   printAlarm();
 }
 
@@ -164,14 +163,14 @@ bool isLeapYear(int rtcYear) {
 }
 
 // ----------------------------------------------------------------------------
-// RTC alarm interrupt service routine (ISR).
+// RTC alarm interrupt service routine (ISR)
 // ----------------------------------------------------------------------------
 void alarmIsr() {
   alarmFlag = true;
 }
 
 // ----------------------------------------------------------------------------
-// Prints the RTC's current date and time in "YYYY-MM-DD HH:MM:SS" format.
+// Prints the RTC's current date and time in "YYYY-MM-DD HH:MM:SS" format
 // ----------------------------------------------------------------------------
 void printDateTime() {
   char dateTimeBuffer[30];
@@ -183,7 +182,7 @@ void printDateTime() {
 }
 
 // ----------------------------------------------------------------------------
-// Print the RTC's alarm time in "YYYY-MM-DD HH:MM:SS" format.
+// Prints the RTC's alarm time in "YYYY-MM-DD HH:MM:SS" format
 // ----------------------------------------------------------------------------
 void printAlarm() {
   char alarmBuffer[30];
@@ -192,4 +191,19 @@ void printAlarm() {
            rtc.getAlarmYear(), rtc.getAlarmMonth(), rtc.getAlarmDay(),
            rtc.getAlarmHours(), rtc.getAlarmMinutes(), rtc.getAlarmSeconds());
   DEBUG_PRINTLN(alarmBuffer);
+}
+
+// ----------------------------------------------------------------------------
+// Prints a UNIX timestamp in human-readable "YYYY-MM-DD HH:MM:SS" format
+// ----------------------------------------------------------------------------
+void printUnixtime(time_t epoch) {
+  char dateTimeBuffer[30];
+  tmElements_t tm;
+  breakTime(epoch, tm);  // Convert epoch to tm structure
+  snprintf(dateTimeBuffer, sizeof(dateTimeBuffer),
+           "%04d-%02d-%02d %02d:%02d:%02d",
+           tm.Year + 1970, tm.Month, tm.Day,
+           tm.Hour, tm.Minute, tm.Second);
+
+  DEBUG_PRINTLN(dateTimeBuffer);
 }
