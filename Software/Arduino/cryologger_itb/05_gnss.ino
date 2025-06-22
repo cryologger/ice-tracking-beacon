@@ -18,10 +18,9 @@ void configureGnss() {
   myDelay(100);
 
   // Optional antenna update configuration
-  // GNSS_PORT.println("$PGCMD,33,1*6C"); // Enable antenna updates
-  // GNSS_PORT.println("$PGCMD,33,0*6D"); // Disable antenna updates
+  //GNSS_PORT.println("$PGCMD,33,1*6C");  // Enable antenna updates
+  //GNSS_PORT.println("$PGCMD,33,0*6D"); // Disable antenna updates
 }
-
 
 // ----------------------------------------------------------------------------
 // Read the GNSS receiver.
@@ -98,11 +97,17 @@ void readGnss() {
               printDateTime();
             }
 
+            // Record global variables
+            latitude = gnss.location.lat();
+            longitude = gnss.location.lng();
+            satellites = gnss.satellites.value();
+            hdop = gnss.hdop.value();
+
             // Store GNSS data in moSbdMessage
-            moSbdMessage.latitude = gnss.location.lat() * 1000000;
-            moSbdMessage.longitude = gnss.location.lng() * 1000000;
-            moSbdMessage.satellites = gnss.satellites.value();
-            moSbdMessage.hdop = gnss.hdop.value();
+            moSbdMessage.latitude = latitude * 1000000;
+            moSbdMessage.longitude = longitude * 1000000;
+            moSbdMessage.satellites = satellites;
+            moSbdMessage.hdop = hdop;
 
             DEBUG_PRINT("[GNSS] Info: RTC drift = ");
             DEBUG_PRINT(rtcDrift);
@@ -120,8 +125,8 @@ void readGnss() {
 
     // If no data after ~5 seconds, break
     if ((millis() - startTime) > 5000 && !charsSeen) {
-      DEBUG_PRINTLN("[GNSS] Warning: No GNSS data received. Please check wiring.");
-      break;      
+      DEBUG_PRINTLN("[GNSS] Warning: No NMEA characters received after 5 seconds. Check GNSS wiring and baud rate.");
+      break;
     }
   }
 
@@ -140,7 +145,7 @@ void readGnss() {
 }
 
 // ----------------------------------------------------------------------------
-// Check for valid GNSS fix.
+// Checks for valid GNSS fix.
 // ----------------------------------------------------------------------------
 bool isValidGnssFix() {
   return (
