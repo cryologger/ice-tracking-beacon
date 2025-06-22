@@ -163,14 +163,14 @@ bool isLeapYear(int rtcYear) {
 }
 
 // ----------------------------------------------------------------------------
-// RTC alarm interrupt service routine (ISR)
+// RTC alarm interrupt service routine (ISR).
 // ----------------------------------------------------------------------------
 void alarmIsr() {
   alarmFlag = true;
 }
 
 // ----------------------------------------------------------------------------
-// Prints the RTC's current date and time in "YYYY-MM-DD HH:MM:SS" format
+// Prints the RTC's current date and time in "YYYY-MM-DD HH:MM:SS" format.
 // ----------------------------------------------------------------------------
 void printDateTime() {
   char dateTimeBuffer[30];
@@ -182,7 +182,7 @@ void printDateTime() {
 }
 
 // ----------------------------------------------------------------------------
-// Prints the RTC's alarm time in "YYYY-MM-DD HH:MM:SS" format
+// Prints the RTC's alarm time in "YYYY-MM-DD HH:MM:SS" format.
 // ----------------------------------------------------------------------------
 void printAlarm() {
   char alarmBuffer[30];
@@ -194,7 +194,7 @@ void printAlarm() {
 }
 
 // ----------------------------------------------------------------------------
-// Prints a UNIX timestamp in human-readable "YYYY-MM-DD HH:MM:SS" format
+// Prints a UNIX timestamp in human-readable "YYYY-MM-DD HH:MM:SS" format.
 // ----------------------------------------------------------------------------
 void printUnixtime(time_t epoch) {
   char dateTimeBuffer[30];

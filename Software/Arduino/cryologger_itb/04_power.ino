@@ -9,7 +9,7 @@
 */
 
 // ----------------------------------------------------------------------------
-// Measure battery voltage from the 10/1 MΩ divider.
+// Measures battery voltage from the 10/1 MΩ divider.
 // ----------------------------------------------------------------------------
 float readBattery() {
   // Start execution timer
@@ -28,7 +28,7 @@ float readBattery() {
 }
 
 // ----------------------------------------------------------------------------
-// Disable the serial port.
+// Disables the serial port.
 // ----------------------------------------------------------------------------
 void disableSerial() {
 #if DEBUG
@@ -38,7 +38,7 @@ void disableSerial() {
 }
 
 // ----------------------------------------------------------------------------
-// Enable the serial port.
+// Enables the serial port.
 // ----------------------------------------------------------------------------
 void enableSerial() {
 #if DEBUG
@@ -49,7 +49,7 @@ void enableSerial() {
 }
 
 // ----------------------------------------------------------------------------
-// Enable power to the IMU.
+// Enables power to the IMU.
 // Includes a short non-blocking delay for sensor stabilization.
 // ----------------------------------------------------------------------------
 void enableImuPower() {
@@ -58,7 +58,7 @@ void enableImuPower() {
 }
 
 // ----------------------------------------------------------------------------
-// Disable power to the IMU.
+// Disables power to the IMU.
 // ----------------------------------------------------------------------------
 void disableImuPower() {
   digitalWrite(PIN_IMU_EN, LOW);
@@ -74,14 +74,14 @@ void enableSensorPower() {
 }
 
 // ----------------------------------------------------------------------------
-// Disable power to the sensors.
+// Disables power to the sensors.
 // ----------------------------------------------------------------------------
 void disableSensorPower() {
   digitalWrite(PIN_SENSOR_EN, LOW);
 }
 
 // ----------------------------------------------------------------------------
-// Enable power to GNSS.
+// Enables power to GNSS.
 // Includes a longer non-blocking delay to ensure GNSS module is fully powered.
 // ----------------------------------------------------------------------------
 void enableGnssPower() {
@@ -97,7 +97,7 @@ void disableGnssPower() {
 }
 
 // ----------------------------------------------------------------------------
-// Enable 5V power to the RockBLOCK 9603.
+// Enables 5V power to the RockBLOCK 9603.
 // ----------------------------------------------------------------------------
 void enable5V() {
   digitalWrite(PIN_5V_EN, HIGH);
@@ -105,14 +105,14 @@ void enable5V() {
 }
 
 // ----------------------------------------------------------------------------
-// Disable 5V power to the RockBLOCK 9603.
+// Disables 5V power to the RockBLOCK 9603.
 // ----------------------------------------------------------------------------
 void disable5V() {
   digitalWrite(PIN_5V_EN, LOW);
 }
 
 // ----------------------------------------------------------------------------
-// Prepare the system for deep sleep.
+// Prepares the system for deep sleep.
 // ----------------------------------------------------------------------------
 void prepareForSleep() {
   disableSerial();
@@ -123,7 +123,7 @@ void prepareForSleep() {
 }
 
 // ----------------------------------------------------------------------------
-// Enter deep sleep until an RTC or WDT interrupt occurs.
+// Enters deep sleep until an RTC or WDT interrupt occurs.
 // ----------------------------------------------------------------------------
 void goToSleep() {
   if (firstTimeFlag) {

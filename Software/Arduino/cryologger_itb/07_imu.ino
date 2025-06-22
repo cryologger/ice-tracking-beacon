@@ -7,7 +7,7 @@
 */
 
 // ----------------------------------------------------------------------------
-// Configures the Adafruit LSM6DSOX + LIS3MDL - Precision 9 DoF IMU
+// Configures the Adafruit LSM6DSOX + LIS3MDL - Precision 9 DoF IMU.
 // More info: https://www.adafruit.com/product/4517
 // ----------------------------------------------------------------------------
 void configureLsm6dsox() {
@@ -35,7 +35,7 @@ void configureLsm6dsox() {
 }
 
 // ----------------------------------------------------------------------------
-// Reads the Adafruit LSM6DSOX + LIS3MDL - Precision 9 DoF IMU
+// Reads the Adafruit LSM6DSOX + LIS3MDL - Precision 9 DoF IMU.
 // ----------------------------------------------------------------------------
 void readLsm6dsox() {
   // Start execution timer
@@ -109,7 +109,7 @@ void readLis3mdl(float Mxyz[3]) {
 }
 
 // ----------------------------------------------------------------------------
-// Returns a heading [0..359] (degrees given an acceleration vector a due to 
+// Returns a heading [0..359] (degrees given an acceleration vector a due to
 // gravity, a magnetic vector m, and a facing vector p.
 // ----------------------------------------------------------------------------
 int getHeading(float acc[3], float mag[3], float p[3]) {
@@ -125,14 +125,14 @@ int getHeading(float acc[3], float mag[3], float p[3]) {
   vectorNormalize(N);
 
   // Compute heading in horizontal plane. Correct for local magnetic declination.
-  int heading = round(atan2(vectorDot(W, p), vectorDot(N, p)) * 180.0 / M_PI ); // + declination
-  heading = -heading;               // Conventional nav: heading increases clockwise
-  heading = (heading + 720) % 360;  // Apply compass wrap to [0..359]
+  int heading = round(atan2(vectorDot(W, p), vectorDot(N, p)) * 180.0 / M_PI);  // + declination
+  heading = -heading;                                                           // Conventional nav: heading increases clockwise
+  heading = (heading + 720) % 360;                                              // Apply compass wrap to [0..359]
   return heading;
 }
 
 // ----------------------------------------------------------------------------
-// Vector math helpers
+// Vector math helpers.
 // ----------------------------------------------------------------------------
 void vectorCross(float a[3], float b[3], float out[3]) {
   out[0] = a[1] * b[2] - a[2] * b[1];

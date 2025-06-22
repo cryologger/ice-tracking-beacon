@@ -8,7 +8,7 @@
 
 // ----------------------------------------------------------------------------
 // Configure Watchdog Timer.
-// Perform a system reset if loop() blocks for more than 8–16 seconds. 
+// Perform a system reset if loop() blocks for more than 8–16 seconds.
 // ----------------------------------------------------------------------------
 void configureWdt() {
   /*
@@ -51,11 +51,10 @@ void configureWdt() {
   NVIC_EnableIRQ(WDT_IRQn);
 
   DEBUG_PRINTLN("[WDT] Info: WDT initialized.");
-
 }
 
 // ----------------------------------------------------------------------------
-// Reset the Watchdog Timer.
+// Resets the Watchdog Timer.
 // ----------------------------------------------------------------------------
 void resetWdt() {
   //DEBUG_PRINT("[WDT] WDT interrupt = "); DEBUG_PRINTLN(wdtCounter);
@@ -64,8 +63,8 @@ void resetWdt() {
   while (WDT->STATUS.bit.SYNCBUSY)
     ;  // Await synchronization of registers between clock domains
 
-  wdtFlag = false;  
-  wdtCounter = 0;   
+  wdtFlag = false;
+  wdtCounter = 0;
 }
 
 // ----------------------------------------------------------------------------

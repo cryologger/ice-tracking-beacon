@@ -46,7 +46,7 @@ void configureAdc() {
 }
 
 // ----------------------------------------------------------------------------
-// Map raw ADC values to floats.
+// Maps raw ADC values to floats.
 // ----------------------------------------------------------------------------
 float mapFloat(float x, float in_min, float in_max,
                float out_min, float out_max) {
@@ -54,7 +54,7 @@ float mapFloat(float x, float in_min, float in_max,
 }
 
 // ----------------------------------------------------------------------------
-// Read raw ADC values from PIN_VBAT, compute two forms of voltage
+// Reads raw ADC values from PIN_VBAT, compute two forms of voltage
 // (one based on a direct 3.3/4095 scale, another factoring in the
 // 10 MΩ + 1 MΩ divider), and prints them for debugging or calibration.
 // ----------------------------------------------------------------------------

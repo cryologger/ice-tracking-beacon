@@ -11,7 +11,7 @@
 */
 
 // ----------------------------------------------------------------------------
-// Adafruit BME280 Temperature Humidity Pressure Sensor
+// Configures and reads Adafruit BME280 Temperature Humidity Pressure Sensor.
 // More info: https://www.adafruit.com/product/2652
 // Initializes the BME280 sensor and reads temperature, humidity, and
 // pressure data.

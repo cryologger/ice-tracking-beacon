@@ -61,6 +61,21 @@ void printSettings() {
   DEBUG_PRINTLN("System Configuration");
   printLine();
 
+
+  DEBUG_PRINT("Alarm Mode: ");
+  printTab(2);
+  DEBUG_PRINTLN(ALARM_MODE);
+
+  DEBUG_PRINT("Alarm Interval: ");
+  printTab(1);
+  if (ALARM_MODE == DAILY) {
+    DEBUG_PRINTLN(ALARM_INTERVAL_DAY);
+  } else if (ALARM_MODE == HOURLY) {
+    DEBUG_PRINTLN(ALARM_INTERVAL_HOUR);
+  } else if (ALARM_MODE == MINUTE) {
+    DEBUG_PRINTLN(ALARM_INTERVAL_MINUTE);
+  }
+
   DEBUG_PRINT("Transmit Interval: ");
   printTab(1);
   DEBUG_PRINTLN(transmitInterval);
@@ -88,6 +103,10 @@ void printSensors() {
   DEBUG_PRINTLN("Sensor Measurements");
   printLine();
 
+  DEBUG_PRINT("Datetime: ");
+  printTab(1);
+  printUnixtime(unixtime);
+
   DEBUG_PRINT("Temperature: ");
   printTab(1);
   DEBUG_PRINTLN(temperatureInt);
@@ -114,11 +133,11 @@ void printSensors() {
 
   DEBUG_PRINT("Latitude: ");
   printTab(1);
-  DEBUG_PRINTLN(latitude);
+  DEBUG_PRINTLN_DEC(latitude, 6);
 
   DEBUG_PRINT("Longitude: ");
   printTab(1);
-  DEBUG_PRINTLN(longitude);
+  DEBUG_PRINTLN_DEC(longitude, 6);
 
   DEBUG_PRINT("Satellites: ");
   printTab(1);
@@ -168,14 +187,6 @@ void printTimers() {
   DEBUG_PRINTLN(timer.iridium);
 
   printLine();
-}
-
-// ----------------------------------------------------------------------------
-// Clears all execution timers.
-// Resets the timer structure to zero for performance diagnostics.
-// ----------------------------------------------------------------------------
-void clearTimers() {
-  memset(&timer, 0x00, sizeof(timer));
 }
 
 // ----------------------------------------------------------------------------
@@ -275,20 +286,21 @@ void printMtSbd() {
 }
 
 // ----------------------------------------------------------------------------
-// Prints the contents of the MO-SBD union/structure in a hex dump format.
+// Prints the MO-SBD message in hexadecimal format, byte by byte.
+// Useful for debugging and verifying the contents of the packed data
+// before transmission via the Iridium modem.
 // ----------------------------------------------------------------------------
 void printMoSbdHex() {
-  DEBUG_PRINTLN("MO-SBD Union/structure ");
+  DEBUG_PRINTLN("MO-SBD Payload (Byte View)");
   printLine();
 
   char tempData[16];
   DEBUG_PRINTLN("Byte\tHex");
 
-  for (int i = 0; i < (int)sizeof(moSbdMessage); ++i) {
+  for (size_t i = 0; i < sizeof(moSbdMessage); ++i) {
     sprintf(tempData, "%d\t0x%02X", i, moSbdMessage.bytes[i]);
     DEBUG_PRINTLN(tempData);
   }
-
   printLine();
 }
 
@@ -303,10 +315,11 @@ void printMoSbdBuffer() {
   char tempData[16];
   DEBUG_PRINTLN("Byte\tHex");
 
-  for (int i = 0; i < (int)moSbdBufferSize; ++i) {
+  for (size_t i = 0; i < moSbdBufferSize; ++i) {
     sprintf(tempData, "%d\t0x%02X", i, moSbdBuffer[i]);
     DEBUG_PRINTLN(tempData);
   }
+  printLine();
 }
 
 // ----------------------------------------------------------------------------
@@ -320,7 +333,7 @@ void printMtSbdBuffer() {
   char tempData[16];
   DEBUG_PRINTLN("Byte\tHex");
 
-  for (int i = 0; i < (int)mtSbdBufferSize; ++i) {
+  for (size_t i = 0; i < mtSbdBufferSize; ++i) {
     sprintf(tempData, "%d\t0x%02X", i, mtSbdBuffer[i]);
     DEBUG_PRINTLN(tempData);
   }
