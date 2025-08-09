@@ -23,7 +23,7 @@ void configureGnss() {
 }
 
 // ----------------------------------------------------------------------------
-// Read the GNSS receiver.
+// Reads the GNSS receiver.
 // If a valid fix is found, sync the RTC if newer than the current unixtime,
 // update moSbdMessage with GNSS data, and log RTC drift.
 // ----------------------------------------------------------------------------
@@ -62,13 +62,15 @@ void readGnss() {
         // Valid fix if fix quality > 0, not stale, and satellites > 0.
         if (isValidGnssFix()) {
 
+#if DEBUG_GNSS
           DEBUG_PRINT(" Pass");  // Debugging only
-          fixCounter++;          // Increment fix counter
+#endif
+          fixCounter++;  // Increment fix counter
 
           // Wait until enough consecutive fixes have been collected
           if (fixCounter >= 10) {
             fixFound = true;
-
+            DEBUG_PRINT("[GNSS] Info: Fix found. = ");
             // Convert GNSS date/time to epoch
             tm.Hour = gnss.time.hour();
             tm.Minute = gnss.time.minute();
@@ -115,7 +117,10 @@ void readGnss() {
             blinkLed(5, 100);
           }
         } else {
+          DEBUG_PRINT("[GNSS] Warning: Fix not found.");
+#if DEBUG_GNSS
           DEBUG_PRINT(" Fail");  // Debugging only
+#endif
         }
       }
     }

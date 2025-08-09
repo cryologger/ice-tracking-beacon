@@ -76,6 +76,7 @@ void setRtcAlarm() {
   int month = rtc.getMonth();
   int year = rtc.getYear();  // Offset from 2000 (e.g., 25 = 2025)
 
+/*
   // Align to next hour on first run
   if (firstTimeFlag) {
     DEBUG_PRINTLN("[RTC] Info: First run – aligning to next hour rollover.");
@@ -84,7 +85,7 @@ void setRtcAlarm() {
     alarmFlag = false;
     return;
   }
-
+*/
   // Add user-defined intervals
   minute += alarmIntervalMinute;
   hour += alarmIntervalHour;
@@ -146,7 +147,7 @@ void setRtcAlarm() {
   rtc.enableAlarm(match);
   alarmFlag = false;
 
-  DEBUG_PRINT("[RTC] Info: Alarm set for");
+  DEBUG_PRINT("[RTC] Info: Alarm set for ");
   printAlarm();
 }
 

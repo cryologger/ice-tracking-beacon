@@ -61,7 +61,6 @@ void printSettings() {
   DEBUG_PRINTLN("System Configuration");
   printLine();
 
-
   DEBUG_PRINT("Alarm Mode: ");
   printTab(2);
   DEBUG_PRINTLN(ALARM_MODE);
@@ -186,6 +185,10 @@ void printTimers() {
   printTab(1);
   DEBUG_PRINTLN(timer.iridium);
 
+  DEBUG_PRINT("Free Ram: ");
+  printTab(1);
+  DEBUG_PRINTLN(freeRam());
+  
   printLine();
 }
 
