@@ -70,7 +70,7 @@ void readGnss() {
           // Wait until enough consecutive fixes have been collected
           if (fixCounter >= 10) {
             fixFound = true;
-            DEBUG_PRINT("[GNSS] Info: Fix found. = ");
+            DEBUG_PRINT("[GNSS] Info: Fix found.");
             // Convert GNSS date/time to epoch
             tm.Hour = gnss.time.hour();
             tm.Minute = gnss.time.minute();
@@ -117,7 +117,7 @@ void readGnss() {
             blinkLed(5, 100);
           }
         } else {
-          DEBUG_PRINT("[GNSS] Warning: Fix not found.");
+          //DEBUG_PRINT("[GNSS] Warning: Fix not found.");
 #if DEBUG_GNSS
           DEBUG_PRINT(" Fail");  // Debugging only
 #endif

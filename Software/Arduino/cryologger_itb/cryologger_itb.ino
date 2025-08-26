@@ -1,8 +1,8 @@
 /*
   Title:    Cryologger Ice Tracking Beacon (ITB)
-  Date:     June 22, 2025
+  Date:     August 26, 2025
   Author:   Adam Garbo
-  Version:  3.4
+  Version:  4.0.0
   License:  GPLv3. See license file for more information.
 
   Components:
@@ -28,23 +28,26 @@
 // USER CONFIGURATION
 // ----------------------------------------------------------------------------
 
-// Device identifier.
-#define UID "ITB_25_01"  // Unique identifier (UID)
+// Device identifier
+#define UID "ITB_25_01"  // Serial
 
-// Alarm parameters.
+// Alarm parameters
 #define ALARM_MODE HOURLY        // Alarm mode (MINUTE, HOURLY, DAILY)
 #define ALARM_INTERVAL_DAY 0     // Alarm day interval (days)
-#define ALARM_INTERVAL_HOUR 1    // Alarm hour interval (hours)
-#define ALARM_INTERVAL_MINUTE 0  // Alarm minute interval (minutes)
+#define ALARM_INTERVAL_HOUR 0    // Alarm hour interval (hours) — ensure validation allows 0
+#define ALARM_INTERVAL_MINUTE 2  // Alarm minute interval (minutes)
 
-// Transmission parameters.
-#define TRANSMIT_INTERVAL 1     // Number of messages to include in each Iridium transmission (340-byte limit). Default: 1
-#define TRANSMIT_REATTEMPTS 9;  // Number of attempts to retransmit failed Iridium messages (340-byte limit). Default: 3
+// Transmission parameters
+#define TRANSMIT_INTERVAL 3    // Messages included per Iridium TX (MO buffer limit: 340 bytes)
+#define TRANSMIT_REATTEMPTS 3  // Number of reattempt cycles after a failed TX
 
-// GNSS and Iridium parameters. Do not change unless debugging.
-#define GNSS_TIMEOUT 180;     // Timeout for GNSS signal acquisition (seconds). Default: 180
-#define IRIDIUM_TIMEOUT 180;  // Timeout for Iridium send/receive commands (seconds). Default: 180
-#define IRIDIUM_STARTUP 120;  // Timeout for Iridium modem startup (seconds). Default: 120
+// GNSS and Iridium parameters. Do not change unless debugging
+#define GNSS_TIMEOUT 180   // GNSS acquisition timeout (s) - default: 180
+#define IRIDIUM_TIMEOUT 5  // Iridium send/receive timeout (s) - default: 180
+#define IRIDIUM_STARTUP 5  // Iridium modem startup timeout (s) - default: 120
+
+// Iridium SBD sizing
+#define SBD_MSG_SIZE 34  // Size of one MO-SBD message (bytes)
 
 // ----------------------------------------------------------------------------
 //  END OF USER CONFIGURATION
@@ -59,7 +62,7 @@
 #include <Adafruit_Sensor.h>    // 1.1.15
 #include <Arduino.h>            // Must precede <wiring_private.h>
 #include <ArduinoLowPower.h>    // 1.2.2
-#include <IridiumSBD.h>         // 3.0.6
+#include <IridiumSBD.h>         // 3.0.8
 #include <RTCZero.h>            // 1.6.0
 #include <TimeLib.h>            // 1.6.1
 #include <TinyGPS++.h>          // 1.0.3
@@ -69,16 +72,16 @@
 // ----------------------------------------------------------------------------
 // Software & Hardware Versions
 // ----------------------------------------------------------------------------
-#define SOFTWARE_VERSION "3.4.0"
+#define SOFTWARE_VERSION "4.0.0"
 #define HARDWARE_VERSION "3.2"
 #define ROCKBLOCK_VERSION_3F true
 
 // ----------------------------------------------------------------------------
 // Debugging Macros
 // ----------------------------------------------------------------------------
-#define DEBUG true          // Output debug messages to Serial Monitor
-#define DEBUG_GNSS true     // Output GNSS debug information
-#define DEBUG_IRIDIUM true  // Output Iridium debug messages to Serial Monitor
+#define DEBUG true           // Output debug messages to Serial Monitor
+#define DEBUG_GNSS false     // Output GNSS debug information
+#define DEBUG_IRIDIUM false  // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
 #define DEBUG_PRINT(x) SERIAL_PORT.print(x)
@@ -119,7 +122,7 @@
 #define DAILY 2
 
 // ----------------------------------------------------------------------------
-// Seria/UART Configuration
+// Serial/UART Configuration
 // ----------------------------------------------------------------------------
 // Create a new UART instance on pins 10 (RX) and 11 (TX).
 // More info: https://www.arduino.cc/en/Tutorial/SamdSercom
@@ -134,6 +137,12 @@ Uart Serial2(&sercom1, PIN_IRIDIUM_RX, PIN_IRIDIUM_TX,
 void SERCOM1_Handler() {
   Serial2.IrqHandler();
 }
+
+// ----------------------------------------------------------------------------
+// SYSTEM LIMITS / DERIVED CONSTANTS (do not edit)
+// ----------------------------------------------------------------------------
+#define SBD_BUF_BYTES 340  // Iridium MO buffer limit
+#define SBD_MAX_MSGS (SBD_BUF_BYTES / SBD_MSG_SIZE)
 
 // ----------------------------------------------------------------------------
 // Object Instantiations
@@ -174,7 +183,7 @@ typedef union {
     uint8_t transmitStatus;     // Iridium return code            (1 byte)
     uint16_t iterationCounter;  // Message counter                (2 bytes)
   } __attribute__((packed));    // Total: 34 bytes
-  uint8_t bytes[34];
+  uint8_t bytes[SBD_MSG_SIZE];
 } SBD_MO_MESSAGE;
 
 SBD_MO_MESSAGE moSbdMessage;
@@ -386,20 +395,24 @@ void loop() {
     printDateTime();
 
     // Perform measurements
-    readBattery();         // Read the battery voltage
-    readGnss();            // Read the GNSS
-    enableSensorPower();   // Enable power to sensor(s)
-    enableImuPower();      // Enable power to IMU
-    readLsm6dsox();        // Read the IMU
-    readBme280();          // Read sensor(s)
+    readBattery();  // Read the battery voltage
+    DEBUG_PRINT("Free RAM: ");
+    printTab(1);
+    DEBUG_PRINTLN(freeRam());
+
+    readGnss();  // Read the GNSS
+    enableSensorPower();  // Enable power to sensor(s)
+    enableImuPower();     // Enable power to IMU
+    readLsm6dsox();  // Read the IMU
+    readBme280();  // Read sensor(s)
     disableSensorPower();  // Disable 3.3V power to sensor(s)
     disableImuPower();     // Disable 3.3V power to IMU
     printSensors();        // Display recorded measurements
-    writeBuffer();         // Write data to transmit buffer
+    writeBuffer();  // Write data to transmit buffer
 
     // Check if data transmission interval has been reached
-    if ((transmitCounter == transmitInterval) || firstTimeFlag) {
-      transmitData();
+    if ((transmitCounter >= transmitInterval) || firstTimeFlag) {
+        transmitData();
     }
 
     // Print function execution timers
