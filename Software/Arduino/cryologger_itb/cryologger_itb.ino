@@ -1,6 +1,6 @@
 /*
   Title:    Cryologger Ice Tracking Beacon (ITB)
-  Date:     August 26, 2025
+  Date:     August 30, 2025
   Author:   Adam Garbo
   Version:  4.0.0
   License:  GPLv3. See license file for more information.
@@ -29,7 +29,7 @@
 // ----------------------------------------------------------------------------
 
 // Device identifier
-#define UID "ITB_25_038"  // Serial
+#define UID "ITB_25_041"  // Unique identifier
 
 // Alarm parameters
 #define ALARM_MODE HOURLY        // Alarm mode (MINUTE, HOURLY, DAILY)
@@ -42,7 +42,7 @@
 #define TRANSMIT_REATTEMPTS 3  // Number of reattempt cycles after a failed TX
 
 // GNSS and Iridium parameters. Do not change unless debugging
-#define GNSS_TIMEOUT 180   // GNSS acquisition timeout (s) - default: 180
+#define GNSS_TIMEOUT 180     // GNSS acquisition timeout (s) - default: 180
 #define IRIDIUM_TIMEOUT 180  // Iridium send/receive timeout (s) - default: 180
 #define IRIDIUM_STARTUP 120  // Iridium modem startup timeout (s) - default: 120
 
@@ -64,11 +64,11 @@
 #include <ArduinoLowPower.h>    // 1.2.2
 #include <IridiumSBD.h>         // 3.0.8
 #include <RTCZero.h>            // 1.6.0
-#include "structs.h"
-#include <TimeLib.h>         // 1.6.1
-#include <TinyGPS++.h>       // 1.0.3
-#include <Wire.h>            //
-#include <wiring_private.h>  // Required for creating new Serial instance
+#include "structs.h"            //
+#include <TimeLib.h>            // 1.6.1
+#include <TinyGPS++.h>          // 1.0.3
+#include <Wire.h>               //
+#include <wiring_private.h>     // Required for creating new Serial instance
 
 // ----------------------------------------------------------------------------
 // Software & Hardware Versions
@@ -81,8 +81,8 @@
 // Debugging Macros
 // ----------------------------------------------------------------------------
 #define DEBUG true           // Output debug messages to Serial Monitor
-#define DEBUG_GNSS false     // Output GNSS debug information
-#define DEBUG_IRIDIUM false  // Output Iridium debug messages to Serial Monitor
+#define DEBUG_GNSS true     // Output GNSS debug information
+#define DEBUG_IRIDIUM true  // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
 #define DEBUG_PRINT(x) SERIAL_PORT.print(x)

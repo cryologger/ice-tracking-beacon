@@ -188,7 +188,7 @@ void printTimers() {
   DEBUG_PRINT("Free Ram: ");
   printTab(1);
   DEBUG_PRINTLN(freeRam());
-  
+
   printLine();
 }
 

@@ -213,7 +213,7 @@ void readLsm6dsox() {
     // Compute pitch and roll from accel
     pitch = atan2f(-Axyz[0], sqrtf(Axyz[1] * Axyz[1] + Axyz[2] * Axyz[2])) * 180.0 / M_PI;
     roll = atan2f(Axyz[1], Axyz[2]) * 180.0 / M_PI;
-    
+
     // Tilt-compensated heading (relative; no declination)
     heading = getHeading(Axyz, Mxyz, p);
 

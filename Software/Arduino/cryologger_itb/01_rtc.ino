@@ -76,7 +76,7 @@ void setRtcAlarm() {
   int month = rtc.getMonth();
   int year = rtc.getYear();  // Offset from 2000 (e.g., 25 = 2025)
 
-/*
+  /*
   // Align to next hour on first run
   if (firstTimeFlag) {
     DEBUG_PRINTLN("[RTC] Info: First run – aligning to next hour rollover.");
