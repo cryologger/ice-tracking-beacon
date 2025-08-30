@@ -3,6 +3,7 @@ from scipy import linalg
 from matplotlib import pyplot as plt
 import argparse
 import sys
+import os
 
 # ---------------------------------------------------------------------------
 # Magnetometer calibration via ellipsoid fit
@@ -12,8 +13,10 @@ import sys
 class Magnetometer(object):
     MField = 1000  # Arbitrary normalization factor (unit sphere target)
 
-    def __init__(self, filename, F=MField):
+    def __init__(self, filename, outfile=None, F=MField):
         self.filename = filename
+        # Default output name: input file name with .txt extension
+        self.outfile = outfile if outfile else os.path.splitext(filename)[0] + ".txt"
         self.F = F
         self.b = np.zeros([3, 1])
         self.A_1 = np.eye(3)
@@ -63,15 +66,16 @@ class Magnetometer(object):
 
         print("First 5 rows calibrated:\n", result[:5])
 
-        # Save corrected data to out.txt
-        np.savetxt("out.txt", result, fmt="%f", delimiter=" ,")
+        # Save corrected data to specified output file
+        np.savetxt(self.outfile, result, fmt="%f", delimiter=" ,")
+        print(f"Saved calibrated data to '{self.outfile}'")
 
         # Print paste-ready code for firmware
+        b0, b1, b2 = self.b.ravel().tolist()
         print("\n*************************")
         print("Code to paste into IMU module:")
         print("*************************")
-        print("static const float M_B[3] = { %.6f, %.6f, %.6f };" %
-              (self.b[0], self.b[1], self.b[2]))
+        print("static const float M_B[3] = { %.6f, %.6f, %.6f };" % (b0, b1, b2))
         print("\nstatic const float M_Ainv[3][3] = {")
         print("  { %.6f, %.6f, %.6f }," % (self.A_1[0, 0], self.A_1[0, 1], self.A_1[0, 2]))
         print("  { %.6f, %.6f, %.6f }," % (self.A_1[1, 0], self.A_1[1, 1], self.A_1[1, 2]))  # FIXED
@@ -126,6 +130,10 @@ if __name__ == "__main__":
         default="mag3_raw.csv",
         help="Path to CSV file (default: mag3_raw.csv)"
     )
+    parser.add_argument(
+        "-o", "--output",
+        help="Output file. Defaults to <input_basename>.txt"
+    )
     args = parser.parse_args()
 
-    Magnetometer(args.filename).run()
+    Magnetometer(args.filename, outfile=args.output).run()
