@@ -16,7 +16,7 @@ class Magnetometer(object):
     def __init__(self, filename, outfile=None, F=MField):
         self.filename = filename
         # Default output name: input file name with .txt extension
-        self.outfile = outfile if outfile else os.path.splitext(filename)[0] + ".txt"
+        self.outfile = outfile if outfile else os.path.splitext(filename)[0] + "_out.txt"
         self.F = F
         self.b = np.zeros([3, 1])
         self.A_1 = np.eye(3)
