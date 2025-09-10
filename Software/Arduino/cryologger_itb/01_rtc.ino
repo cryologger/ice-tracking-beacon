@@ -52,16 +52,16 @@ void configureRtc() {
 // Reads the current epoch time from the RTC.
 // ----------------------------------------------------------------------------
 void readRtc() {
-  // Start execution timer.
+  // Start execution timer
   uint32_t loopStartTime = millis();
 
-  // Get Unix epoch time.
+  // Get Unix epoch time
   unixtime = rtc.getEpoch();
 
-  // Write data to the MO-SBD message structure.
+  // Write data to the MO-SBD message structure
   moSbdMessage.unixtime = unixtime;
 
-  // Record elapsed execution time.
+  // Record elapsed execution time
   timer.readRtc = millis() - loopStartTime;
 }
 
@@ -69,15 +69,7 @@ void readRtc() {
 // Sets the RTC alarm.
 // ----------------------------------------------------------------------------
 void setRtcAlarm() {
-  // Get current RTC time
-  int minute = rtc.getMinutes();
-  int hour = rtc.getHours();
-  int day = rtc.getDay();
-  int month = rtc.getMonth();
-  int year = rtc.getYear();  // Offset from 2000 (e.g., 25 = 2025)
-
-  /*
-  // Align to next hour on first run
+  // On first boot, align to next hour boundary using MATCH_MMSS
   if (firstTimeFlag) {
     DEBUG_PRINTLN("[RTC] Info: First run – aligning to next hour rollover.");
     rtc.setAlarmTime(0, 0, 0);
@@ -85,62 +77,52 @@ void setRtcAlarm() {
     alarmFlag = false;
     return;
   }
-*/
-  // Add user-defined intervals
-  minute += alarmIntervalMinute;
-  hour += alarmIntervalHour;
-  day += alarmIntervalDay;
 
-  // Overflow minutes/hours
-  if (minute >= 60) {
-    hour += minute / 60;
-    minute %= 60;
+  // Read current time from RTC
+  uint32_t current_epoch = rtc.getEpoch();
+
+  // Compute total interval in seconds
+  uint32_t interval_sec =
+    alarmIntervalMinute * 60UL
+    + alarmIntervalHour * 3600UL
+    + alarmIntervalDay * 86400UL;
+
+  // Safety check — ensure we always have a valid interval
+  if (interval_sec == 0) {
+    DEBUG_PRINTLN("[RTC] Warning: Alarm interval is 0! Falling back to default 1 hour.");
+    interval_sec = 3600UL;  // Default to 1 hour
   }
 
-  // Overflow hours/days
-  if (hour >= 24) {
-    day += hour / 24;
-    hour %= 24;
-  }
+  // Align to the next clean interval boundary
+  uint32_t next_epoch = ((current_epoch + interval_sec) / interval_sec) * interval_sec;
 
-  // Handle day/month/year overflow
-  const byte daysInMonth[12] = {
-    31, 28, 31, 30, 31, 30,
-    31, 31, 30, 31, 30, 31
-  };
+  // Convert to date/time
+  tmElements_t tm;
+  breakTime(next_epoch, tm);  // Handles all calendar overflow and leap year logic
 
-  while (true) {
-    byte maxDay = daysInMonth[month - 1];
-    if (month == 2 && isLeapYear(year)) {
-      maxDay = 29;
-    }
+  int second = tm.Second;
+  int minute = tm.Minute;
+  int hour = tm.Hour;
+  int day = tm.Day;
+  int month = tm.Month;
+  int year = (tm.Year + 1970) - 2000;  // RTC year offset from 2000 (tm.Year is years since 1970)
 
-    if (day <= maxDay) break;
-
-    day -= maxDay;
-    month++;
-    if (month > 12) {
-      month = 1;
-      year++;
-    }
-  }
-
-  // Set alarm
-  rtc.setAlarmTime(hour, minute, 0);
+  // Set alarm time and date
+  rtc.setAlarmTime(hour, minute, second);
   rtc.setAlarmDate(day, month, year);
 
-  // Determine RTC alarm match mode
+  // Determine match mode based on user config
   RTCZero::Alarm_Match match;
   switch (alarmMode) {
     case MINUTE:
-      match = RTCZero::MATCH_MMSS;
+      match = RTCZero::MATCH_HHMMSS;  // Matches every HH:MM:SS for sub-hour intervals
       break;
     case HOURLY:
-      match = RTCZero::MATCH_HHMMSS;
+      match = RTCZero::MATCH_HHMMSS;  // Matches every HH:MM:SS
       break;
     case DAILY:
     default:
-      match = RTCZero::MATCH_DHHMMSS;
+      match = RTCZero::MATCH_DHHMMSS;  // Matches every DD:HH:MM:SS
       break;
   }
 
@@ -149,18 +131,6 @@ void setRtcAlarm() {
 
   DEBUG_PRINT("[RTC] Info: Alarm set for ");
   printAlarm();
-}
-
-// ----------------------------------------------------------------------------
-// Determines if the given RTC year offset from 2000 is a leap year.
-// Example: If rtc.year == 24, then it's 2024, which is a leap year.
-// ----------------------------------------------------------------------------
-bool isLeapYear(int rtcYear) {
-  int fullYear = 2000 + rtcYear;
-  if ((fullYear % 400) == 0) return true;
-  if ((fullYear % 100) == 0) return false;
-  if ((fullYear % 4) == 0) return true;
-  return false;
 }
 
 // ----------------------------------------------------------------------------
