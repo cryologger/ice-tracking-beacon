@@ -1,10 +1,8 @@
 # Cryologger - Iceberg Tracking Beacon (ITB)
-<p align="left">
-<img alt="GitHub" src="https://img.shields.io/github/license/adamgarbo/Cryologger_Iceberg_Tracking_Beacon">
-<img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/adamgarbo/Cryologger_Iceberg_Tracking_Beacon">
-<img alt="GitHub issues" src="https://img.shields.io/github/issues/adamgarbo/Cryologger_Iceberg_Tracking_Beacon">
-<img alt="DOI" src="https://zenodo.org/badge/163880339.svg">
-</p>
+![License](https://img.shields.io/github/license/adamgarbo/Cryologger_Iceberg_Tracking_Beacon)
+![Release](https://img.shields.io/github/v/release/adamgarbo/Cryologger_Iceberg_Tracking_Beacon)
+![Issues](https://img.shields.io/github/issues/adamgarbo/Cryologger_Iceberg_Tracking_Beacon)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17100582.svg)](https://doi.org/10.5281/zenodo.17100582)
 
 ### Note: This project is under active development. 
 
