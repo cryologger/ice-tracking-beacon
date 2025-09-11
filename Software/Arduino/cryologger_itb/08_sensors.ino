@@ -18,7 +18,7 @@
 // ----------------------------------------------------------------------------
 void readBme280() {
   // Start execution timer
-  unsigned long startTime = millis();
+  uint32_t startTime = millis();
 
   DEBUG_PRINT("[Sensors] Info: Initializing BME280...");
 

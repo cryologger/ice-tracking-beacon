@@ -318,7 +318,7 @@ void printMoRecordSummary(uint16_t logicalIndex, const uint8_t* raw) {
   DEBUG_PRINT("°");
   DEBUG_PRINT(" | head: ");
   DEBUG_PRINT(headDeg);
-  DEBUG_PRINT(" °");
+  DEBUG_PRINT("°");
 
   DEBUG_PRINT(" | txDur: ");
   DEBUG_PRINT(txDur);
@@ -560,7 +560,7 @@ void transmitData() {
   // printMoWindowHex(moSbdBuffer, SBD_BUF_BYTES);
 
   // Power up modem and open port
-  unsigned long startTime = millis();
+  uint32_t startTime = millis();
   enable5V();
   IRIDIUM_PORT.begin(19200);
   pinPeripheral(PIN_IRIDIUM_TX, PIO_SERCOM);
@@ -665,7 +665,7 @@ void transmitData() {
 // Callbacks and error helpers
 // ----------------------------------------------------------------------------
 bool ISBDCallback() {
-  unsigned long currentMillis = millis();
+  uint32_t currentMillis = millis();
   if (currentMillis - previousMillis > 1000) {
     previousMillis = currentMillis;
     resetWdt();

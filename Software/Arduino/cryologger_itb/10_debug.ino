@@ -144,7 +144,7 @@ void printSensors() {
 
   DEBUG_PRINT("HDOP: ");
   printTab(2);
-  DEBUG_PRINTLN(hdop);
+  DEBUG_PRINTLN(hdop/100);
 
   DEBUG_PRINT("Battery: ");
   printTab(1);

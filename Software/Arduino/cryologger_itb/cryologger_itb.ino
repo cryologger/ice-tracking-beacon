@@ -1,6 +1,6 @@
 /*
   Title:    Cryologger Ice Tracking Beacon (ITB)
-  Date:     August 30, 2025
+  Date:     September 9, 2025
   Author:   Adam Garbo
   Version:  4.0.0
   License:  GPLv3. See license file for more information.
@@ -34,8 +34,8 @@
 // Alarm parameters
 #define ALARM_MODE HOURLY        // Alarm mode (MINUTE, HOURLY, DAILY)
 #define ALARM_INTERVAL_DAY 0     // Alarm day interval (days)
-#define ALARM_INTERVAL_HOUR 0    // Alarm hour interval (hours) — ensure validation allows 0
-#define ALARM_INTERVAL_MINUTE 2  // Alarm minute interval (minutes)
+#define ALARM_INTERVAL_HOUR 1    // Alarm hour interval (hours) — ensure validation allows 0
+#define ALARM_INTERVAL_MINUTE 0  // Alarm minute interval (minutes)
 
 // Transmission parameters
 #define TRANSMIT_INTERVAL 3    // Messages included per Iridium TX (MO buffer limit: 340 bytes)
@@ -80,7 +80,7 @@
 // ----------------------------------------------------------------------------
 // Debugging Macros
 // ----------------------------------------------------------------------------
-#define DEBUG true           // Output debug messages to Serial Monitor
+#define DEBUG true          // Output debug messages to Serial Monitor
 #define DEBUG_GNSS true     // Output GNSS debug information
 #define DEBUG_IRIDIUM true  // Output Iridium debug messages to Serial Monitor
 
@@ -186,12 +186,12 @@ struct OnlineStatus {
 
 // Function execution timers
 struct Timer {
-  unsigned long readRtc;
-  unsigned long readBattery;
-  unsigned long readBme280;
-  unsigned long readLsm6dsox;
-  unsigned long readGnss;
-  unsigned long iridium;
+  uint32_t readRtc;
+  uint32_t readBattery;
+  uint32_t readBme280;
+  uint32_t readLsm6dsox;
+  uint32_t readGnss;
+  uint32_t iridium;
 } timer;
 
 // ------------------------------------------------------------------------------------------------
@@ -204,9 +204,9 @@ uint8_t alarmIntervalHour = ALARM_INTERVAL_HOUR;      // Alarm hour interval
 uint8_t alarmIntervalMinute = ALARM_INTERVAL_MINUTE;  // Alarm minute interval
 uint8_t transmitInterval = TRANSMIT_INTERVAL;         // Messages to transmit in each Iridium transmission (340-byte limit)
 uint8_t transmitReattempts = TRANSMIT_REATTEMPTS;     // Failed message transmission reattempts
-unsigned int gnssTimeout = GNSS_TIMEOUT;              // Timeout for GNSS signal acquisition (seconds)
-unsigned int iridiumTimeout = IRIDIUM_TIMEOUT;        // Timeout for Iridium transmission (seconds)
-unsigned int IridiumStartup = IRIDIUM_STARTUP;        // Timeout for Iridium startup (seconds)
+uint16_t gnssTimeout = GNSS_TIMEOUT;              // Timeout for GNSS signal acquisition (seconds)
+uint16_t iridiumTimeout = IRIDIUM_TIMEOUT;        // Timeout for Iridium transmission (seconds)
+uint16_t IridiumStartup = IRIDIUM_STARTUP;        // Timeout for Iridium startup (seconds)
 
 // ----------------------------------------------------------------------------
 // Global Variables
@@ -219,7 +219,7 @@ bool resetFlag = 0;               // Flag to force system reset using Watchdog T
 
 // Counters
 volatile int wdtCounter = 0;        // Watchdog Timer interrupt counter
-unsigned int iterationCounter = 0;  // Counter to track total number of program iterations (zero indicates a reset)
+uint16_t iterationCounter = 0;  // Counter to track total number of program iterations (zero indicates a reset)
 
 // Iridium SBD buffers and counters
 uint8_t moSbdBuffer[340];           // Buffer for Mobile Originated SBD (MO-SBD) message (340 bytes max)
@@ -228,16 +228,16 @@ size_t moSbdBufferSize;             // Size of MO-SBD message buffer
 size_t mtSbdBufferSize;             // size of MT-SBD message buffer
 byte transmitCounter = 0;           // Counter to track Iridium SBD transmission intervals
 byte transmitReattemptCounter = 0;  // Retry attempts for failed Iridium SBD transmissions
-unsigned int failureCounter = 0;    // Counter to track consecutive failed Iridium SBD transmission attempts
+uint16_t failureCounter = 0;    // Counter to track consecutive failed Iridium SBD transmission attempts
 
 // RTC and timers
-unsigned long unixtime = 0;        // Global epoch time variable
-unsigned long alarmTime = 0;       // Global epoch alarm time variable
-unsigned long gnssEpoch = 0;       // Seconds GNSS epoch time
-unsigned long rtcEpoch = 0;        // Global RTC epoch time
-long rtcDrift = 0;                 // Global RTC drift
+uint32_t unixtime = 0;        // Global epoch time variable
+uint32_t alarmTime = 0;       // Global epoch alarm time variable
+uint32_t gnssEpoch = 0;       // Seconds GNSS epoch time
+uint32_t rtcEpoch = 0;        // Global RTC epoch time
+int32_t rtcDrift = 0;                 // Global RTC drift
 tmElements_t tm;                   // Variable for converting time elements to time_t
-unsigned long previousMillis = 0;  // Global millis() timer
+uint32_t previousMillis = 0;  // Global millis() timer
 
 // Measurement varaibles
 float temperatureInt = 0.0;  // Internal temperature (°C)

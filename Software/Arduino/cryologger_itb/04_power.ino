@@ -13,7 +13,7 @@
 // ----------------------------------------------------------------------------
 float readBattery() {
   // Start execution timer
-  unsigned long startTime = millis();
+  uint32_t startTime = millis();
 
   // Measure external battery voltage across 10/1 MΩ resistor divider (1/10)
   (void)analogRead(PIN_VBAT);  // Dummy read
@@ -146,10 +146,10 @@ void wakeUp() {
 // Non-blocking LED blink routine.
 // Flashes the built-in LED a specified number of times with the given delay.
 // ----------------------------------------------------------------------------
-void blinkLed(byte ledFlashes, unsigned int ledDelay) {
+void blinkLed(byte ledFlashes, uint16_t ledDelay) {
   byte i = 0;
   while (i < ledFlashes * 2) {
-    unsigned long currentMillis = millis();
+    uint32_t currentMillis = millis();
     if (currentMillis - previousMillis >= ledDelay) {
       digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
       previousMillis = currentMillis;
@@ -164,8 +164,8 @@ void blinkLed(byte ledFlashes, unsigned int ledDelay) {
 // This function delays for a specified duration (in milliseconds) while
 // calling petDog() to prevent unintended WDT resets.
 // ----------------------------------------------------------------------------
-void myDelay(unsigned long ms) {
-  unsigned long start = millis();
+void myDelay(uint32_t ms) {
+  uint32_t start = millis();
   while (millis() - start < ms) {
     resetWdt();  // Reset the WDT during the delay
   }

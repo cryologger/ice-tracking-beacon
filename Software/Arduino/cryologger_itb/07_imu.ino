@@ -151,7 +151,7 @@ void configureLsm6dsox() {
 // ----------------------------------------------------------------------------
 void readLsm6dsox() {
   // Start execution timer
-  unsigned long startTime = millis();
+  uint32_t startTime = millis();
 
   // Reconfigure after each wake
   configureLsm6dsox();
