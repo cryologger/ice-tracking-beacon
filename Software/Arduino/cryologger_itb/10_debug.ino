@@ -1,138 +1,352 @@
-void printLine()
-{
-  for (byte i = 0; i < 80; i++)
-  {
+/*
+  Debug Module
+
+  This module provides debugging utilities to print user-defined system
+  settings, function execution timers, Iridium SBD message data, and available
+  memory.
+*/
+
+// ----------------------------------------------------------------------------
+// Prints a horizontal separator line (80 dashes).
+// ----------------------------------------------------------------------------
+void printLine() {
+  for (byte i = 0; i < 80; i++) {
     DEBUG_PRINT("-");
   }
   DEBUG_PRINTLN();
 }
 
-void printTab(byte _times)
-{
-  for (byte i = 0; i < _times; i++)
-  {
+// ----------------------------------------------------------------------------
+// Prints tab spacing. Each tab is displayed `_times` times.
+// ----------------------------------------------------------------------------
+void printTab(byte _times) {
+  for (byte i = 0; i < _times; i++) {
     DEBUG_PRINT("\t");
   }
 }
 
-// Print user-defined beacon settings
-void printSettings()
-{
+// ----------------------------------------------------------------------------
+// Prints system information.
+// ----------------------------------------------------------------------------
+void printSystemInfo() {
   printLine();
-  DEBUG_PRINTLN("Current Settings");
+  DEBUG_PRINTLN("System Information");
   printLine();
-  DEBUG_PRINT("sampleInterval: ");    printTab(1);  DEBUG_PRINTLN(sampleInterval);
-  DEBUG_PRINT("transmitInterval: ");  printTab(1);  DEBUG_PRINTLN(transmitInterval);
-  DEBUG_PRINT("retransmitCounter: "); printTab(1);  DEBUG_PRINTLN(retransmitCounter);
-  DEBUG_PRINT("retransmitLimit: ");   printTab(1);  DEBUG_PRINTLN(retransmitLimit);
-  DEBUG_PRINT("resetFlag: ");         printTab(2);  DEBUG_PRINTLN(resetFlag);
-  DEBUG_PRINT("voltage: ");           printTab(2);  DEBUG_PRINTLN(voltage);
+  DEBUG_PRINT("Serial:");
+  printTab(3);
+  DEBUG_PRINTLN(uid);
+  DEBUG_PRINT("Software Version:");
+  printTab(1);
+  DEBUG_PRINTLN(SOFTWARE_VERSION);
+  DEBUG_PRINT("Hardware Version:");
+  printTab(1);
+  DEBUG_PRINTLN(HARDWARE_VERSION);
+  DEBUG_PRINT("Datetime:");
+  printTab(2);
+  printDateTime();
+  DEBUG_PRINT("Battery:");
+  printTab(2);
+  DEBUG_PRINTLN(readBattery());
+  DEBUG_PRINT("Free Ram: ");
+  printTab(2);
+  DEBUG_PRINTLN(freeRam());
+  //printLine();
+}
+
+// ----------------------------------------------------------------------------
+// Prints user-defined beacon configuration settings.
+// ----------------------------------------------------------------------------
+void printSettings() {
+  printLine();
+  DEBUG_PRINTLN("System Configuration");
+  printLine();
+
+  DEBUG_PRINT("Alarm Mode: ");
+  printTab(2);
+  DEBUG_PRINTLN(ALARM_MODE);
+
+  DEBUG_PRINT("Alarm Interval: ");
+  printTab(1);
+  if (ALARM_MODE == DAILY) {
+    DEBUG_PRINTLN(ALARM_INTERVAL_DAY);
+  } else if (ALARM_MODE == HOURLY) {
+    DEBUG_PRINTLN(ALARM_INTERVAL_HOUR);
+  } else if (ALARM_MODE == MINUTE) {
+    DEBUG_PRINTLN(ALARM_INTERVAL_MINUTE);
+  }
+
+  DEBUG_PRINT("Transmit Interval: ");
+  printTab(1);
+  DEBUG_PRINTLN(transmitInterval);
+
+  DEBUG_PRINT("Retransmit Counter: ");
+  printTab(1);
+  DEBUG_PRINTLN(transmitReattemptCounter);
+
+  DEBUG_PRINT("Transmit Reattempts: ");
+  printTab(1);
+  DEBUG_PRINTLN(transmitReattempts);
+
+  DEBUG_PRINT("Reset Flag: ");
+  printTab(2);
+  DEBUG_PRINTLN(resetFlag);
+
   printLine();
 }
 
-void printTimers()
-{
+// ----------------------------------------------------------------------------
+// Prints sensor measurements.
+// ----------------------------------------------------------------------------
+void printSensors() {
+  printLine();
+  DEBUG_PRINTLN("Sensor Measurements");
+  printLine();
+
+  DEBUG_PRINT("Datetime: ");
+  printTab(1);
+  printUnixtime(unixtime);
+
+  DEBUG_PRINT("Temperature: ");
+  printTab(1);
+  DEBUG_PRINTLN(temperatureInt);
+
+  DEBUG_PRINT("Humidity: ");
+  printTab(1);
+  DEBUG_PRINTLN(humidityInt);
+
+  DEBUG_PRINT("Pressure: ");
+  printTab(1);
+  DEBUG_PRINTLN(pressureInt);
+
+  DEBUG_PRINT("Pitch: ");
+  printTab(2);
+  DEBUG_PRINTLN(pitch);
+
+  DEBUG_PRINT("Roll: ");
+  printTab(2);
+  DEBUG_PRINTLN(roll);
+
+  DEBUG_PRINT("Heading: ");
+  printTab(1);
+  DEBUG_PRINTLN(heading);
+
+  DEBUG_PRINT("Latitude: ");
+  printTab(1);
+  DEBUG_PRINTLN_DEC(latitude, 6);
+
+  DEBUG_PRINT("Longitude: ");
+  printTab(1);
+  DEBUG_PRINTLN_DEC(longitude, 6);
+
+  DEBUG_PRINT("Satellites: ");
+  printTab(1);
+  DEBUG_PRINTLN(satellites);
+
+  DEBUG_PRINT("HDOP: ");
+  printTab(2);
+  DEBUG_PRINTLN(hdop/100);
+
+  DEBUG_PRINT("Battery: ");
+  printTab(1);
+  DEBUG_PRINTLN(voltage);
+
+  //printLine();
+}
+
+// ----------------------------------------------------------------------------
+// Prints function execution timers.
+// ----------------------------------------------------------------------------
+void printTimers() {
   //printLine();
   DEBUG_PRINTLN("Function Execution Timers");
   printLine();
-  DEBUG_PRINT("readBattery: ");     printTab(1);  DEBUG_PRINTLN(timer.readBattery);
-  DEBUG_PRINT("readRtc: ");         printTab(1);  DEBUG_PRINTLN(timer.readRtc);
-  DEBUG_PRINT("readBme280: ");      printTab(1);  DEBUG_PRINTLN(timer.readBme280);
-  DEBUG_PRINT("readLsm303: ");      printTab(1);  DEBUG_PRINTLN(timer.readLsm303);
-  DEBUG_PRINT("readGnss: ");        printTab(1);  DEBUG_PRINTLN(timer.readGnss);
-  DEBUG_PRINT("transmitData: ");    printTab(1);  DEBUG_PRINTLN(timer.iridium);
-  DEBUG_PRINT("freeRam(): ");       printTab(1);  DEBUG_PRINTLN(freeRam());
+
+  DEBUG_PRINT("readBattery: ");
+  printTab(1);
+  DEBUG_PRINTLN(timer.readBattery);
+
+  DEBUG_PRINT("readRtc: ");
+  printTab(1);
+  DEBUG_PRINTLN(timer.readRtc);
+
+  DEBUG_PRINT("readBme280: ");
+  printTab(1);
+  DEBUG_PRINTLN(timer.readBme280);
+
+  DEBUG_PRINT("readLsm6dsox: ");
+  printTab(1);
+  DEBUG_PRINTLN(timer.readLsm6dsox);
+
+  DEBUG_PRINT("readGnss: ");
+  printTab(1);
+  DEBUG_PRINTLN(timer.readGnss);
+
+  DEBUG_PRINT("transmitData: ");
+  printTab(1);
+  DEBUG_PRINTLN(timer.iridium);
+
+  DEBUG_PRINT("Free Ram: ");
+  printTab(1);
+  DEBUG_PRINTLN(freeRam());
 
   printLine();
 }
 
-// Print contents of union/structure storing Mobile Originated (MO) SBD message data
-void printMoSbd()
-{
+// ----------------------------------------------------------------------------
+// Prints Mobile Originated (MO) SBD message data stored in 'moSbdMessage'.
+// Shows each field in a human-readable format.
+// ----------------------------------------------------------------------------
+void printMoSbd() {
   printLine();
   DEBUG_PRINTLN("MO-SBD Message Data");
   printLine();
-  DEBUG_PRINT("unixtime:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.unixtime);
-  DEBUG_PRINT("temperature:");      printTab(2);  DEBUG_PRINTLN(moSbdMessage.temperatureInt);
-  DEBUG_PRINT("humidity:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.humidityInt);
-  DEBUG_PRINT("pressure:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.pressureInt);
-  DEBUG_PRINT("pitch:");            printTab(3);  DEBUG_PRINTLN(moSbdMessage.pitch);
-  DEBUG_PRINT("roll:");             printTab(3);  DEBUG_PRINTLN(moSbdMessage.roll);
-  DEBUG_PRINT("heading:");          printTab(2);  DEBUG_PRINTLN(moSbdMessage.heading);
-  DEBUG_PRINT("latitude:");         printTab(2);  DEBUG_PRINTLN(moSbdMessage.latitude);
-  DEBUG_PRINT("longitude:");        printTab(2);  DEBUG_PRINTLN(moSbdMessage.longitude);
-  DEBUG_PRINT("satellites:");       printTab(2);  DEBUG_PRINTLN(moSbdMessage.satellites);
-  DEBUG_PRINT("hdop:");             printTab(3);  DEBUG_PRINTLN(moSbdMessage.hdop);
-  DEBUG_PRINT("voltage:");          printTab(2);  DEBUG_PRINTLN(moSbdMessage.voltage);
-  DEBUG_PRINT("transmitDuration:"); printTab(1);  DEBUG_PRINTLN(moSbdMessage.transmitDuration);
-  DEBUG_PRINT("transmitStatus:");   printTab(2);  DEBUG_PRINTLN(moSbdMessage.transmitStatus);
-  DEBUG_PRINT("iterationCounter:"); printTab(1);  DEBUG_PRINTLN(moSbdMessage.iterationCounter);
+
+  DEBUG_PRINT("unixtime:");
+  printTab(2);
+  DEBUG_PRINTLN(moSbdMessage.unixtime);
+
+  DEBUG_PRINT("temperature:");
+  printTab(2);
+  DEBUG_PRINTLN(moSbdMessage.temperatureInt);
+
+  DEBUG_PRINT("humidity:");
+  printTab(2);
+  DEBUG_PRINTLN(moSbdMessage.humidityInt);
+
+  DEBUG_PRINT("pressure:");
+  printTab(2);
+  DEBUG_PRINTLN(moSbdMessage.pressureInt);
+
+  DEBUG_PRINT("pitch:");
+  printTab(3);
+  DEBUG_PRINTLN(moSbdMessage.pitch);
+
+  DEBUG_PRINT("roll:");
+  printTab(3);
+  DEBUG_PRINTLN(moSbdMessage.roll);
+
+  DEBUG_PRINT("heading:");
+  printTab(2);
+  DEBUG_PRINTLN(moSbdMessage.heading);
+
+  DEBUG_PRINT("latitude:");
+  printTab(2);
+  DEBUG_PRINTLN(moSbdMessage.latitude);
+
+  DEBUG_PRINT("longitude:");
+  printTab(2);
+  DEBUG_PRINTLN(moSbdMessage.longitude);
+
+  DEBUG_PRINT("satellites:");
+  printTab(2);
+  DEBUG_PRINTLN(moSbdMessage.satellites);
+
+  DEBUG_PRINT("hdop:");
+  printTab(3);
+  DEBUG_PRINTLN(moSbdMessage.hdop);
+
+  DEBUG_PRINT("voltage:");
+  printTab(2);
+  DEBUG_PRINTLN(moSbdMessage.voltage);
+
+  DEBUG_PRINT("transmitDuration:");
+  printTab(1);
+  DEBUG_PRINTLN(moSbdMessage.transmitDuration);
+
+  DEBUG_PRINT("transmitStatus:");
+  printTab(2);
+  DEBUG_PRINTLN(moSbdMessage.transmitStatus);
+
+  DEBUG_PRINT("iterationCounter:");
+  printTab(1);
+  DEBUG_PRINTLN(moSbdMessage.iterationCounter);
+
   printLine();
 }
 
-// Print contents of union/structure storing Mobile Originated (MT) SBD message data
-void printMtSbd()
-{
+// ----------------------------------------------------------------------------
+// Prints Mobile Terminated (MT) SBD message data stored in 'mtSbdMessage'.
+// Shows each field in a human-readable format.
+// ----------------------------------------------------------------------------
+void printMtSbd() {
   printLine();
   DEBUG_PRINTLN("MT-SBD Message Data");
   printLine();
-  DEBUG_PRINT("sampleInterval:");    printTab(2);  DEBUG_PRINTLN(mtSbdMessage.sampleInterval);
-  DEBUG_PRINT("transmitInterval:"); printTab(1);  DEBUG_PRINTLN(mtSbdMessage.transmitInterval);
-  DEBUG_PRINT("retransmitLimit:");  printTab(1);  DEBUG_PRINTLN(mtSbdMessage.retransmitLimit);
-  DEBUG_PRINT("resetFlag:");        printTab(2);  DEBUG_PRINTLN(mtSbdMessage.resetFlag);
+
+  DEBUG_PRINT("transmitInterval:");
+  printTab(1);
+  DEBUG_PRINTLN(mtSbdMessage.transmitInterval);
+
+  DEBUG_PRINT("retransmitLimit:");
+  printTab(1);
+  DEBUG_PRINTLN(mtSbdMessage.transmitReattempts);
+
+  DEBUG_PRINT("resetFlag:");
+  printTab(2);
+  DEBUG_PRINTLN(mtSbdMessage.resetFlag);
+
   printLine();
 }
 
-// Print contents of union/structure
-void printMoSbdHex()
-{
-  DEBUG_PRINTLN("MO-SBD Union/structure ");
+// ----------------------------------------------------------------------------
+// Prints the MO-SBD message in hexadecimal format, byte by byte.
+// Useful for debugging and verifying the contents of the packed data
+// before transmission via the Iridium modem.
+// ----------------------------------------------------------------------------
+void printMoSbdHex() {
+  DEBUG_PRINTLN("MO-SBD Payload (Byte View)");
   printLine();
+
   char tempData[16];
   DEBUG_PRINTLN("Byte\tHex");
-  for (int i = 0; i < sizeof(moSbdMessage); ++i)
-  {
+
+  for (size_t i = 0; i < sizeof(moSbdMessage); ++i) {
     sprintf(tempData, "%d\t0x%02X", i, moSbdMessage.bytes[i]);
     DEBUG_PRINTLN(tempData);
   }
   printLine();
 }
 
-// Print contents of transmit buffer
-void printMoSbdBuffer()
-{
+// ----------------------------------------------------------------------------
+// Prints the MO-SBD transmit buffer (moSbdBuffer) in a hex dump format.
+// ----------------------------------------------------------------------------
+void printMoSbdBuffer() {
   printLine();
   DEBUG_PRINTLN("MO-SBD Transmit buffer");
   printLine();
+
   char tempData[16];
   DEBUG_PRINTLN("Byte\tHex");
-  for (int i = 0; i < moSbdBufferSize; ++i)
-  {
+
+  for (size_t i = 0; i < moSbdBufferSize; ++i) {
     sprintf(tempData, "%d\t0x%02X", i, moSbdBuffer[i]);
     DEBUG_PRINTLN(tempData);
   }
+  printLine();
 }
 
-// Print contents of transmit buffer
-void printMtSbdBuffer()
-{
+// ----------------------------------------------------------------------------
+// Prints the MT-SBD transmit buffer (mtSbdBuffer) in a hex dump format.
+// ----------------------------------------------------------------------------
+void printMtSbdBuffer() {
   printLine();
   DEBUG_PRINTLN("MT-SBD Transmit buffer");
   printLine();
-  // Print contents of mtSbdBuffer in hexadecimal
+
   char tempData[16];
   DEBUG_PRINTLN("Byte\tHex");
-  for (int i = 0; i < mtSbdBufferSize; ++i)
-  {
+
+  for (size_t i = 0; i < mtSbdBufferSize; ++i) {
     sprintf(tempData, "%d\t0x%02X", i, mtSbdBuffer[i]);
     DEBUG_PRINTLN(tempData);
   }
+  printLine();
 }
-
-// Function to print available 32K SRAM memory
+// ----------------------------------------------------------------------------
+// Computes and returns the amount of free RAM, in bytes.
+// ----------------------------------------------------------------------------
 extern "C" char *sbrk(int i);
-int freeRam()
-{
+int freeRam() {
   char stack_dummy = 0;
   return &stack_dummy - sbrk(0);
 }

@@ -1,153 +1,180 @@
-// Configure the real-time clock (RTC)
-void configureRtc()
-{
-  // Alarm modes:
-  // 0: MATCH_OFF          Never
-  // 1: MATCH_SS           Every Minute
-  // 2: MATCH_MMSS         Every Hour
-  // 3: MATCH_HHMMSS       Every Day
-  // 4: MATCH_DHHMMSS      Every Month
-  // 5: MATCH_MMDDHHMMSS   Every Year
-  // 6: MATCH_YYMMDDHHMMSS Once, on a specific date and a specific time
+/*
+  RTC Module
 
-  // Initialize RTC
+  This module configures and manages the SAMD21 real-time clock (RTC).
+  It sets alarms, manages alarm interrupt handling, and provides
+  utility functions to read and print RTC time and alarms. 
+  
+  -----------------------------------------------------------------------------
+  Alarm Modes:
+  -----------------------------------------------------------------------------
+  MATCH_OFF            Disabled
+  MATCH_SS             Every minute
+  MATCH_MMSS           Every hour
+  MATCH_HHMMSS         Every day
+  MATCH_DHHMMSS        Every month
+  MATCH_MMDDHHMMSS     Every year
+  MATCH_YYMMDDHHMMSS   Once, on a specific date and time
+*/
+
+// ----------------------------------------------------------------------------
+// Initializes the RTC and optionally sets the date/time for debugging.
+// Attaches an interrupt handler for the RTC alarm ISR.
+// ----------------------------------------------------------------------------
+void configureRtc() {
+
+  // Initialize the RTC.
   rtc.begin();
 
-  // Set time manually
+  // Optional manual time setting:
   //rtc.setTime(23, 58, 30); // hours, minutes, seconds
-  //rtc.setDate(1, 6, 22); // day, month, year
-  //rtc.setEpoch();
+  //rtc.setDate(1, 6, 22);   // day, month, year
+  //rtc.setEpoch();          // Sets the time to specified epoch
 
-  // Set initial RTC alarm time
-  rtc.setAlarmTime(0, 0, 0); // hours, minutes, seconds
+  // Set the initial alarm time to the next hour rollover (hours, minutes, seconds).
+  rtc.setAlarmTime(0, 0, 0);
 
-  // Enable alarm for hour rollover match
+  // Enable alarm for hour rollover match.
   rtc.enableAlarm(rtc.MATCH_MMSS);
-  //rtc.enableAlarm(rtc.MATCH_SS);
+  // rtc.enableAlarm(rtc.MATCH_SS);
 
-  // Attach alarm interrupt service routine (ISR)
+  // Attach alarm interrupt service routine (ISR).
   rtc.attachInterrupt(alarmIsr);
 
-  alarmFlag = false; // Clear flag
+  // Clear the alarm flag.
+  alarmFlag = false;
 
-  DEBUG_PRINT("Info: RTC initialized "); printDateTime();
-  DEBUG_PRINT("Info: Initial alarm "); printAlarm();
-  DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_MMSS);
+  DEBUG_PRINT("[RTC] Info: RTC initialized ");
+  printDateTime();
 }
 
-// Read RTC
-void readRtc()
-{
+// ----------------------------------------------------------------------------
+// Reads the current epoch time from the RTC.
+// ----------------------------------------------------------------------------
+void readRtc() {
+  // Start execution timer
   uint32_t loopStartTime = millis();
 
-  // Get Unix Epoch time
+  // Get Unix epoch time
   unixtime = rtc.getEpoch();
 
-  // Write data to union
+  // Write data to the MO-SBD message structure
   moSbdMessage.unixtime = unixtime;
 
-  // Stop loop timer
+  // Record elapsed execution time
   timer.readRtc = millis() - loopStartTime;
 }
 
-// Set RTC alarm
-void setRtcAlarm()
-{
-  // Calculate next alarm
-  alarmTime = unixtime + (sampleInterval * 60UL);
-  DEBUG_PRINT(F("Info: unixtime ")); DEBUG_PRINTLN(unixtime);
-  DEBUG_PRINT(F("Info: alarmTime ")); DEBUG_PRINTLN(alarmTime);
-
-  // Check if program is running for first time, alarm is set in the past, or alarm is set too far in the future
-  //
-  if (firstTimeFlag || (rtc.getEpoch() >= alarmTime) || (alarmTime - unixtime > 86400))
-  {
-    DEBUG_PRINTLN(F("Warning: RTC alarm set in the past or too far in the future."));
-
-    // Set alarm for next hour rollover match
-    rtc.setAlarmTime(0, 0, 0); // hours, minutes, seconds
-
-    // Enable alarm
-    rtc.enableAlarm(rtc.MATCH_MMSS);
-
-    DEBUG_PRINT("Info: "); printDateTime();
-    DEBUG_PRINT("Info: Next alarm "); printAlarm();
-    DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_MMSS);
+// ----------------------------------------------------------------------------
+// Sets the RTC alarm.
+// ----------------------------------------------------------------------------
+void setRtcAlarm() {
+  // On first boot, align to next hour boundary using MATCH_MMSS
+  if (firstTimeFlag) {
+    DEBUG_PRINTLN("[RTC] Info: First run – aligning to next hour rollover.");
+    rtc.setAlarmTime(0, 0, 0);
+    rtc.enableAlarm(RTCZero::MATCH_MMSS);
+    alarmFlag = false;
+    return;
   }
-  // Check if too many transmission attempt failures have occurred
-  else if (failureCounter >= 12)
-  {
-    DEBUG_PRINTLN(F("Warning: Increasing RTC alarm interval due to repeated transmission failures"));
 
-    // Set alarm for next day rollover match
-    rtc.setAlarmTime(0, 0, 0); // hours, minutes, seconds
+  // Read current time from RTC
+  uint32_t current_epoch = rtc.getEpoch();
 
-    // Enable alarm for next day rollover match
-    rtc.enableAlarm(rtc.MATCH_HHMMSS);
+  // Compute total interval in seconds
+  uint32_t interval_sec =
+    alarmIntervalMinute * 60UL
+    + alarmIntervalHour * 3600UL
+    + alarmIntervalDay * 86400UL;
 
-    DEBUG_PRINT("Info: "); printDateTime();
-    DEBUG_PRINT("Info: Next alarm "); printAlarm();
-    DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_MMSS);
+  // Safety check — ensure we always have a valid interval
+  if (interval_sec == 0) {
+    DEBUG_PRINTLN("[RTC] Warning: Alarm interval is 0! Falling back to default 1 hour.");
+    interval_sec = 3600UL;  // Default to 1 hour
   }
-  else
-  {
-    DEBUG_PRINTLN(F("Info: Setting RTC alarm based on specified interval."));
 
-    // Set alarm time
-    rtc.setAlarmTime(hour(alarmTime), minute(alarmTime), 0); // hours, minutes, seconds
+  // Align to the next clean interval boundary
+  uint32_t next_epoch = ((current_epoch + interval_sec) / interval_sec) * interval_sec;
 
-    // Set alarm date
-    rtc.setAlarmDate(day(alarmTime), month(alarmTime), year(alarmTime) - 2000);
+  // Convert to date/time
+  tmElements_t tm;
+  breakTime(next_epoch, tm);  // Handles all calendar overflow and leap year logic
 
-    // Enable alarm
-    rtc.enableAlarm(rtc.MATCH_HHMMSS);
+  int second = tm.Second;
+  int minute = tm.Minute;
+  int hour = tm.Hour;
+  int day = tm.Day;
+  int month = tm.Month;
+  int year = (tm.Year + 1970) - 2000;  // RTC year offset from 2000 (tm.Year is years since 1970)
 
-    DEBUG_PRINT("Info: "); printDateTime();
-    DEBUG_PRINT("Info: Next alarm "); printAlarm();
-    DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_HHMMSS);
+  // Set alarm time and date
+  rtc.setAlarmTime(hour, minute, second);
+  rtc.setAlarmDate(day, month, year);
+
+  // Determine match mode based on user config
+  RTCZero::Alarm_Match match;
+  switch (alarmMode) {
+    case MINUTE:
+      match = RTCZero::MATCH_HHMMSS;  // Matches every HH:MM:SS for sub-hour intervals
+      break;
+    case HOURLY:
+      match = RTCZero::MATCH_HHMMSS;  // Matches every HH:MM:SS
+      break;
+    case DAILY:
+    default:
+      match = RTCZero::MATCH_DHHMMSS;  // Matches every DD:HH:MM:SS
+      break;
   }
-  // Clear flag
-  alarmFlag = false;
-}
 
-void setCutoffAlarm()
-{
-  // Set alarm for hour rollover match
-  rtc.setAlarmTime(0, 0, 0); // hours, minutes, seconds
-
-  // Enable alarm for hour rollover match
-  rtc.enableAlarm(rtc.MATCH_MMSS);
-
-  // Clear flag
+  rtc.enableAlarm(match);
   alarmFlag = false;
 
-  DEBUG_PRINT("Info: "); printDateTime();
-  DEBUG_PRINT("Info: Next alarm "); printAlarm();
-  DEBUG_PRINT("Info: Alarm match "); DEBUG_PRINTLN(rtc.MATCH_HHMMSS);
+  DEBUG_PRINT("[RTC] Info: Alarm set for ");
+  printAlarm();
 }
 
-// RTC alarm interrupt service routine (ISR)
-void alarmIsr()
-{
+// ----------------------------------------------------------------------------
+// RTC alarm interrupt service routine (ISR).
+// ----------------------------------------------------------------------------
+void alarmIsr() {
   alarmFlag = true;
 }
 
-// Print the RTC's current date and time
-void printDateTime()
-{
-  char dateTimeBuffer[25];
-  sprintf(dateTimeBuffer, "20%02d-%02d-%02d %02d:%02d:%02d",
-          rtc.getYear(), rtc.getMonth(), rtc.getDay(),
-          rtc.getHours(), rtc.getMinutes(), rtc.getSeconds());
+// ----------------------------------------------------------------------------
+// Prints the RTC's current date and time in "YYYY-MM-DD HH:MM:SS" format.
+// ----------------------------------------------------------------------------
+void printDateTime() {
+  char dateTimeBuffer[30];
+  snprintf(dateTimeBuffer, sizeof(dateTimeBuffer),
+           "20%02d-%02d-%02d %02d:%02d:%02d",
+           rtc.getYear(), rtc.getMonth(), rtc.getDay(),
+           rtc.getHours(), rtc.getMinutes(), rtc.getSeconds());
   DEBUG_PRINTLN(dateTimeBuffer);
 }
 
-// Print the RTC's alarm
-void printAlarm()
-{
-  char alarmBuffer[25];
-  sprintf(alarmBuffer, "20%02d-%02d-%02d %02d:%02d:%02d",
-          rtc.getAlarmYear(), rtc.getAlarmMonth(), rtc.getAlarmDay(),
-          rtc.getAlarmHours(), rtc.getAlarmMinutes(), rtc.getAlarmSeconds());
+// ----------------------------------------------------------------------------
+// Prints the RTC's alarm time in "YYYY-MM-DD HH:MM:SS" format.
+// ----------------------------------------------------------------------------
+void printAlarm() {
+  char alarmBuffer[30];
+  snprintf(alarmBuffer, sizeof(alarmBuffer),
+           "20%02d-%02d-%02d %02d:%02d:%02d",
+           rtc.getAlarmYear(), rtc.getAlarmMonth(), rtc.getAlarmDay(),
+           rtc.getAlarmHours(), rtc.getAlarmMinutes(), rtc.getAlarmSeconds());
   DEBUG_PRINTLN(alarmBuffer);
+}
+
+// ----------------------------------------------------------------------------
+// Prints a UNIX timestamp in human-readable "YYYY-MM-DD HH:MM:SS" format.
+// ----------------------------------------------------------------------------
+void printUnixtime(time_t epoch) {
+  char dateTimeBuffer[30];
+  tmElements_t tm;
+  breakTime(epoch, tm);  // Convert epoch to tm structure
+  snprintf(dateTimeBuffer, sizeof(dateTimeBuffer),
+           "%04d-%02d-%02d %02d:%02d:%02d",
+           tm.Year + 1970, tm.Month, tm.Day,
+           tm.Hour, tm.Minute, tm.Second);
+
+  DEBUG_PRINTLN(dateTimeBuffer);
 }
