@@ -97,8 +97,6 @@ static void selectImuCalibrationOnce() {
 // Configures the LSM6DSOX + LIS3MDL IMU.
 // ----------------------------------------------------------------------------
 void configureLsm6dsox() {
-  enableImuPower();  // Enable power to IMU rail
-  myDelay(5);        // Rail settle
 
   // One-time setup (safe to call every wake)
   initOnce();
@@ -226,9 +224,6 @@ void readLsm6dsox() {
     DEBUG_PRINTLN("[IMU] Warning: LSM6DSOX + LIS3MDL offline!");
   }
 
-  // Power down IMU
-  disableImuPower();
-
   // Record elapsed execution time
   timer.readLsm6dsox = millis() - startTime;
 }
@@ -251,7 +246,7 @@ static inline void discardImuWarmupSamples(int n) {
   for (int i = 0; i < n; ++i) {
     if (online.lis3mdl) lis3mdl.getEvent(&magEvt);
     if (online.lsm6dsox) lsm6dsox.getEvent(&accel, &gyro, &temp);
-    myDelay(10);  // simple fixed delay; not ODR-aligned by design
+    myDelay(100); 
   }
 }
 
