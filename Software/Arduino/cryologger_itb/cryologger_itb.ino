@@ -1,9 +1,10 @@
 /*
   Title:    Cryologger Ice Tracking Beacon (ITB)
-  Date:     September 9, 2025
+  Date:     May 7, 2026
   Author:   Adam Garbo
-  Version:  4.0.0
+  Version:  4.1.0
   License:  GPLv3. See license file for more information.
+  Copyright (C) 2017-2025 Adam Garbo
 
   Components:
   - Rock7 RockBLOCK 9603
@@ -21,7 +22,7 @@
 
   Comments:
   - TN0702 N-Channel FET required for On/Off operation with RockBLOCK v3.F and higher
-  - Sketch uses 75904 bytes (28%) of program storage space. Maximum is 262144 bytes.
+  - Sketch uses 77408 bytes (29%) of program storage space. Maximum is 262144 bytes.
 */
 
 // ----------------------------------------------------------------------------
@@ -29,12 +30,12 @@
 // ----------------------------------------------------------------------------
 
 // Device identifier
-#define UID "ITB_25_041"  // Unique identifier
+#define SERIAL_NUMBER "ITB_26_042"  // Unique identifier
 
 // Alarm parameters
 #define ALARM_MODE HOURLY        // Alarm mode (MINUTE, HOURLY, DAILY)
 #define ALARM_INTERVAL_DAY 0     // Alarm day interval (days)
-#define ALARM_INTERVAL_HOUR 1    // Alarm hour interval (hours) — ensure validation allows 0
+#define ALARM_INTERVAL_HOUR 1    // Alarm hour interval (hours)
 #define ALARM_INTERVAL_MINUTE 0  // Alarm minute interval (minutes)
 
 // Transmission parameters
@@ -57,12 +58,12 @@
 // Libraries                    Version
 // ----------------------------------------------------------------------------
 #include <Adafruit_BME280.h>    // 2.3.0
-#include <Adafruit_LIS3MDL.h>   // 1.2.4
+#include <Adafruit_LIS3MDL.h>   // 1.2.5
 #include <Adafruit_LSM6DSOX.h>  // 4.7.4
 #include <Adafruit_Sensor.h>    // 1.1.15
 #include <Arduino.h>            // Must precede <wiring_private.h>
 #include <ArduinoLowPower.h>    // 1.2.2
-#include <IridiumSBD.h>         // 3.0.8
+#include <IridiumSBD.h>         // 3.1.0
 #include <RTCZero.h>            // 1.6.0
 #include "structs.h"            //
 #include <TimeLib.h>            // 1.6.1
@@ -71,18 +72,18 @@
 #include <wiring_private.h>     // Required for creating new Serial instance
 
 // ----------------------------------------------------------------------------
-// Software & Hardware Versions
+// Firmware & Hardware Versions
 // ----------------------------------------------------------------------------
-#define SOFTWARE_VERSION "4.0.0"
+#define FIRMWARE_VERSION "4.1.0"
 #define HARDWARE_VERSION "3.2"
-#define ROCKBLOCK_VERSION_3F true
+#define ROCKBLOCK_VERSION_3F false
 
 // ----------------------------------------------------------------------------
 // Debugging Macros
 // ----------------------------------------------------------------------------
 #define DEBUG true          // Output debug messages to Serial Monitor
-#define DEBUG_GNSS true     // Output GNSS debug information
-#define DEBUG_IRIDIUM true  // Output Iridium debug messages to Serial Monitor
+#define DEBUG_GNSS false     // Output GNSS debug information
+#define DEBUG_IRIDIUM false  // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
 #define DEBUG_PRINT(x) SERIAL_PORT.print(x)
@@ -142,8 +143,9 @@ void SERCOM1_Handler() {
 // ----------------------------------------------------------------------------
 // SYSTEM LIMITS / DERIVED CONSTANTS (do not edit)
 // ----------------------------------------------------------------------------
-#define SBD_BUF_BYTES 340  // Iridium MO buffer limit
-#define SBD_MAX_MSGS (SBD_BUF_BYTES / SBD_MSG_SIZE)
+#define SBD_MO_BUF_BYTES 340  // Iridium MO buffer limit
+#define SBD_MT_BUF_BYTES 270  // Iridium MT buffer limit
+#define SBD_MAX_MSGS (SBD_MO_BUF_BYTES / SBD_MSG_SIZE)
 
 // ----------------------------------------------------------------------------
 // Object Instantiations
@@ -170,9 +172,6 @@ SBD_MO_MESSAGE moSbdMessage;
 // Union to store received Iridium SBD Mobile Terminated (MT) message
 SBD_MT_MESSAGE mtSbdMessage;
 
-// Add this line to declare the function prototype
-bool validateMtSbdMessage(const SBD_MT_MESSAGE& msg);
-
 // ----------------------------------------------------------------------------
 // Structures for System Status and Timers
 // ----------------------------------------------------------------------------
@@ -197,16 +196,16 @@ struct Timer {
 // ------------------------------------------------------------------------------------------------
 // User Defined Global Variable Declarations
 // ------------------------------------------------------------------------------------------------
-char uid[20] = UID;
+char serialNumber[20] = SERIAL_NUMBER;
 uint8_t alarmMode = ALARM_MODE;                       // Alarm match mode
 uint8_t alarmIntervalDay = ALARM_INTERVAL_DAY;        // Alarm day interval
 uint8_t alarmIntervalHour = ALARM_INTERVAL_HOUR;      // Alarm hour interval
 uint8_t alarmIntervalMinute = ALARM_INTERVAL_MINUTE;  // Alarm minute interval
 uint8_t transmitInterval = TRANSMIT_INTERVAL;         // Messages to transmit in each Iridium transmission (340-byte limit)
 uint8_t transmitReattempts = TRANSMIT_REATTEMPTS;     // Failed message transmission reattempts
-uint16_t gnssTimeout = GNSS_TIMEOUT;              // Timeout for GNSS signal acquisition (seconds)
-uint16_t iridiumTimeout = IRIDIUM_TIMEOUT;        // Timeout for Iridium transmission (seconds)
-uint16_t IridiumStartup = IRIDIUM_STARTUP;        // Timeout for Iridium startup (seconds)
+uint16_t gnssTimeout = GNSS_TIMEOUT;                  // Timeout for GNSS signal acquisition (seconds)
+uint16_t iridiumTimeout = IRIDIUM_TIMEOUT;            // Timeout for Iridium transmission (seconds)
+uint16_t iridiumStartup = IRIDIUM_STARTUP;            // Timeout for Iridium startup (seconds)
 
 // ----------------------------------------------------------------------------
 // Global Variables
@@ -218,28 +217,30 @@ bool firstTimeFlag = true;        // Flag to determine if program is running for
 bool resetFlag = 0;               // Flag to force system reset using Watchdog Timer
 
 // Counters
-volatile int wdtCounter = 0;        // Watchdog Timer interrupt counter
+volatile int wdtCounter = 0;    // Watchdog Timer interrupt counter
 uint16_t iterationCounter = 0;  // Counter to track total number of program iterations (zero indicates a reset)
 
 // Iridium SBD buffers and counters
-uint8_t moSbdBuffer[340];           // Buffer for Mobile Originated SBD (MO-SBD) message (340 bytes max)
-uint8_t mtSbdBuffer[270];           // Buffer for Mobile Terminated SBD (MT-SBD) message (270 bytes max)
-size_t moSbdBufferSize;             // Size of MO-SBD message buffer
-size_t mtSbdBufferSize;             // size of MT-SBD message buffer
-byte transmitCounter = 0;           // Counter to track Iridium SBD transmission intervals
-byte transmitReattemptCounter = 0;  // Retry attempts for failed Iridium SBD transmissions
-uint16_t failureCounter = 0;    // Counter to track consecutive failed Iridium SBD transmission attempts
+uint8_t moSbdBuffer[SBD_MO_BUF_BYTES];  // Buffer for Mobile Originated SBD (MO-SBD) message (340 bytes max)
+uint8_t mtSbdBuffer[SBD_MT_BUF_BYTES];  // Buffer for Mobile Terminated SBD (MT-SBD) message (270 bytes max)
+size_t moSbdBufferSize;                 // Size of MO-SBD message buffer
+size_t mtSbdBufferSize;                 // size of MT-SBD message buffer
+byte transmitCounter = 0;               // Counter to track Iridium SBD transmission intervals
 
 // RTC and timers
 uint32_t unixtime = 0;        // Global epoch time variable
 uint32_t alarmTime = 0;       // Global epoch alarm time variable
 uint32_t gnssEpoch = 0;       // Seconds GNSS epoch time
 uint32_t rtcEpoch = 0;        // Global RTC epoch time
-int32_t rtcDrift = 0;                 // Global RTC drift
-tmElements_t tm;                   // Variable for converting time elements to time_t
+int32_t rtcDrift = 0;         // Global RTC drift
+tmElements_t tm;              // Variable for converting time elements to time_t
 uint32_t previousMillis = 0;  // Global millis() timer
 
-// Measurement varaibles
+// GNSS epoch time guards
+static const uint32_t GNSS_EPOCH_MIN = 1767225600UL;  // Minimum date (2026-01-01)
+static const uint32_t GNSS_EPOCH_MAX = 2051222400UL;  // Maximum date (2035-01-01)
+
+// Measurement variables
 float temperatureInt = 0.0;  // Internal temperature (°C)
 float humidityInt = 0.0;     // Internal humidity (%)
 float pressureInt = 0.0;     // Internal pressure (hPa)
@@ -249,7 +250,7 @@ int heading = 0;             // Tilt-compensated heading (°)
 float latitude = 0.0;        // GNSS latitude (DD)
 float longitude = 0.0;       // GNSS longitude (DD)
 byte satellites = 0;         // GNSS satellites
-float hdop = 0.0;            // GNSS HDOP
+uint16_t hdop = 0;           // GNSS HDOP
 float voltage = 0.0;         // Battery voltage
 
 // ----------------------------------------------------------------------------
@@ -268,7 +269,7 @@ void setup() {
   digitalWrite(PIN_GNSS_EN, HIGH);   // Disable power to GNSS
   digitalWrite(PIN_IMU_EN, LOW);     // Disable power to IMU
   digitalWrite(PIN_5V_EN, LOW);      // Disable power to RockBLOCK 9603
-#ifdef ROCKBLOCK_VERSION_3F
+#if ROCKBLOCK_VERSION_3F
   digitalWrite(PIN_IRIDIUM_SLEEP, HIGH);  // RockBLOCK v3.F and above: Set N-FET controlling RockBLOCK On/Off pin to HIGH (no voltage)
 #else
   digitalWrite(PIN_IRIDIUM_SLEEP, LOW);  // RockBLOCK v3.D and below: Set On/Off pin LOW to disable power to Iridium
@@ -338,8 +339,8 @@ void loop() {
     // Perform measurements
     readBattery();         // Read the battery voltage
     readGnss();            // Read the GNSS
+    enableImuPower();      // Enable 3.3V power to IMU
     enableSensorPower();   // Enable power to sensor(s)
-    enableImuPower();      // Enable power to IMU
     readLsm6dsox();        // Read the IMU
     readBme280();          // Read sensor(s)
     disableSensorPower();  // Disable 3.3V power to sensor(s)
