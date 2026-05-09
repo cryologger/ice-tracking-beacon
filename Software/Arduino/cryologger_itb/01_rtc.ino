@@ -87,10 +87,16 @@ void setRtcAlarm() {
     + alarmIntervalHour * 3600UL
     + alarmIntervalDay * 86400UL;
 
-  // Safety check — ensure we always have a valid interval
+  // Safety check: ensure we always have a valid interval
   if (interval_sec == 0) {
     DEBUG_PRINTLN("[RTC] Warning: Alarm interval is 0! Falling back to default 1 hour.");
     interval_sec = 3600UL;  // Default to 1 hour
+  }
+
+  // Safety check: do not allow sleep intervals longer than 24 hours
+  if (interval_sec > 86400UL) {
+    DEBUG_PRINTLN("[RTC] Warning: Alarm interval exceeds 24 hours. Capping at 24 hours.");
+    interval_sec = 86400UL;
   }
 
   // Align to the next clean interval boundary
@@ -115,14 +121,14 @@ void setRtcAlarm() {
   RTCZero::Alarm_Match match;
   switch (alarmMode) {
     case MINUTE:
-      match = RTCZero::MATCH_HHMMSS;  // Matches every HH:MM:SS for sub-hour intervals
+      match = RTCZero::MATCH_MMSS;  // Matches every MM:SS for sub-hour intervals
       break;
     case HOURLY:
       match = RTCZero::MATCH_HHMMSS;  // Matches every HH:MM:SS
       break;
     case DAILY:
     default:
-      match = RTCZero::MATCH_DHHMMSS;  // Matches every DD:HH:MM:SS
+      match = RTCZero::MATCH_HHMMSS;  // Matches every HH:MM:SS
       break;
   }
 
@@ -177,4 +183,42 @@ void printUnixtime(time_t epoch) {
            tm.Hour, tm.Minute, tm.Second);
 
   DEBUG_PRINTLN(dateTimeBuffer);
+}
+
+// ----------------------------------------------------------------------------
+// Synchronizes the RTC from the GNSS.
+// ----------------------------------------------------------------------------
+static bool syncRtcFromGnss(time_t gnssEpoch) {
+  rtcEpoch = rtc.getEpoch();
+  rtcDrift = (int32_t)rtcEpoch - (int32_t)gnssEpoch;
+
+  bool epochSane = (gnssEpoch >= GNSS_EPOCH_MIN
+                    && gnssEpoch <= GNSS_EPOCH_MAX);
+
+  bool rtcUninitialized = (rtcEpoch < GNSS_EPOCH_MIN);
+  bool gnssNewer = (gnssEpoch > rtcEpoch);
+
+  if (epochSane && (rtcUninitialized || gnssNewer)) {
+    rtc.setEpoch(gnssEpoch);
+
+    unixtime = rtc.getEpoch();
+    moSbdMessage.unixtime = unixtime;
+
+    DEBUG_PRINT("[RTC] Info: RTC synced ");
+    printDateTime();
+
+    DEBUG_PRINT("[RTC] Info: RTC drift = ");
+    DEBUG_PRINT(rtcDrift);
+    DEBUG_PRINTLN(" seconds.");
+
+    return true;
+  }
+
+  if (!epochSane) {
+    DEBUG_PRINTLN("[RTC] Warning: GNSS epoch outside plausible range. RTC not updated.");
+  } else {
+    DEBUG_PRINTLN("[RTC] Warning: GNSS time is not newer than RTC. RTC not synced.");
+  }
+
+  return false;
 }
