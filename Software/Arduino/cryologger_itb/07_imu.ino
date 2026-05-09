@@ -62,8 +62,8 @@ static void selectImuCalibrationOnce() {
 
   const MagCal* C = getSelectedCal();
   if (!C) {
-    DEBUG_PRINT("[IMU] Warning: No calibration found for UID=");
-    DEBUG_PRINTLN(UID);
+    DEBUG_PRINT("[IMU] Warning: No calibration found for SERIAL=");
+    DEBUG_PRINTLN(SERIAL_NUMBER);
     return;
   }
 
@@ -90,7 +90,7 @@ static void selectImuCalibrationOnce() {
   }
 
   DEBUG_PRINT("[IMU] Using calibration for ");
-  DEBUG_PRINTLN(C->uid);
+  DEBUG_PRINTLN(C->serialNumber);
 }
 
 // ----------------------------------------------------------------------------
@@ -162,7 +162,7 @@ void readLsm6dsox() {
     DEBUG_PRINTLN("[IMU] Reading LSM6DSOX + LIS3MDL.");
 
     // Discard first few samples after power-up to avoid startup transients
-    discardImuWarmupSamples(6);  // simple fixed-count discard (≈10 ms each inside)
+    discardImuWarmupSamples(3);  // Simple fixed-count discard (≈10 ms each inside)
 
     // Average a few samples for stability (timing unchanged)
     const int N = 5;
@@ -246,7 +246,7 @@ static inline void discardImuWarmupSamples(int n) {
   for (int i = 0; i < n; ++i) {
     if (online.lis3mdl) lis3mdl.getEvent(&magEvt);
     if (online.lsm6dsox) lsm6dsox.getEvent(&accel, &gyro, &temp);
-    myDelay(100); 
+    myDelay(25);
   }
 }
 

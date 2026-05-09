@@ -35,10 +35,17 @@ void readBme280() {
     humidityInt = bme280.readHumidity();
     pressureInt = bme280.readPressure() / 100.0F;
 
+    // Constrain humidity to valid range
+    humidityInt = constrain(humidityInt, 0.0f, 100.0f);
+
+    // Offset and constrain pressure to valid uint16_t range
+    float pressureOffset = pressureInt - 850.0f;
+    pressureOffset = constrain(pressureOffset, 0.0f, 655.35f);
+
     // Write data to SBD structure
-    moSbdMessage.temperatureInt = temperatureInt * 100;    // °C * 100
-    moSbdMessage.humidityInt = humidityInt * 100;          // % * 100
-    moSbdMessage.pressureInt = (pressureInt - 850) * 100;  // Offset by 850 hPa * 100
+    moSbdMessage.temperatureInt = (int16_t)(temperatureInt * 100.0f);  // °C * 100
+    moSbdMessage.humidityInt = (uint16_t)(humidityInt * 100.0f);       // % * 100
+    moSbdMessage.pressureInt = (uint16_t)(pressureOffset * 100.0f);    // Offset by 850 hPa * 100
 
   } else {
     online.bme280 = false;
