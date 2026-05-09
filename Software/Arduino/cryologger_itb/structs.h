@@ -2,12 +2,12 @@
 #pragma once
 #include <stdint.h>
 
-#ifndef SBD_MSG_SIZE
-#define SBD_MSG_SIZE 34
+#ifndef SBD_MO_SIZE
+#error "SBD_MO_SIZE must be defined before including structs.h"
 #endif
 
 #ifndef SBD_MT_SIZE
-#define SBD_MT_SIZE 7
+#error "SBD_MT_SIZE must be defined before including structs.h"
 #endif
 
 typedef union {
@@ -28,7 +28,7 @@ typedef union {
     uint8_t transmitStatus;
     uint16_t iterationCounter;
   };
-  uint8_t bytes[SBD_MSG_SIZE];
+  uint8_t bytes[SBD_MO_SIZE];
 } SBD_MO_MESSAGE;
 
 typedef union {
@@ -38,8 +38,11 @@ typedef union {
     uint8_t alarmIntervalHour;
     uint8_t alarmIntervalMinute;
     uint8_t transmitInterval;
-    uint8_t transmitReattempts;
     uint8_t resetFlag;
   };
-  uint8_t bytes[7];
+  uint8_t bytes[SBD_MT_SIZE];
 } SBD_MT_MESSAGE;
+
+static_assert(sizeof(SBD_MO_MESSAGE) == SBD_MO_SIZE, "SBD_MO_MESSAGE size mismatch");
+
+static_assert(sizeof(SBD_MT_MESSAGE) == SBD_MT_SIZE, "SBD_MT_MESSAGE size mismatch");
