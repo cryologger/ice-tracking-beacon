@@ -36,12 +36,12 @@ void configureRtc() {
 
   // Enable alarm for hour rollover match.
   rtc.enableAlarm(rtc.MATCH_MMSS);
-  // rtc.enableAlarm(rtc.MATCH_SS);
+  // rtc.enableAlarm(rtc.MATCH_SS); // Debugging only
 
-  // Attach alarm interrupt service routine (ISR).
+  // Attach alarm interrupt service routine (ISR)
   rtc.attachInterrupt(alarmIsr);
 
-  // Clear the alarm flag.
+  // Clear the alarm flag
   alarmFlag = false;
 
   DEBUG_PRINT("[RTC] Info: RTC initialized ");

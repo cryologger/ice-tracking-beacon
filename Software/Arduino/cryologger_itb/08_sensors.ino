@@ -53,6 +53,6 @@ void readBme280() {
     DEBUG_PRINTLN("[Sensors] Error: BME280 offline!");
   }
 
-  // Record elapsed execution time.
+  // Record elapsed execution time
   timer.readBme280 = millis() - startTime;
 }

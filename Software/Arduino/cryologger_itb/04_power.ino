@@ -4,8 +4,8 @@
   This module provides control over power for hardware components,
   including battery voltage measurement, toggling serial communication,
   and enabling/disabling power to GNSS, IMU, sensors, and RockBLOCK 9603.
-  It also includes a non-blocking LED blink function, a non-blocking delay
-  for watchdog resets, and routines to prepare or recover from deep sleep.
+  It also includes a non-blocking LED blink and delay functions for 
+  watchdog resets, and deep sleep routines.
 */
 
 // ----------------------------------------------------------------------------
@@ -131,7 +131,7 @@ void goToSleep() {
   }
   LowPower.deepSleep();
   /*
-     Execution halts here until an RTC/WDT interrupt wakes the device
+     Execution halts here until an RTC/WDT interrupt wakes the device.
   */
 }
 
@@ -156,7 +156,7 @@ void blinkLed(byte ledFlashes, uint16_t ledDelay) {
       i++;
     }
   }
-  digitalWrite(LED_BUILTIN, LOW);  // Ensure LED is off after blinking
+  digitalWrite(LED_BUILTIN, LOW);  // Ensure LED is off after blinking.
 }
 
 // ----------------------------------------------------------------------------
