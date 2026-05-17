@@ -50,8 +50,8 @@ static inline void setSentenceOutput_GGA_RMC() {
 // GNSS configuration
 // ----------------------------------------------------------------------------
 void configureGnss() {
-  // Set NMEA update rate (1 Hz)
-  setUpdateRateMs(1000);
+  // Set NMEA update rate
+  setUpdateRateMs(1000); // Set rate to 1 Hz (1000 ms)
 
   // Set NMEA sentence output frequencies to GGA and RMC
   setSentenceOutput_GGA_RMC();

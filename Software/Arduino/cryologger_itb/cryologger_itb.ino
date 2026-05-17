@@ -1,10 +1,10 @@
 /*
   Title:    Cryologger Ice Tracking Beacon (ITB)
-  Date:     May 7, 2026
+  Date:     May 17, 2026
   Author:   Adam Garbo
   Version:  4.1.0
   License:  GPLv3. See license file for more information.
-  Copyright (C) 2017-2025 Adam Garbo
+  Copyright (C) 2026 Adam Garbo
 
   Components:
   - Rock7 RockBLOCK 9603
@@ -22,7 +22,7 @@
 
   Comments:
   - TN0702 N-Channel FET required for On/Off operation with RockBLOCK v3.F and higher
-  - Sketch uses 77408 bytes (29%) of program storage space. Maximum is 262144 bytes.
+  - Sketch uses 75948 bytes (28%) of program storage space. Maximum is 262144 bytes.
 */
 
 // ----------------------------------------------------------------------------
@@ -32,14 +32,14 @@
 // Device identifier
 #define SERIAL_NUMBER "ITB_26_042"  // Unique identifier
 
-// Alarm parameters
+// Rolling alarm parameters
 #define ALARM_MODE HOURLY        // Alarm mode (MINUTE, HOURLY, DAILY)
-#define ALARM_INTERVAL_DAY 0     // Alarm day interval (days)
-#define ALARM_INTERVAL_HOUR 1    // Alarm hour interval (hours)
-#define ALARM_INTERVAL_MINUTE 0  // Alarm minute interval (minutes)
+#define ALARM_INTERVAL_DAY 0     // Alarm day interval (1-30 days)
+#define ALARM_INTERVAL_HOUR 1    // Alarm hour interval (1-23 hours)
+#define ALARM_INTERVAL_MINUTE 0  // Alarm minute interval (1-59 minutes)
 
 // Transmission parameters
-#define TRANSMIT_INTERVAL 3    // Messages included per Iridium TX (MO buffer limit: 340 bytes)
+#define TRANSMIT_INTERVAL 3    // Messages included per Iridium TX (Limit: 340 bytes)
 #define TRANSMIT_REATTEMPTS 3  // Number of reattempt cycles after a failed TX
 
 // GNSS and Iridium parameters. Do not change unless debugging
@@ -48,7 +48,8 @@
 #define IRIDIUM_STARTUP 120  // Iridium modem startup timeout (s) - default: 120
 
 // Iridium SBD sizing
-#define SBD_MSG_SIZE 34  // Size of one MO-SBD message (bytes)
+#define SBD_MO_SIZE 34  // Size of MO-SBD message (bytes)
+#define SBD_MT_SIZE 6   // Size of MT-SBD message (bytes)
 
 // ----------------------------------------------------------------------------
 //  END OF USER CONFIGURATION
@@ -82,8 +83,8 @@
 // Debugging Macros
 // ----------------------------------------------------------------------------
 #define DEBUG true          // Output debug messages to Serial Monitor
-#define DEBUG_GNSS false     // Output GNSS debug information
-#define DEBUG_IRIDIUM false  // Output Iridium debug messages to Serial Monitor
+#define DEBUG_GNSS true     // Output GNSS debug information
+#define DEBUG_IRIDIUM true  // Output Iridium debug messages to Serial Monitor
 
 #if DEBUG
 #define DEBUG_PRINT(x) SERIAL_PORT.print(x)
@@ -109,9 +110,9 @@
 // ----------------------------------------------------------------------------
 #define PIN_VBAT A0           // Voltage divider
 #define PIN_SENSOR_EN A3      // Sensor digital pin power enable
-#define PIN_IMU_EN A4         // IMU digital pin enable
+#define PIN_IMU_EN A4         // IMU digital pin power enable
 #define PIN_GNSS_EN A5        // GNSS enable
-#define PIN_5V_EN 6           // 5V voltage regulator
+#define PIN_5V_EN 6           // 5V voltage regulator enable
 #define PIN_IRIDIUM_RX 10     // RockBLOCK 9603 RXD (Yellow)
 #define PIN_IRIDIUM_TX 11     // RockBLOCK 9603 TXD (Orange)
 #define PIN_IRIDIUM_SLEEP 12  // RockBLOCK 9603 OnOff (Grey)
@@ -145,7 +146,7 @@ void SERCOM1_Handler() {
 // ----------------------------------------------------------------------------
 #define SBD_MO_BUF_BYTES 340  // Iridium MO buffer limit
 #define SBD_MT_BUF_BYTES 270  // Iridium MT buffer limit
-#define SBD_MAX_MSGS (SBD_MO_BUF_BYTES / SBD_MSG_SIZE)
+#define SBD_MAX_MSGS (SBD_MO_BUF_BYTES / SBD_MO_SIZE)
 
 // ----------------------------------------------------------------------------
 // Object Instantiations
@@ -196,13 +197,12 @@ struct Timer {
 // ------------------------------------------------------------------------------------------------
 // User Defined Global Variable Declarations
 // ------------------------------------------------------------------------------------------------
-char serialNumber[20] = SERIAL_NUMBER;
+char serialNumber[20] = SERIAL_NUMBER;                // Unique identifier
 uint8_t alarmMode = ALARM_MODE;                       // Alarm match mode
 uint8_t alarmIntervalDay = ALARM_INTERVAL_DAY;        // Alarm day interval
 uint8_t alarmIntervalHour = ALARM_INTERVAL_HOUR;      // Alarm hour interval
 uint8_t alarmIntervalMinute = ALARM_INTERVAL_MINUTE;  // Alarm minute interval
 uint8_t transmitInterval = TRANSMIT_INTERVAL;         // Messages to transmit in each Iridium transmission (340-byte limit)
-uint8_t transmitReattempts = TRANSMIT_REATTEMPTS;     // Failed message transmission reattempts
 uint16_t gnssTimeout = GNSS_TIMEOUT;                  // Timeout for GNSS signal acquisition (seconds)
 uint16_t iridiumTimeout = IRIDIUM_TIMEOUT;            // Timeout for Iridium transmission (seconds)
 uint16_t iridiumStartup = IRIDIUM_STARTUP;            // Timeout for Iridium startup (seconds)
@@ -275,7 +275,7 @@ void setup() {
   digitalWrite(PIN_IRIDIUM_SLEEP, LOW);  // RockBLOCK v3.D and below: Set On/Off pin LOW to disable power to Iridium
 #endif
 
-  // Configure analog-to-digital (ADC) converter.
+  // Configure analog-to-digital (ADC) converter
   configureAdc();
 
   Wire.begin();           // Initialize I2C
@@ -305,7 +305,7 @@ void setup() {
   printSystemInfo();  // Print system information
   printSettings();    // Print configuration settings
 
-  // Close serial port if immediately entering deep sleep
+  // Close serial port if entering deep sleep
   if (!firstTimeFlag) {
     disableSerial();
   }
@@ -318,7 +318,7 @@ void setup() {
 // Main Loop
 // ----------------------------------------------------------------------------
 void loop() {
-  // Check if RTC alarm triggered or if program is running for the first time
+  // Check if RTC alarm triggered or if program running for first time
   if (alarmFlag || firstTimeFlag) {
     // Read the RTC
     readRtc();
@@ -326,9 +326,8 @@ void loop() {
     // Reset WDT
     resetWdt();
 
-    // Check if program is running for the first time.
+    // Skip wake if program running for first time
     if (!firstTimeFlag) {
-      // Wake from deep sleep
       wakeUp();
       blinkLed(4, 250);
     }
@@ -348,21 +347,21 @@ void loop() {
     printSensors();        // Display recorded measurements
     writeBuffer();         // Write data to transmit buffer
 
-    // Check if data transmission interval has been reached
+    // Transmit data when interval is reached or if program running for first time
     if ((transmitCounter >= transmitInterval) || firstTimeFlag) {
       transmitData();
     }
 
-    // Print function execution timers
+    // Print function execution timers.
     printTimers();
 
-    // Set the next RTC alarm
+    // Set the next RTC alarm.
     setRtcAlarm();
 
     DEBUG_PRINTLN("[Main] Entering deep sleep...");
     DEBUG_PRINTLN();
 
-    // Prepare system for sleep
+    // Prepare system for sleep.
     prepareForSleep();
 
     myDelay(500);  // Debugging delay
@@ -373,7 +372,7 @@ void loop() {
     resetWdt();
   }
 
-  // Blink LED to indicate normal operation
+  // Blink LED to when WDT triggers to indicate normal operation
   blinkLed(1, 25);
 
   // Enter deep sleep, awaiting RTC or WDT interrupt
