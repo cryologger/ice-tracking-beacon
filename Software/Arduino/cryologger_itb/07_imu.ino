@@ -41,7 +41,7 @@ static void initOnce() {
   // Normalize forward vector p once
   float m2 = p[0] * p[0] + p[1] * p[1] + p[2] * p[2];
   if (m2 > 0.0) {
-    float inv = 1.0 / sqrtf(m2);
+    float inv = 1.0f / sqrtf(m2);
     p[0] *= inv;
     p[1] *= inv;
     p[2] *= inv;
@@ -79,7 +79,7 @@ static void selectImuCalibrationOnce() {
   // Normalize forward vector p
   float m2 = p[0] * p[0] + p[1] * p[1] + p[2] * p[2];
   if (m2 > 0.0f) {
-    float inv = 1.0 / sqrtf(m2);
+    float inv = 1.0f / sqrtf(m2);
     p[0] *= inv;
     p[1] *= inv;
     p[2] *= inv;
@@ -156,7 +156,6 @@ void readLsm6dsox() {
 
   float Axyz[3] = { 0.0, 0.0, 0.0 };
   float Mxyz[3] = { 0.0, 0.0, 0.0 };  // corrected mag (3×3 bias/scale applied)
-  int heading_deg = 0;
 
   if (online.lsm6dsox && online.lis3mdl) {
     DEBUG_PRINTLN("[IMU] Reading LSM6DSOX + LIS3MDL.");
@@ -192,7 +191,7 @@ void readLsm6dsox() {
     }
 
     // Average
-    const float invN = 1.0 / (float)N;
+    const float invN = 1.0f / (float)N;
     Axyz[0] *= invN;
     Axyz[1] *= invN;
     Axyz[2] *= invN;
@@ -209,15 +208,15 @@ void readLsm6dsox() {
     }
 
     // Compute pitch and roll from accel
-    pitch = atan2f(-Axyz[0], sqrtf(Axyz[1] * Axyz[1] + Axyz[2] * Axyz[2])) * 180.0 / M_PI;
-    roll = atan2f(Axyz[1], Axyz[2]) * 180.0 / M_PI;
+    pitch = atan2f(-Axyz[0], sqrtf(Axyz[1] * Axyz[1] + Axyz[2] * Axyz[2])) * 180.0f / (float)M_PI;
+    roll = atan2f(Axyz[1], Axyz[2]) * 180.0f / (float)M_PI;
 
     // Tilt-compensated heading (relative; no declination)
     heading = getHeading(Axyz, Mxyz, p);
 
     // Store (scaled where needed)
-    moSbdMessage.pitch = (int16_t)lroundf(pitch * 100.0);
-    moSbdMessage.roll = (int16_t)lroundf(roll * 100.0);
+    moSbdMessage.pitch = (int16_t)lroundf(pitch * 100.0f);
+    moSbdMessage.roll = (int16_t)lroundf(roll * 100.0f);
     moSbdMessage.heading = (uint16_t)heading;
 
   } else {
@@ -234,7 +233,7 @@ void readLsm6dsox() {
 static inline bool normalizeSafe(float v[3]) {
   float m2 = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
   if (!(m2 > 0.0f) || isnan(m2)) return false;
-  float inv = 1.0 / sqrtf(m2);
+  float inv = 1.0f / sqrtf(m2);
   v[0] *= inv;
   v[1] *= inv;
   v[2] *= inv;
@@ -268,7 +267,7 @@ int getHeading(float acc[3], float mag[3], float p[3]) {
   // Heading in horizontal plane (clockwise positive)
   float num = vectorDot(W, p);
   float den = vectorDot(N, p);
-  int heading = (int)lroundf(atan2f(num, den) * 180.0 / (float)M_PI);
+  int heading = (int)lroundf(atan2f(num, den) * 180.0f / (float)M_PI);
   heading = (heading + 360) % 360;
   return heading;
 }
@@ -283,7 +282,7 @@ float vectorDot(float a[3], float b[3]) {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 }
 void vectorNormalize(float a[3]) {  // Kept for compatibility; prefer normalizeSafe
-  float m = sqrt(vectorDot(a, a));
+  float m = sqrtf(vectorDot(a, a));
   if (m != 0) {
     a[0] /= m;
     a[1] /= m;

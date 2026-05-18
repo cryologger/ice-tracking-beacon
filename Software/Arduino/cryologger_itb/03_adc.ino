@@ -54,20 +54,20 @@ float mapFloat(float x, float in_min, float in_max,
 }
 
 // ----------------------------------------------------------------------------
-// Reads raw ADC values from PIN_VBAT, compute two forms of voltage
-// (one based on a direct 3.3/4095 scale, another factoring in the
-// 10 MΩ + 1 MΩ divider), and prints them for debugging or calibration.
+// Reads raw ADC values from PIN_VBAT and computes two voltages:
+// voltage1 — raw ADC pin voltage (direct 3.3 V / 4096 scale)
+// voltage2 — actual battery voltage (scaled through 10 MΩ + 1 MΩ divider)
 // ----------------------------------------------------------------------------
 void calibrateAdc() {
   float sensorValue = analogRead(PIN_VBAT);
 
-  // Direct scaling: 3.3 V / 4095 counts
-  float voltage1 = sensorValue * (3.3 / 4095.0);
+  // Direct scaling: raw ADC pin voltage (0–3.3 V)
+  float voltage1 = sensorValue * (3.3f / 4096.0f);
 
-  // Voltage divider-based scaling
-  float voltage2 = sensorValue * ((10.0 + 1.0) / 1.0);  // Factor for 10 MΩ + 1 MΩ
-  voltage2 *= 3.3;                                      // 3.3 V reference
-  voltage2 /= 4096.0;                                   // Convert to voltage
+  // Voltage divider-based scaling: actual battery voltage
+  float voltage2 = sensorValue * ((10.0f + 1.0f) / 1.0f);  // Factor for 10 MΩ + 1 MΩ
+  voltage2 *= 3.3f;                                        // 3.3 V reference
+  voltage2 /= 4096.0f;                                     // Convert to voltage
 
   DEBUG_PRINTLN(F("[ADC] Info: sensorValue, voltage1, voltage2"));
   DEBUG_PRINT(F("[ADC] Info:"));
