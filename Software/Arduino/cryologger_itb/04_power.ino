@@ -168,5 +168,6 @@ void myDelay(uint32_t ms) {
   uint32_t start = millis();
   while (millis() - start < ms) {
     resetWdt();  // Reset the WDT during the delay
+    delay(10);
   }
 }
