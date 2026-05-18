@@ -11,6 +11,13 @@
 */
 
 // ----------------------------------------------------------------------------
+// No-data sentinels 
+// ----------------------------------------------------------------------------
+static const int16_t BME280_TEMP_NOVALUE = INT16_MIN;
+static const uint16_t BME280_HUMIDITY_NOVALUE = UINT16_MAX;
+static const uint16_t BME280_PRESSURE_NOVALUE = UINT16_MAX;
+
+// ----------------------------------------------------------------------------
 // Configures and reads Adafruit BME280 Temperature Humidity Pressure Sensor.
 // More info: https://www.adafruit.com/product/2652
 // Initializes the BME280 sensor and reads temperature, humidity, and
@@ -51,6 +58,11 @@ void readBme280() {
     online.bme280 = false;
     DEBUG_PRINTLN("failed!");
     DEBUG_PRINTLN("[Sensors] Error: BME280 offline!");
+
+    // Write no-data values to SBD structure
+    moSbdMessage.temperatureInt = BME280_TEMP_NOVALUE;
+    moSbdMessage.humidityInt = BME280_HUMIDITY_NOVALUE;
+    moSbdMessage.pressureInt = BME280_PRESSURE_NOVALUE;
   }
 
   // Record elapsed execution time
