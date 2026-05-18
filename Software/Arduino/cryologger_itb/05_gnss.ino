@@ -51,7 +51,7 @@ static inline void setSentenceOutput_GGA_RMC() {
 // ----------------------------------------------------------------------------
 void configureGnss() {
   // Set NMEA update rate
-  setUpdateRateMs(1000); // Set rate to 1 Hz (1000 ms)
+  setUpdateRateMs(1000);  // Set rate to 1 Hz (1000 ms)
 
   // Set NMEA sentence output frequencies to GGA and RMC
   setSentenceOutput_GGA_RMC();
@@ -176,6 +176,7 @@ void readGnss() {
   // Start execution timer
   uint32_t startTime = millis();
 
+
   // Clear flags
   bool fixFound = false;
   bool charsSeen = false;
@@ -185,6 +186,7 @@ void readGnss() {
   uint8_t satsSamples[GNSS_SAMPLE_TARGET];
   uint16_t hdopSamples[GNSS_SAMPLE_TARGET];
 
+  tmElements_t tm;
   uint8_t sampleCount = 0;
   time_t lastGoodEpoch = 0;
   bool haveFallback = false;
