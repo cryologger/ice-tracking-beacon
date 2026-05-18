@@ -32,7 +32,7 @@ typedef union {
 } SBD_MO_MESSAGE;
 
 typedef union {
-  struct {
+  struct __attribute__((packed)) {
     uint8_t alarmMode;
     uint8_t alarmIntervalDay;
     uint8_t alarmIntervalHour;
