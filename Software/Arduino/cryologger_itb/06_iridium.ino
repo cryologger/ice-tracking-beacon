@@ -357,20 +357,22 @@ void writeBuffer() {
   DEBUG_PRINTLN(transmitInterval);
 
   // Populate fields that are only known at queue-time
-  moSbdMessage.voltage = readBattery() * 100;
+  moSbdMessage.voltage = (uint16_t)lroundf(readBattery() * 100.0f);
   moSbdMessage.iterationCounter = iterationCounter;
 
   ringBufferPush(moSbdMessage.bytes);
   printMoSbd();
-  //printMoWindowHex();
 
   // Clear struct so transmitStatus/transmitDuration from the previous TX cycle
   // do not persist beyond this point (they carry forward intentionally for one
   // cycle, then are zeroed here)
   moSbdMessage = {};
 
+
+#if DEBUG_IRIDIUM
   printRingBufferStatus("writeBuffer");
   printRingBufferMap();
+#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -387,6 +389,8 @@ void transmitData() {
   size_t moBytes = 0;
   memset(moSbdBuffer, 0x00, sizeof(moSbdBuffer));
   uint16_t stagedMsgs = buildMoPayload(moSbdBuffer, sizeof(moSbdBuffer), &moBytes);
+
+  printMoWindowHex(moSbdBuffer, moBytes);
 
   DEBUG_PRINT("[Iridium] Info: Staging ");
   DEBUG_PRINT(stagedMsgs);

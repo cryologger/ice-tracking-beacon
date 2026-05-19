@@ -29,6 +29,9 @@ void readBme280() {
 
   DEBUG_PRINT("[Sensors] Info: Initializing BME280...");
 
+  // Assume offline unless initialization succeeds
+  online.bme280 = false;
+
   // Attempt to initialize the BME280 sensor
   const int MAX_TRIES = 3;
 
@@ -37,9 +40,11 @@ void readBme280() {
       online.bme280 = true;
       break;
     }
+
     DEBUG_PRINT("[Sensors] Info: BME280 init attempt ");
     DEBUG_PRINT(attempt);
     DEBUG_PRINTLN(" failed. Retrying...");
+
     myDelay(10);
   }
 

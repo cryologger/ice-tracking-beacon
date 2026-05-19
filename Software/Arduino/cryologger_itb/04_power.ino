@@ -143,7 +143,7 @@ void wakeUp() {
 }
 
 // ----------------------------------------------------------------------------
-// Non-blocking LED blink routine.
+// LED blink routine.
 // Flashes the built-in LED a specified number of times with the given delay.
 // ----------------------------------------------------------------------------
 void blinkLed(byte ledFlashes, uint16_t ledDelay) {
@@ -160,7 +160,7 @@ void blinkLed(byte ledFlashes, uint16_t ledDelay) {
 }
 
 // ----------------------------------------------------------------------------
-// Delay function that resets the Watchdog Timer throughout the wait.
+// Delay function that resets the Watchdog Timer.
 // Delays for the specified duration (ms) while preventing WDT resets.
 // Note: minimum effective delay is ~10 ms due to inner delay(10).
 // ----------------------------------------------------------------------------

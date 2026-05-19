@@ -9,6 +9,13 @@
 #include "imu_calibration.h"
 
 // ----------------------------------------------------------------------------
+// No-data sentinels
+// ----------------------------------------------------------------------------
+static const int16_t IMU_PITCH_NOVALUE = INT16_MIN;
+static const int16_t IMU_ROLL_NOVALUE = INT16_MIN;
+static const uint16_t IMU_HEADING_NOVALUE = UINT16_MAX;
+
+// ----------------------------------------------------------------------------
 // Per-unit calibration & frame config (PASTE YOUR NUMBERS)
 // ----------------------------------------------------------------------------
 
@@ -21,7 +28,7 @@
 // {0, 0, -1});   // Align to Z-
 static float p[3] = { 1.0f, 0.0f, 0.0f };  // Normalized once at boot
 
-// Magnetometer 3×3 calibration (Magneto-style). REPLACE with your unit's values.
+// Magnetometer 3×3 calibration. Replace with per-unit values when available.
 // Bias (µT)
 static float M_B[3] = { 0.0f, 0.0f, 0.0f };
 
@@ -199,9 +206,9 @@ void readLsm6dsox() {
     // Normalize; skip orientation if either vector is degenerate
     if (!normalizeSafe(Axyz) || !normalizeSafe(Mxyz)) {
       DEBUG_PRINTLN("[IMU] Warning: Degenerate IMU vector, skipping orientation.");
-      moSbdMessage.pitch = 0;
-      moSbdMessage.roll = 0;
-      moSbdMessage.heading = 0;
+      moSbdMessage.pitch = IMU_PITCH_NOVALUE;
+      moSbdMessage.roll = IMU_ROLL_NOVALUE;
+      moSbdMessage.heading = IMU_HEADING_NOVALUE;
     } else {
       // Compute pitch and roll from accel
       pitch = atan2f(-Axyz[0], sqrtf(Axyz[1] * Axyz[1] + Axyz[2] * Axyz[2])) * 180.0f / (float)M_PI;
@@ -218,6 +225,9 @@ void readLsm6dsox() {
 
   } else {
     DEBUG_PRINTLN("[IMU] Warning: LSM6DSOX + LIS3MDL offline!");
+    moSbdMessage.pitch = IMU_PITCH_NOVALUE;
+    moSbdMessage.roll = IMU_ROLL_NOVALUE;
+    moSbdMessage.heading = IMU_HEADING_NOVALUE;
   }
 
   // Record elapsed execution time

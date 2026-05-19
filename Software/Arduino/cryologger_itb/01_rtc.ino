@@ -106,16 +106,9 @@ void setRtcAlarm() {
   tmElements_t tm;
   breakTime(next_epoch, tm);  // Handles all calendar overflow and leap year logic
 
-  int second = tm.Second;
-  int minute = tm.Minute;
-  int hour = tm.Hour;
-  int day = tm.Day;
-  int month = tm.Month;
-  int year = (tm.Year + 1970) - 2000;  // RTC year offset from 2000 (tm.Year is years since 1970)
-
   // Set alarm time and date
-  rtc.setAlarmTime(hour, minute, second);
-  rtc.setAlarmDate(day, month, year);
+  rtc.setAlarmTime(tm.Hour, tm.Minute, tm.Second);
+  rtc.setAlarmDate(tm.Day, tm.Month, (tm.Year + 1970) - 2000);  // RTC year offset from 2000 (tm.Year is years since 1970)
 
   // Determine match mode based on user config
   RTCZero::Alarm_Match match;

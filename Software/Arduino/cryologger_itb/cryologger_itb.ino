@@ -234,17 +234,17 @@ static const uint32_t GNSS_EPOCH_MIN = 1767225600UL;  // Minimum date (2026-01-0
 static const uint32_t GNSS_EPOCH_MAX = 2051222400UL;  // Maximum date (2035-01-01)
 
 // Measurement variables
-float temperatureInt = 0.0;  // Internal temperature (°C)
-float humidityInt = 0.0;     // Internal humidity (%)
-float pressureInt = 0.0;     // Internal pressure (hPa)
-float pitch = 0.0;           // Pitch (°)
-float roll = 0.0;            // Roll (°)
+float temperatureInt = 0.0f;  // Internal temperature (°C)
+float humidityInt = 0.0f;     // Internal humidity (%)
+float pressureInt = 0.0f;     // Internal pressure (hPa)
+float pitch = 0.0f;           // Pitch (°)
+float roll = 0.0f;            // Roll (°)
 int heading = 0;             // Tilt-compensated heading (°)
-float latitude = 0.0;        // GNSS latitude (DD)
-float longitude = 0.0;       // GNSS longitude (DD)
+float latitude = 0.0f;        // GNSS latitude (DD)
+float longitude = 0.0f;       // GNSS longitude (DD)
 uint8_t satellites = 0;      // GNSS satellites
 uint16_t hdop = 0;           // GNSS HDOP
-float voltage = 0.0;         // Battery voltage
+float voltage = 0.0f;         // Battery voltage
 
 // ----------------------------------------------------------------------------
 // Setup

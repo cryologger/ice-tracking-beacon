@@ -18,7 +18,7 @@ static const uint32_t FIELD_STALE_MS_MAX = 1500;  // NMEA field freshness gate
 static const uint8_t GNSS_SAMPLE_TARGET = 30;  // Target number of fixes to collect for median
 static const uint8_t GNSS_SAMPLE_MIN = 10;     // Minimum fixes needed to use median
 
-// No-fix sentinels (avoid 0,0 ambiguity in payload)
+// No-fix sentinels
 static const int32_t GNSS_LATLON_NOVALUE = -999999999L;
 static const uint16_t GNSS_HDOP_NOVALUE = 0xFFFF;
 static const uint8_t GNSS_SATS_NOVALUE = 0xFF;
@@ -81,6 +81,7 @@ static bool isValidFix() {
   if (!gnss.location.isValid() || gnss.location.age() > FIELD_STALE_MS_MAX) return false;
   if (!gnss.time.isValid() || gnss.time.age() > FIELD_STALE_MS_MAX) return false;
   if (!gnss.date.isValid() || gnss.date.age() > FIELD_STALE_MS_MAX) return false;
+  if (!gnss.hdop.isValid() || gnss.hdop.age() > FIELD_STALE_MS_MAX) return false;
   if (!gnss.satellites.isValid() || gnss.satellites.age() > FIELD_STALE_MS_MAX) return false;
   if (gnss.satellites.value() == 0) return false;
   return true;
@@ -372,10 +373,10 @@ void readGnss() {
     moSbdMessage.hdop = GNSS_HDOP_NOVALUE;
 
     // Also clear globals on no-fix (so any downstream logic can detect it)
-    latitude = 0.0;
-    longitude = 0.0;
+    latitude = 0.0f;
+    longitude = 0.0f;
     satellites = 0;
-    hdop = 0.0;
+    hdop = 0;
   }
 
   // Close GNSS Serial port
