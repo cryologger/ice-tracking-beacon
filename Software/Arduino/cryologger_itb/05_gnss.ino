@@ -67,11 +67,10 @@ static bool isGoodFix() {
   if (!gnss.location.isValid() || gnss.location.age() > FIELD_STALE_MS_MAX) return false;
   if (!gnss.time.isValid() || gnss.time.age() > FIELD_STALE_MS_MAX) return false;
   if (!gnss.date.isValid() || gnss.date.age() > FIELD_STALE_MS_MAX) return false;
-  if (!gnss.hdop.isValid() || !gnss.satellites.isValid()) return false;
-
+  if (!gnss.hdop.isValid() || gnss.hdop.age() > FIELD_STALE_MS_MAX) return false;
+  if (!gnss.satellites.isValid() || gnss.satellites.age() > FIELD_STALE_MS_MAX) return false;
   if (gnss.satellites.value() < SATS_GOOD_MIN) return false;
   if (gnss.hdop.value() > HDOP_GOOD_MAX) return false;
-
   return true;
 }
 
@@ -79,11 +78,12 @@ static bool isGoodFix() {
 // “Any valid” fix used as a fallback if not enough samples collected.
 // ----------------------------------------------------------------------------
 static bool isValidFix() {
-  return (
-    gnss.location.isValid() && gnss.location.age() < FIELD_STALE_MS_MAX
-    && gnss.time.isValid() && gnss.time.age() < FIELD_STALE_MS_MAX
-    && gnss.date.isValid() && gnss.date.age() < FIELD_STALE_MS_MAX
-    && gnss.satellites.isValid() && gnss.satellites.value() > 0);
+  if (!gnss.location.isValid() || gnss.location.age() > FIELD_STALE_MS_MAX) return false;
+  if (!gnss.time.isValid() || gnss.time.age() > FIELD_STALE_MS_MAX) return false;
+  if (!gnss.date.isValid() || gnss.date.age() > FIELD_STALE_MS_MAX) return false;
+  if (!gnss.satellites.isValid() || gnss.satellites.age() > FIELD_STALE_MS_MAX) return false;
+  if (gnss.satellites.value() == 0) return false;
+  return true;
 }
 
 // ----------------------------------------------------------------------------
@@ -175,7 +175,6 @@ static uint8_t medianUint8(uint8_t values[], uint8_t count) {
 void readGnss() {
   // Start execution timer
   uint32_t startTime = millis();
-
 
   // Clear flags
   bool fixFound = false;
