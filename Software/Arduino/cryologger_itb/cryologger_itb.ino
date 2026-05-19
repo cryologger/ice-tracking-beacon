@@ -30,7 +30,7 @@
 // ----------------------------------------------------------------------------
 
 // Device identifier
-#define SERIAL_NUMBER "ITB_26_042"  // Unique identifier
+#define SERIAL_NUMBER "ITB_26_TST"  // Unique identifier
 
 // Rolling alarm parameters
 #define ALARM_MODE HOURLY        // Alarm mode (MINUTE, HOURLY, DAILY)
@@ -39,8 +39,7 @@
 #define ALARM_INTERVAL_MINUTE 0  // Alarm minute interval (1-59 minutes)
 
 // Transmission parameters
-#define TRANSMIT_INTERVAL 3    // Messages included per Iridium TX (Limit: 340 bytes)
-#define TRANSMIT_REATTEMPTS 3  // Number of reattempt cycles after a failed TX
+#define TRANSMIT_INTERVAL 3  // Messages included per Iridium TX (Limit: 340 bytes)
 
 // GNSS and Iridium parameters. Do not change unless debugging
 #define GNSS_TIMEOUT 180     // GNSS acquisition timeout (s) - default: 180
@@ -120,9 +119,11 @@
 // ----------------------------------------------------------------------------
 // Alarm Mode Definitions
 // ----------------------------------------------------------------------------
-#define MINUTE 0
-#define HOURLY 1
-#define DAILY 2
+enum AlarmMode : uint8_t {
+  MINUTE = 0,
+  HOURLY = 1,
+  DAILY = 2
+};
 
 // ----------------------------------------------------------------------------
 // Serial/UART Configuration
@@ -157,12 +158,6 @@ Adafruit_LSM6DSOX lsm6dsox;
 IridiumSBD modem(IRIDIUM_PORT, PIN_IRIDIUM_SLEEP);
 RTCZero rtc;
 TinyGPSPlus gnss;
-
-// Custom TinyGPS objects for fix and validity checks.
-// Note: $GPGGA and $GPRMC sentences produced by GPS receivers (PA6H module)
-// $GNGGA and $GNRMC sentences produced by GPS/GLONASS receivers (PA161D module)
-TinyGPSCustom gnssFix(gnss, "GNGGA", 6);       // Fix quality
-TinyGPSCustom gnssValidity(gnss, "GNRMC", 2);  // Validity
 
 // ----------------------------------------------------------------------------
 // Structures for Iridium SBD Transmission
@@ -214,7 +209,7 @@ uint16_t iridiumStartup = IRIDIUM_STARTUP;            // Timeout for Iridium sta
 volatile bool alarmFlag = false;  // Flag for alarm interrupt service routine
 volatile bool wdtFlag = false;    // Flag for Watchdog Timer interrupt service routine
 bool firstTimeFlag = true;        // Flag to determine if program is running for the first time
-bool resetFlag = 0;               // Flag to force system reset using Watchdog Timer
+bool resetFlag = false;           // Flag to force system reset using Watchdog Timer
 
 // Counters
 volatile int wdtCounter = 0;    // Watchdog Timer interrupt counter
@@ -224,16 +219,14 @@ uint16_t iterationCounter = 0;  // Counter to track total number of program iter
 uint8_t moSbdBuffer[SBD_MO_BUF_BYTES];  // Buffer for Mobile Originated SBD (MO-SBD) message (340 bytes max)
 uint8_t mtSbdBuffer[SBD_MT_BUF_BYTES];  // Buffer for Mobile Terminated SBD (MT-SBD) message (270 bytes max)
 size_t moSbdBufferSize;                 // Size of MO-SBD message buffer
-size_t mtSbdBufferSize;                 // size of MT-SBD message buffer
-byte transmitCounter = 0;               // Counter to track Iridium SBD transmission intervals
+size_t mtSbdBufferSize;                 // Size of MT-SBD message buffer
+uint8_t transmitCounter = 0;            // Counter to track Iridium SBD transmission intervals
 
 // RTC and timers
 uint32_t unixtime = 0;        // Global epoch time variable
-uint32_t alarmTime = 0;       // Global epoch alarm time variable
 uint32_t gnssEpoch = 0;       // Seconds GNSS epoch time
 uint32_t rtcEpoch = 0;        // Global RTC epoch time
 int32_t rtcDrift = 0;         // Global RTC drift
-tmElements_t tm;              // Variable for converting time elements to time_t
 uint32_t previousMillis = 0;  // Global millis() timer
 
 // GNSS epoch time guards
@@ -249,7 +242,7 @@ float roll = 0.0;            // Roll (°)
 int heading = 0;             // Tilt-compensated heading (°)
 float latitude = 0.0;        // GNSS latitude (DD)
 float longitude = 0.0;       // GNSS longitude (DD)
-byte satellites = 0;         // GNSS satellites
+uint8_t satellites = 0;      // GNSS satellites
 uint16_t hdop = 0;           // GNSS HDOP
 float voltage = 0.0;         // Battery voltage
 
@@ -284,7 +277,7 @@ void setup() {
 #if DEBUG
   SERIAL_PORT.begin(115200);  // Open serial port at 115200 baud
   // while (!Serial);     // Optionally wait for Serial Monitor connection
-  blinkLed(4, 500);  // Non-blocking delay to allow user to open Serial Monitor
+  blinkLed(4, 500);  // Delay to allow user to open Serial Monitor
 #endif
 
   // Output startup information
@@ -294,7 +287,7 @@ void setup() {
   printLine();
   DEBUG_PRINTLN("[Setup] Info: Initializing peripherals...");
 
-  // Configure devices.
+  // Configure devices
   configureRtc();      // Configure real-time clock (RTC)
   readRtc();           // Read datetime from RTC
   configureWdt();      // Configure Watchdog Timer (WDT)
@@ -336,7 +329,6 @@ void loop() {
     printDateTime();
 
     // Perform measurements
-    readBattery();         // Read the battery voltage
     readGnss();            // Read the GNSS
     enableImuPower();      // Enable 3.3V power to IMU
     enableSensorPower();   // Enable power to sensor(s)
@@ -352,16 +344,16 @@ void loop() {
       transmitData();
     }
 
-    // Print function execution timers.
+    // Print function execution timers
     printTimers();
 
-    // Set the next RTC alarm.
+    // Set the next RTC alarm
     setRtcAlarm();
 
     DEBUG_PRINTLN("[Main] Entering deep sleep...");
     DEBUG_PRINTLN();
 
-    // Prepare system for sleep.
+    // Prepare system for sleep
     prepareForSleep();
 
     myDelay(500);  // Debugging delay

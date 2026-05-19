@@ -10,10 +10,7 @@
 // Prints a horizontal separator line (80 dashes).
 // ----------------------------------------------------------------------------
 void printLine() {
-  for (byte i = 0; i < 80; i++) {
-    DEBUG_PRINT("-");
-  }
-  DEBUG_PRINTLN();
+  DEBUG_PRINTLN(F("--------------------------------------------------------------------------------"));
 }
 
 // ----------------------------------------------------------------------------
@@ -46,7 +43,7 @@ void printSystemInfo() {
   printDateTime();
   DEBUG_PRINT("Battery:");
   printTab(2);
-  DEBUG_PRINTLN(readBattery());
+  DEBUG_PRINTLN(voltage);
   DEBUG_PRINT("Free Ram: ");
   printTab(2);
   DEBUG_PRINTLN(freeRam());
@@ -63,7 +60,10 @@ void printSettings() {
 
   DEBUG_PRINT("Alarm Mode: ");
   printTab(2);
-  DEBUG_PRINTLN(alarmMode);
+  if (alarmMode == DAILY) DEBUG_PRINTLN("DAILY");
+  else if (alarmMode == HOURLY) DEBUG_PRINTLN("HOURLY");
+  else if (alarmMode == MINUTE) DEBUG_PRINTLN("MINUTE");
+  else DEBUG_PRINTLN("Unknown");
 
   DEBUG_PRINT("Alarm Interval: ");
   printTab(1);

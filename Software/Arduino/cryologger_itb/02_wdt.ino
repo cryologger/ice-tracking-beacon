@@ -8,7 +8,8 @@
 
 // ----------------------------------------------------------------------------
 // Configure Watchdog Timer.
-// Perform a system reset if loop() blocks for more than 8–16 seconds.
+// Early warning fires at 8 s; system resets after 10 consecutive
+// unserviced warnings (~80 s total), indicating a genuinely stuck system.
 // ----------------------------------------------------------------------------
 void configureWdt() {
   /*

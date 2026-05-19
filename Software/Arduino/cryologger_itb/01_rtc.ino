@@ -26,9 +26,9 @@ void configureRtc() {
   // Initialize the RTC.
   rtc.begin();
 
-  // Optional manual time setting:
-  //rtc.setTime(23, 58, 30); // hours, minutes, seconds
-  //rtc.setDate(1, 6, 22);   // day, month, year
+  // Debugging only: manual time settings
+  //rtc.setTime(23, 58, 30);  // hours, minutes, seconds
+  //rtc.setDate(1, 6, 26);    // day, month, year
   //rtc.setEpoch();          // Sets the time to specified epoch
 
   // Set the initial alarm time to the next hour rollover (hours, minutes, seconds).
@@ -36,7 +36,7 @@ void configureRtc() {
 
   // Enable alarm for hour rollover match.
   rtc.enableAlarm(rtc.MATCH_MMSS);
-  // rtc.enableAlarm(rtc.MATCH_SS); // Debugging only
+  //rtc.enableAlarm(rtc.MATCH_SS); // Debugging only
 
   // Attach alarm interrupt service routine (ISR)
   rtc.attachInterrupt(alarmIsr);
@@ -100,7 +100,7 @@ void setRtcAlarm() {
   }
 
   // Align to the next clean interval boundary
-  uint32_t next_epoch = ((current_epoch + interval_sec) / interval_sec) * interval_sec;
+  uint32_t next_epoch = ((current_epoch / interval_sec) + 1UL) * interval_sec;
 
   // Convert to date/time
   tmElements_t tm;
@@ -128,7 +128,7 @@ void setRtcAlarm() {
       break;
     case DAILY:
     default:
-      match = RTCZero::MATCH_HHMMSS;  // Matches every HH:MM:SS
+      match = RTCZero::MATCH_DHHMMSS;  // Matches every DD:HH:MM:SS
       break;
   }
 

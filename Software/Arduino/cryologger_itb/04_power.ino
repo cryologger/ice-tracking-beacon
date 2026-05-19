@@ -18,7 +18,7 @@ float readBattery() {
   // Measure external battery voltage across 10/1 MΩ resistor divider (1/10)
   (void)analogRead(PIN_VBAT);  // Dummy read
   voltage = analogRead(PIN_VBAT);
-  voltage *= ((10000000.0 + 1000000.0) / 1000000.0);
+  voltage *= ((10000000.0f + 1000000.0f) / 1000000.0f);
   voltage *= 3.3;   // Multiply by 3.3V reference
   voltage /= 4096;  // Convert raw ADC count to actual voltage
 
@@ -160,9 +160,9 @@ void blinkLed(byte ledFlashes, uint16_t ledDelay) {
 }
 
 // ----------------------------------------------------------------------------
-// Non-blocking delay function that continues to reset the Watchdog Timer.
-// This function delays for a specified duration (in milliseconds) while
-// calling petDog() to prevent unintended WDT resets.
+// Delay function that resets the Watchdog Timer throughout the wait.
+// Delays for the specified duration (ms) while preventing WDT resets.
+// Note: minimum effective delay is ~10 ms due to inner delay(10).
 // ----------------------------------------------------------------------------
 void myDelay(uint32_t ms) {
   uint32_t start = millis();

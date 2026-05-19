@@ -59,6 +59,7 @@ float mapFloat(float x, float in_min, float in_max,
 // voltage2 — actual battery voltage (scaled through 10 MΩ + 1 MΩ divider)
 // ----------------------------------------------------------------------------
 void calibrateAdc() {
+  (void)analogRead(PIN_VBAT);  // Dummy read
   float sensorValue = analogRead(PIN_VBAT);
 
   // Direct scaling: raw ADC pin voltage (0–3.3 V)
