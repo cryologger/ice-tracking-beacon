@@ -11,14 +11,15 @@
 // ----------------------------------------------------------------------------
 // Tuning parameters
 // ----------------------------------------------------------------------------
-static const uint16_t HDOP_GOOD_MAX = 250;        // <= 2.50 for accepted samples
-static const uint8_t SATS_GOOD_MIN = 5;           // Prefer stable 3D
-static const uint32_t FIELD_STALE_MS_MAX = 1500;  // NMEA field freshness gate
+static const uint16_t HDOP_PREFERRED_MAX = 250;   // <= 2.50 HDOP for preferred fixes
+static const uint8_t SATS_PREFERRED_MIN = 5;      // Minimum satellites for preferred fixes
+static const uint32_t FIELD_STALE_MS_MAX = 1500;  // NMEA field freshness gate (ms)
 
-static const uint8_t GNSS_SAMPLE_TARGET = 30;  // Target number of fixes to collect for median
-static const uint8_t GNSS_SAMPLE_MIN = 10;     // Minimum fixes needed to use median
+static const uint8_t GNSS_PREFERRED_TARGET = 15;  // Exit early if this many preferred fixes collected
+static const uint8_t GNSS_SAMPLE_TARGET = 30;     // Maximum acceptable fixes to collect
+static const uint8_t GNSS_SAMPLE_MIN = 1;         // Minimum fixes needed to report a position
 
-// No-fix sentinels
+// No-fix sentinels (avoid 0,0 ambiguity in payload)
 static const int32_t GNSS_LATLON_NOVALUE = -999999999L;
 static const uint16_t GNSS_HDOP_NOVALUE = 0xFFFF;
 static const uint8_t GNSS_SATS_NOVALUE = 0xFF;
@@ -61,29 +62,30 @@ void configureGnss() {
 }
 
 // ----------------------------------------------------------------------------
-// Checks for an acceptable GNSS fix to add to the median sample buffer.
+// Base validity check shared by both fix tiers.
+// Ensures all required fields are present and fresh before any quality
+// thresholds are applied. An acceptable fix is any fix that passes this
+// check — the receiver's own validity judgement is the only gate.
 // ----------------------------------------------------------------------------
-static bool isGoodFix() {
+static bool isFreshValidFix() {
   if (!gnss.location.isValid() || gnss.location.age() > FIELD_STALE_MS_MAX) return false;
   if (!gnss.time.isValid() || gnss.time.age() > FIELD_STALE_MS_MAX) return false;
   if (!gnss.date.isValid() || gnss.date.age() > FIELD_STALE_MS_MAX) return false;
   if (!gnss.hdop.isValid() || gnss.hdop.age() > FIELD_STALE_MS_MAX) return false;
   if (!gnss.satellites.isValid() || gnss.satellites.age() > FIELD_STALE_MS_MAX) return false;
-  if (gnss.satellites.value() < SATS_GOOD_MIN) return false;
-  if (gnss.hdop.value() > HDOP_GOOD_MAX) return false;
   return true;
 }
 
 // ----------------------------------------------------------------------------
-// “Any valid” fix used as a fallback if not enough samples collected.
+// Checks for a preferred fix: fresh and valid, with low HDOP and high
+// satellite count. These drive toward early exit at GNSS_PREFERRED_TARGET
+// and produce the highest quality median. Also stored in the acceptable
+// buffer since preferred is a subset of acceptable.
 // ----------------------------------------------------------------------------
-static bool isValidFix() {
-  if (!gnss.location.isValid() || gnss.location.age() > FIELD_STALE_MS_MAX) return false;
-  if (!gnss.time.isValid() || gnss.time.age() > FIELD_STALE_MS_MAX) return false;
-  if (!gnss.date.isValid() || gnss.date.age() > FIELD_STALE_MS_MAX) return false;
-  if (!gnss.hdop.isValid() || gnss.hdop.age() > FIELD_STALE_MS_MAX) return false;
-  if (!gnss.satellites.isValid() || gnss.satellites.age() > FIELD_STALE_MS_MAX) return false;
-  if (gnss.satellites.value() == 0) return false;
+static bool isPreferredFix() {
+  if (!isFreshValidFix()) return false;
+  if (gnss.satellites.value() < SATS_PREFERRED_MIN) return false;
+  if (gnss.hdop.value() > HDOP_PREFERRED_MAX) return false;
   return true;
 }
 
@@ -169,6 +171,33 @@ static uint8_t medianUint8(uint8_t values[], uint8_t count) {
 }
 
 // ----------------------------------------------------------------------------
+// Computes and stores a median fix from the sample buffer.
+// Called from all exit paths to avoid duplicating the median computation
+// and debug output.
+// ----------------------------------------------------------------------------
+static void computeMedianFix(double latSamples[], double lngSamples[],
+                             uint8_t satsSamples[], uint16_t hdopSamples[],
+                             uint8_t count, time_t epoch) {
+  latitude = medianDouble(latSamples, count);
+  longitude = medianDouble(lngSamples, count);
+  satellites = medianUint8(satsSamples, count);
+  hdop = medianUint16(hdopSamples, count);
+  gnssEpoch = epoch;
+
+  DEBUG_PRINT("[GNSS] Info: Median fix calculated from ");
+  DEBUG_PRINT(count);
+  DEBUG_PRINTLN(" samples.");
+  DEBUG_PRINT("[GNSS] Info: Median latitude = ");
+  DEBUG_PRINTLN_DEC(latitude, 6);
+  DEBUG_PRINT("[GNSS] Info: Median longitude = ");
+  DEBUG_PRINTLN_DEC(longitude, 6);
+  DEBUG_PRINT("[GNSS] Info: Median satellites = ");
+  DEBUG_PRINTLN(satellites);
+  DEBUG_PRINT("[GNSS] Info: Median HDOP = ");
+  DEBUG_PRINTLN_DEC((float)hdop / 100.0f, 2);
+}
+
+// ----------------------------------------------------------------------------
 // Reads the GNSS receiver.
 // If a valid fix is found, sync the RTC if newer than the current unixtime,
 // update moSbdMessage with GNSS data, and log RTC drift.
@@ -181,19 +210,25 @@ void readGnss() {
   bool fixFound = false;
   bool charsSeen = false;
 
-  double latSamples[GNSS_SAMPLE_TARGET];
-  double lngSamples[GNSS_SAMPLE_TARGET];
-  uint8_t satsSamples[GNSS_SAMPLE_TARGET];
-  uint16_t hdopSamples[GNSS_SAMPLE_TARGET];
+  // Preferred buffer: high-quality fixes only (HDOP <= HDOP_PREFERRED_MAX,
+  // sats >= SATS_PREFERRED_MIN). Used for the median if enough are collected.
+  double preferredLatSamples[GNSS_PREFERRED_TARGET];
+  double preferredLngSamples[GNSS_PREFERRED_TARGET];
+  uint8_t preferredSatsSamples[GNSS_PREFERRED_TARGET];
+  uint16_t preferredHdopSamples[GNSS_PREFERRED_TARGET];
+  uint8_t preferredCount = 0;
+
+  // Acceptable buffer: any fix the receiver considers valid and fresh,
+  // including preferred ones. Used as fallback if preferred count is
+  // insufficient.
+  double acceptableLatSamples[GNSS_SAMPLE_TARGET];
+  double acceptableLngSamples[GNSS_SAMPLE_TARGET];
+  uint8_t acceptableSatsSamples[GNSS_SAMPLE_TARGET];
+  uint16_t acceptableHdopSamples[GNSS_SAMPLE_TARGET];
+  uint8_t acceptableCount = 0;
 
   tmElements_t tm;
-  uint8_t sampleCount = 0;
-  time_t lastGoodEpoch = 0;
-  bool haveFallback = false;
-  double fbLat = 0.0, fbLng = 0.0;
-  uint8_t fbSats = 0;
-  uint16_t fbHdop = 9999;
-  time_t fbEpoch = 0;
+  time_t lastEpoch = 0;
 
   // Enable power to GNSS
   enableGnssPower();
@@ -230,69 +265,72 @@ void readGnss() {
     // ------------------------------------------------------------------------
     if (gnss.hdop.isUpdated()) {
 
-      // Maintain a fallback fix in case we do not collect enough good samples.
-      if (isValidFix()) {
-        uint16_t h = gnss.hdop.isValid() ? gnss.hdop.value() : 9999;
+      bool preferred = isPreferredFix();
+      bool acceptable = !preferred && isFreshValidFix();
 
-        if (!haveFallback || h < fbHdop) {
-          haveFallback = true;
-          fbLat = gnss.location.lat();
-          fbLng = gnss.location.lng();
-          fbSats = gnss.satellites.isValid() ? gnss.satellites.value() : 0;
-          fbHdop = h;
+      if (preferred || acceptable) {
 
-          tm.Hour = gnss.time.hour();
-          tm.Minute = gnss.time.minute();
-          tm.Second = gnss.time.second();
-          tm.Day = gnss.date.day();
-          tm.Month = gnss.date.month();
-          tm.Year = gnss.date.year() - 1970;
-          fbEpoch = makeTime(tm);
-        }
-      }
-
-      // Add accepted fixes to the median sample buffer.
-      if (isGoodFix() && sampleCount < GNSS_SAMPLE_TARGET) {
-        latSamples[sampleCount] = gnss.location.lat();
-        lngSamples[sampleCount] = gnss.location.lng();
-        satsSamples[sampleCount] = gnss.satellites.value();
-        hdopSamples[sampleCount] = gnss.hdop.value();
-
+        // Capture time elements once for both buffers
         tm.Hour = gnss.time.hour();
         tm.Minute = gnss.time.minute();
         tm.Second = gnss.time.second();
         tm.Day = gnss.date.day();
         tm.Month = gnss.date.month();
         tm.Year = gnss.date.year() - 1970;
-        lastGoodEpoch = makeTime(tm);
+        lastEpoch = makeTime(tm);
 
-        sampleCount++;
+        // Store in acceptable buffer — receives all fixes including preferred
+        if (acceptableCount < GNSS_SAMPLE_TARGET) {
+          acceptableLatSamples[acceptableCount] = gnss.location.lat();
+          acceptableLngSamples[acceptableCount] = gnss.location.lng();
+          acceptableSatsSamples[acceptableCount] = gnss.satellites.value();
+          acceptableHdopSamples[acceptableCount] = gnss.hdop.value();
+          acceptableCount++;
+        }
 
-        DEBUG_PRINT("[GNSS] Info: GNSS sample ");
-        DEBUG_PRINT(sampleCount);
+        // Additionally store in preferred buffer if it qualifies
+        if (preferred && preferredCount < GNSS_PREFERRED_TARGET) {
+          preferredLatSamples[preferredCount] = gnss.location.lat();
+          preferredLngSamples[preferredCount] = gnss.location.lng();
+          preferredSatsSamples[preferredCount] = gnss.satellites.value();
+          preferredHdopSamples[preferredCount] = gnss.hdop.value();
+          preferredCount++;
+        }
+
+        DEBUG_PRINT("[GNSS] Info: Sample ");
+        DEBUG_PRINT(acceptableCount);
         DEBUG_PRINT("/");
-        DEBUG_PRINTLN(GNSS_SAMPLE_TARGET);
+        DEBUG_PRINT(GNSS_SAMPLE_TARGET);
+        DEBUG_PRINT(preferred ? " [preferred] preferred: " : " [acceptable] preferred: ");
+        DEBUG_PRINT(preferredCount);
+        DEBUG_PRINT("/");
+        DEBUG_PRINTLN(GNSS_PREFERRED_TARGET);
 
-        if (sampleCount >= GNSS_SAMPLE_TARGET) {
-          latitude = medianDouble(latSamples, sampleCount);
-          longitude = medianDouble(lngSamples, sampleCount);
-          satellites = medianUint8(satsSamples, sampleCount);
-          hdop = medianUint16(hdopSamples, sampleCount);
-          gnssEpoch = lastGoodEpoch;
-
+        // Exit early if enough preferred fixes have been collected —
+        // preferred buffer contains only high-quality uncontaminated data
+        if (preferredCount >= GNSS_PREFERRED_TARGET) {
+          computeMedianFix(preferredLatSamples, preferredLngSamples,
+                           preferredSatsSamples, preferredHdopSamples,
+                           preferredCount, lastEpoch);
+          DEBUG_PRINTLN("[GNSS] Info: Preferred fix threshold reached. Exiting early.");
           fixFound = true;
+        }
 
-          DEBUG_PRINT("[GNSS] Info: Median fix calculated from ");
-          DEBUG_PRINT(sampleCount);
-          DEBUG_PRINTLN(" samples.");
-          DEBUG_PRINT("[GNSS] Info: Median latitude = ");
-          DEBUG_PRINTLN_DEC(latitude, 6);
-          DEBUG_PRINT("[GNSS] Info: Median longitude = ");
-          DEBUG_PRINTLN_DEC(longitude, 6);
-          DEBUG_PRINT("[GNSS] Info: Median satellites = ");
-          DEBUG_PRINTLN(satellites);
-          DEBUG_PRINT("[GNSS] Info: Median HDOP = ");
-          DEBUG_PRINTLN_DEC((float)hdop / 100.0f, 2);
+        // Exit if the acceptable buffer is full — use preferred if any exist,
+        // otherwise fall back to the full acceptable buffer
+        if (!fixFound && acceptableCount >= GNSS_SAMPLE_TARGET) {
+          if (preferredCount >= GNSS_SAMPLE_MIN) {
+            computeMedianFix(preferredLatSamples, preferredLngSamples,
+                             preferredSatsSamples, preferredHdopSamples,
+                             preferredCount, lastEpoch);
+            DEBUG_PRINTLN("[GNSS] Info: Acceptable buffer full. Using preferred median.");
+          } else {
+            computeMedianFix(acceptableLatSamples, acceptableLngSamples,
+                             acceptableSatsSamples, acceptableHdopSamples,
+                             acceptableCount, lastEpoch);
+            DEBUG_PRINTLN("[GNSS] Info: Acceptable buffer full. Using acceptable median.");
+          }
+          fixFound = true;
         }
       }
     }
@@ -307,26 +345,22 @@ void readGnss() {
     }
   }
 
-  // If timeout was reached with enough samples but not the full target, use partial median
-  if (!fixFound && sampleCount >= GNSS_SAMPLE_MIN) {
-    latitude = medianDouble(latSamples, sampleCount);
-    longitude = medianDouble(lngSamples, sampleCount);
-    satellites = medianUint8(satsSamples, sampleCount);
-    hdop = medianUint16(hdopSamples, sampleCount);
-    gnssEpoch = lastGoodEpoch;
-    fixFound = true;
-
-    DEBUG_PRINT("[GNSS] Info: Partial median fix from ");
-    DEBUG_PRINT(sampleCount);
-    DEBUG_PRINTLN(" samples (timeout reached).");
-    DEBUG_PRINT("[GNSS] Info: Partial median latitude = ");
-    DEBUG_PRINTLN_DEC(latitude, 6);
-    DEBUG_PRINT("[GNSS] Info: Partial median longitude = ");
-    DEBUG_PRINTLN_DEC(longitude, 6);
-    DEBUG_PRINT("[GNSS] Info: Partial median satellites = ");
-    DEBUG_PRINTLN(satellites);
-    DEBUG_PRINT("[GNSS] Info: Partial median HDOP = ");
-    DEBUG_PRINTLN_DEC((float)hdop / 100.0f, 2);
+  // Timeout reached — use whatever was collected, preferring the preferred
+  // buffer if it has any samples, otherwise using the acceptable buffer
+  if (!fixFound) {
+    if (preferredCount >= GNSS_SAMPLE_MIN) {
+      computeMedianFix(preferredLatSamples, preferredLngSamples,
+                       preferredSatsSamples, preferredHdopSamples,
+                       preferredCount, lastEpoch);
+      DEBUG_PRINTLN("[GNSS] Info: Timeout reached. Using preferred median.");
+      fixFound = true;
+    } else if (acceptableCount >= GNSS_SAMPLE_MIN) {
+      computeMedianFix(acceptableLatSamples, acceptableLngSamples,
+                       acceptableSatsSamples, acceptableHdopSamples,
+                       acceptableCount, lastEpoch);
+      DEBUG_PRINTLN("[GNSS] Info: Timeout reached. Using acceptable median.");
+      fixFound = true;
+    }
   }
 
   if (fixFound) {
@@ -346,27 +380,10 @@ void readGnss() {
     DEBUG_PRINTLN(" seconds.");
 
     blinkLed(5, 100);
-  } else if (haveFallback) {
-    DEBUG_PRINTLN("[GNSS] Info: Using best valid fix before timeout. Not enough samples for median.");
-
-    // Sync RTC from fallback if newer
-    DEBUG_PRINTLN("[RTC] Info: Syncing RTC from fallback fix...");
-    syncRtcFromGnss(fbEpoch);
-
-    // Set fallback
-    latitude = fbLat;
-    longitude = fbLng;
-    satellites = fbSats;
-    hdop = fbHdop;
-
-    moSbdMessage.latitude = (int32_t)lround(latitude * 1000000.0);
-    moSbdMessage.longitude = (int32_t)lround(longitude * 1000000.0);
-    moSbdMessage.satellites = satellites;
-    moSbdMessage.hdop = (uint16_t)hdop;
   } else {
     DEBUG_PRINTLN("[GNSS] Warning: No GNSS fix found!");
 
-    // Explicit “no-fix” payload
+    // Explicit "no-fix" payload
     moSbdMessage.latitude = GNSS_LATLON_NOVALUE;
     moSbdMessage.longitude = GNSS_LATLON_NOVALUE;
     moSbdMessage.satellites = GNSS_SATS_NOVALUE;
