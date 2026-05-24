@@ -405,10 +405,10 @@ void transmitData() {
   uint32_t startTime = millis();
   enable5V();
   myDelay(100);
-
+  
+  IRIDIUM_PORT.begin(19200);
   pinPeripheral(PIN_IRIDIUM_TX, PIO_SERCOM);
   pinPeripheral(PIN_IRIDIUM_RX, PIO_SERCOM);
-  IRIDIUM_PORT.begin(19200);
 
   DEBUG_PRINTLN("[Iridium] Info: Initializing Iridium modem...");
   int rc = modem.begin();
