@@ -404,9 +404,11 @@ void transmitData() {
   // Power up modem and open serial port
   uint32_t startTime = millis();
   enable5V();
-  IRIDIUM_PORT.begin(19200);
+  myDelay(100);
+
   pinPeripheral(PIN_IRIDIUM_TX, PIO_SERCOM);
   pinPeripheral(PIN_IRIDIUM_RX, PIO_SERCOM);
+  IRIDIUM_PORT.begin(19200);
 
   DEBUG_PRINTLN("[Iridium] Info: Initializing Iridium modem...");
   int rc = modem.begin();
@@ -522,8 +524,13 @@ void ISBDDiagsCallback(IridiumSBD* /*device*/, char c) {
 }
 #endif
 
-// Inverts HIGH/LOW to drive the N-FET controlling the RockBLOCK On/Off pin.
+// ----------------------------------------------------------------------------
+// RockBLOCK sleep control
+// ----------------------------------------------------------------------------
 void IridiumSBD::setSleepPin(uint8_t enable) {
+#if ROCKBLOCK_VERSION_3F
+
+  // RockBLOCK 9603N version 3.F uses inverted logic through TN0702 N-FET
   if (enable == HIGH) {
     digitalWrite(this->sleepPin, LOW);
     diagprint(F("Modem wake requested.\r\n"));
@@ -531,6 +538,19 @@ void IridiumSBD::setSleepPin(uint8_t enable) {
     digitalWrite(this->sleepPin, HIGH);
     diagprint(F("Modem sleep requested.\r\n"));
   }
+
+#else
+
+  // Earlier RockBLOCK versions use normal logic
+  digitalWrite(this->sleepPin, enable);
+
+  if (enable == HIGH) {
+    diagprint(F("Modem wake requested.\r\n"));
+  } else {
+    diagprint(F("Modem sleep requested.\r\n"));
+  }
+
+#endif
 }
 
 void printIridiumError(int code) {
