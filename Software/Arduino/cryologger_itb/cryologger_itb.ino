@@ -47,7 +47,6 @@
 #define IRIDIUM_STARTUP 120  // Iridium modem startup timeout (s) - default: 120
 
 // Iridium SBD sizing
-#define SBD_MO_SIZE 34  // Size of MO-SBD message (bytes)
 #define SBD_MT_SIZE 6   // Size of MT-SBD message (bytes)
 
 // ----------------------------------------------------------------------------
