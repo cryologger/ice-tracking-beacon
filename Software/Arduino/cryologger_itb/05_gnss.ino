@@ -252,7 +252,7 @@ void readGnss() {
       char c = GNSS_PORT.read();
 
 #if DEBUG_GNSS
-      Serial.write(c);
+      DEBUG_WRITE(c);
 #endif
 
       gnss.encode(c);
