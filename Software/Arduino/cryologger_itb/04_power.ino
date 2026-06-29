@@ -19,8 +19,8 @@ float readBattery() {
   (void)analogRead(PIN_VBAT);  // Dummy read
   voltage = analogRead(PIN_VBAT);
   voltage *= ((10000000.0f + 1000000.0f) / 1000000.0f);
-  voltage *= 3.3;   // Multiply by 3.3V reference
-  voltage /= 4096;  // Convert raw ADC count to actual voltage
+  voltage *= 3.3;      // Multiply by 3.3V reference
+  voltage /= 4096.0f;  // Convert raw ADC count to actual voltage
 
   // Record elapsed execution time
   timer.readBattery = millis() - startTime;

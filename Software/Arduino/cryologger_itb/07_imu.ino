@@ -107,7 +107,7 @@ void configureLsm6dsox() {
 
   // One-time setup (safe to call every wake)
   initOnce();
-  selectImuCalibrationOnce();
+  //selectImuCalibrationOnce();
 
   DEBUG_PRINT("[IMU] Info: Initializing LSM6DSOX + LIS3MDL...");
 

@@ -1,6 +1,6 @@
 /*
   Title:    Cryologger Ice Tracking Beacon (ITB)
-  Date:     May 17, 2026
+  Date:     June 28, 2026
   Author:   Adam Garbo
   Version:  4.1.0
   License:  GPLv3. See license file for more information.
@@ -47,7 +47,7 @@
 #define IRIDIUM_STARTUP 120  // Iridium modem startup timeout (s) - default: 120
 
 // Iridium SBD sizing
-#define SBD_MO_SIZE 34   // Size of MO-SBD message (bytes)
+#define SBD_MO_SIZE 34  // Size of MO-SBD message (bytes)
 #define SBD_MT_SIZE 6   // Size of MT-SBD message (bytes)
 
 // ----------------------------------------------------------------------------
@@ -230,8 +230,8 @@ int32_t rtcDrift = 0;         // Global RTC drift
 uint32_t previousMillis = 0;  // Global millis() timer
 
 // GNSS epoch time guards
-static const uint32_t GNSS_EPOCH_MIN = 1767225600UL;  // Minimum date (2026-01-01)
-static const uint32_t GNSS_EPOCH_MAX = 2051222400UL;  // Maximum date (2035-01-01)
+static const uint32_t GNSS_EPOCH_MIN = 1780272000UL;                               // 2026-06-01 (≈ build date)
+static const uint32_t GNSS_EPOCH_MAX = GNSS_EPOCH_MIN + (10UL * 365UL * 86400UL);  // +10 yr
 
 // Measurement variables
 float temperatureInt = 0.0f;  // Internal temperature (°C)
@@ -239,11 +239,11 @@ float humidityInt = 0.0f;     // Internal humidity (%)
 float pressureInt = 0.0f;     // Internal pressure (hPa)
 float pitch = 0.0f;           // Pitch (°)
 float roll = 0.0f;            // Roll (°)
-int heading = 0;             // Tilt-compensated heading (°)
+int heading = 0;              // Tilt-compensated heading (°)
 float latitude = 0.0f;        // GNSS latitude (DD)
 float longitude = 0.0f;       // GNSS longitude (DD)
-uint8_t satellites = 0;      // GNSS satellites
-uint16_t hdop = 0;           // GNSS HDOP
+uint8_t satellites = 0;       // GNSS satellites
+uint16_t hdop = 0;            // GNSS HDOP
 float voltage = 0.0f;         // Battery voltage
 
 // ----------------------------------------------------------------------------
@@ -364,8 +364,10 @@ void loop() {
     resetWdt();
   }
 
-  // Blink LED to when WDT triggers to indicate normal operation
+  // Blink LED when WDT triggers to indicate normal operation
+#if DEBUG
   blinkLed(1, 25);
+#endif
 
   // Enter deep sleep, awaiting RTC or WDT interrupt
   goToSleep();
