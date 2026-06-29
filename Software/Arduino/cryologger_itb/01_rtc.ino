@@ -182,36 +182,30 @@ void printUnixtime(time_t epoch) {
 // Synchronizes the RTC from the GNSS.
 // ----------------------------------------------------------------------------
 static bool syncRtcFromGnss(time_t gnssEpoch) {
-  rtcEpoch = rtc.getEpoch();
-  rtcDrift = (int32_t)rtcEpoch - (int32_t)gnssEpoch;
-
   bool epochSane = (gnssEpoch >= GNSS_EPOCH_MIN
                     && gnssEpoch <= GNSS_EPOCH_MAX);
 
-  bool rtcUninitialized = (rtcEpoch < GNSS_EPOCH_MIN);
-  bool gnssNewer = (gnssEpoch > rtcEpoch);
-
-  if (epochSane && (rtcUninitialized || gnssNewer)) {
-    rtc.setEpoch(gnssEpoch);
-
-    unixtime = rtc.getEpoch();
-    moSbdMessage.unixtime = unixtime;
-
-    DEBUG_PRINT("[RTC] Info: RTC synced ");
-    printDateTime();
-
-    DEBUG_PRINT("[RTC] Info: RTC drift = ");
-    DEBUG_PRINT(rtcDrift);
-    DEBUG_PRINTLN(" seconds.");
-
-    return true;
-  }
-
   if (!epochSane) {
-    DEBUG_PRINTLN("[RTC] Warning: GNSS epoch outside plausible range. RTC not updated.");
-  } else {
-    DEBUG_PRINTLN("[RTC] Warning: GNSS time is not newer than RTC. RTC not synced.");
+    DEBUG_PRINT("[RTC] Warning: GNSS epoch outside plausible range: ");
+    DEBUG_PRINTLN((uint32_t)gnssEpoch);
+    DEBUG_PRINTLN("[RTC] Warning: RTC not updated.");
+    return false;
   }
 
-  return false;
+  rtcEpoch = rtc.getEpoch();
+  rtcDrift = (int32_t)rtcEpoch - (int32_t)gnssEpoch;
+
+  rtc.setEpoch(gnssEpoch);
+
+  unixtime = rtc.getEpoch();
+  moSbdMessage.unixtime = unixtime;
+
+  DEBUG_PRINT("[RTC] Info: RTC synced ");
+  printDateTime();
+
+  DEBUG_PRINT("[RTC] Info: RTC drift = ");
+  DEBUG_PRINT(rtcDrift);
+  DEBUG_PRINTLN(" seconds.");
+
+  return true;
 }
