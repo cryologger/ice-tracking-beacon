@@ -4,8 +4,8 @@
   This module provides control over power for hardware components,
   including battery voltage measurement, toggling serial communication,
   and enabling/disabling power to GNSS, IMU, sensors, and RockBLOCK 9603.
-  It also includes a non-blocking LED blink function, a non-blocking delay
-  for watchdog resets, and routines to prepare or recover from deep sleep.
+  It also includes a non-blocking LED blink and delay functions for 
+  watchdog resets, and deep sleep routines.
 */
 
 // ----------------------------------------------------------------------------
@@ -18,9 +18,9 @@ float readBattery() {
   // Measure external battery voltage across 10/1 MΩ resistor divider (1/10)
   (void)analogRead(PIN_VBAT);  // Dummy read
   voltage = analogRead(PIN_VBAT);
-  voltage *= ((10000000.0 + 1000000.0) / 1000000.0);
-  voltage *= 3.3;   // Multiply by 3.3V reference
-  voltage /= 4096;  // Convert raw ADC count to actual voltage
+  voltage *= ((10000000.0f + 1000000.0f) / 1000000.0f);
+  voltage *= 3.3;      // Multiply by 3.3V reference
+  voltage /= 4096.0f;  // Convert raw ADC count to actual voltage
 
   // Record elapsed execution time
   timer.readBattery = millis() - startTime;
@@ -131,7 +131,7 @@ void goToSleep() {
   }
   LowPower.deepSleep();
   /*
-     Execution halts here until an RTC/WDT interrupt wakes the device
+     Execution halts here until an RTC/WDT interrupt wakes the device.
   */
 }
 
@@ -143,7 +143,7 @@ void wakeUp() {
 }
 
 // ----------------------------------------------------------------------------
-// Non-blocking LED blink routine.
+// LED blink routine.
 // Flashes the built-in LED a specified number of times with the given delay.
 // ----------------------------------------------------------------------------
 void blinkLed(byte ledFlashes, uint16_t ledDelay) {
@@ -156,17 +156,18 @@ void blinkLed(byte ledFlashes, uint16_t ledDelay) {
       i++;
     }
   }
-  digitalWrite(LED_BUILTIN, LOW);  // Ensure LED is off after blinking
+  digitalWrite(LED_BUILTIN, LOW);  // Ensure LED is off after blinking.
 }
 
 // ----------------------------------------------------------------------------
-// Non-blocking delay function that continues to reset the Watchdog Timer.
-// This function delays for a specified duration (in milliseconds) while
-// calling petDog() to prevent unintended WDT resets.
+// Delay function that resets the Watchdog Timer.
+// Delays for the specified duration (ms) while preventing WDT resets.
+// Note: minimum effective delay is ~10 ms due to inner delay(10).
 // ----------------------------------------------------------------------------
 void myDelay(uint32_t ms) {
   uint32_t start = millis();
   while (millis() - start < ms) {
     resetWdt();  // Reset the WDT during the delay
+    delay(10);
   }
 }

@@ -10,10 +10,7 @@
 // Prints a horizontal separator line (80 dashes).
 // ----------------------------------------------------------------------------
 void printLine() {
-  for (byte i = 0; i < 80; i++) {
-    DEBUG_PRINT("-");
-  }
-  DEBUG_PRINTLN();
+  DEBUG_PRINTLN(F("--------------------------------------------------------------------------------"));
 }
 
 // ----------------------------------------------------------------------------
@@ -34,10 +31,10 @@ void printSystemInfo() {
   printLine();
   DEBUG_PRINT("Serial:");
   printTab(3);
-  DEBUG_PRINTLN(uid);
-  DEBUG_PRINT("Software Version:");
+  DEBUG_PRINTLN(SERIAL_NUMBER);
+  DEBUG_PRINT("Firmware Version:");
   printTab(1);
-  DEBUG_PRINTLN(SOFTWARE_VERSION);
+  DEBUG_PRINTLN(FIRMWARE_VERSION);
   DEBUG_PRINT("Hardware Version:");
   printTab(1);
   DEBUG_PRINTLN(HARDWARE_VERSION);
@@ -46,7 +43,7 @@ void printSystemInfo() {
   printDateTime();
   DEBUG_PRINT("Battery:");
   printTab(2);
-  DEBUG_PRINTLN(readBattery());
+  DEBUG_PRINTLN(voltage);
   DEBUG_PRINT("Free Ram: ");
   printTab(2);
   DEBUG_PRINTLN(freeRam());
@@ -63,29 +60,30 @@ void printSettings() {
 
   DEBUG_PRINT("Alarm Mode: ");
   printTab(2);
-  DEBUG_PRINTLN(ALARM_MODE);
+  if (alarmMode == DAILY) DEBUG_PRINTLN("DAILY");
+  else if (alarmMode == HOURLY) DEBUG_PRINTLN("HOURLY");
+  else if (alarmMode == MINUTE) DEBUG_PRINTLN("MINUTE");
+  else DEBUG_PRINTLN("Unknown");
 
   DEBUG_PRINT("Alarm Interval: ");
   printTab(1);
-  if (ALARM_MODE == DAILY) {
-    DEBUG_PRINTLN(ALARM_INTERVAL_DAY);
-  } else if (ALARM_MODE == HOURLY) {
-    DEBUG_PRINTLN(ALARM_INTERVAL_HOUR);
-  } else if (ALARM_MODE == MINUTE) {
-    DEBUG_PRINTLN(ALARM_INTERVAL_MINUTE);
+
+  if (alarmMode == DAILY) {
+    DEBUG_PRINT(alarmIntervalDay);
+    DEBUG_PRINTLN(" day(s)");
+  } else if (alarmMode == HOURLY) {
+    DEBUG_PRINT(alarmIntervalHour);
+    DEBUG_PRINTLN(" hour(s)");
+  } else if (alarmMode == MINUTE) {
+    DEBUG_PRINT(alarmIntervalMinute);
+    DEBUG_PRINTLN(" minute(s)");
+  } else {
+    DEBUG_PRINTLN("Unknown");
   }
 
   DEBUG_PRINT("Transmit Interval: ");
   printTab(1);
   DEBUG_PRINTLN(transmitInterval);
-
-  DEBUG_PRINT("Retransmit Counter: ");
-  printTab(1);
-  DEBUG_PRINTLN(transmitReattemptCounter);
-
-  DEBUG_PRINT("Transmit Reattempts: ");
-  printTab(1);
-  DEBUG_PRINTLN(transmitReattempts);
 
   DEBUG_PRINT("Reset Flag: ");
   printTab(2);
@@ -144,7 +142,7 @@ void printSensors() {
 
   DEBUG_PRINT("HDOP: ");
   printTab(2);
-  DEBUG_PRINTLN(hdop/100);
+  DEBUG_PRINTLN_DEC((float)hdop / 100.0f, 2);
 
   DEBUG_PRINT("Battery: ");
   printTab(1);
@@ -273,13 +271,25 @@ void printMtSbd() {
   DEBUG_PRINTLN("MT-SBD Message Data");
   printLine();
 
+  DEBUG_PRINT("alarmMode:");
+  printTab(2);
+  DEBUG_PRINTLN(mtSbdMessage.alarmMode);
+
+  DEBUG_PRINT("alarmIntervalDay:");
+  printTab(1);
+  DEBUG_PRINTLN(mtSbdMessage.alarmIntervalDay);
+
+  DEBUG_PRINT("alarmIntervalHour:");
+  printTab(1);
+  DEBUG_PRINTLN(mtSbdMessage.alarmIntervalHour);
+
+  DEBUG_PRINT("alarmIntervalMinute:");
+  printTab(1);
+  DEBUG_PRINTLN(mtSbdMessage.alarmIntervalMinute);
+
   DEBUG_PRINT("transmitInterval:");
   printTab(1);
   DEBUG_PRINTLN(mtSbdMessage.transmitInterval);
-
-  DEBUG_PRINT("retransmitLimit:");
-  printTab(1);
-  DEBUG_PRINTLN(mtSbdMessage.transmitReattempts);
 
   DEBUG_PRINT("resetFlag:");
   printTab(2);
@@ -301,9 +311,14 @@ void printMoSbdHex() {
   DEBUG_PRINTLN("Byte\tHex");
 
   for (size_t i = 0; i < sizeof(moSbdMessage); ++i) {
-    sprintf(tempData, "%d\t0x%02X", i, moSbdMessage.bytes[i]);
+    snprintf(tempData, sizeof(tempData),
+             "%u\t0x%02X",
+             (unsigned)i,
+             moSbdMessage.bytes[i]);
+
     DEBUG_PRINTLN(tempData);
   }
+
   printLine();
 }
 
@@ -319,9 +334,14 @@ void printMoSbdBuffer() {
   DEBUG_PRINTLN("Byte\tHex");
 
   for (size_t i = 0; i < moSbdBufferSize; ++i) {
-    sprintf(tempData, "%d\t0x%02X", i, moSbdBuffer[i]);
+    snprintf(tempData, sizeof(tempData),
+             "%u\t0x%02X",
+             (unsigned)i,
+             moSbdBuffer[i]);
+
     DEBUG_PRINTLN(tempData);
   }
+
   printLine();
 }
 
@@ -337,11 +357,17 @@ void printMtSbdBuffer() {
   DEBUG_PRINTLN("Byte\tHex");
 
   for (size_t i = 0; i < mtSbdBufferSize; ++i) {
-    sprintf(tempData, "%d\t0x%02X", i, mtSbdBuffer[i]);
+    snprintf(tempData, sizeof(tempData),
+             "%u\t0x%02X",
+             (unsigned)i,
+             mtSbdBuffer[i]);
+
     DEBUG_PRINTLN(tempData);
   }
+
   printLine();
 }
+
 // ----------------------------------------------------------------------------
 // Computes and returns the amount of free RAM, in bytes.
 // ----------------------------------------------------------------------------

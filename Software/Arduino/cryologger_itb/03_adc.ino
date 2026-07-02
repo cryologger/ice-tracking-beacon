@@ -16,33 +16,33 @@
 // Max input impedance: 10,808,452 Ohms
 // ----------------------------------------------------------------------------
 void configureAdc() {
-  // Disable ADC before configuration.
+  // Disable ADC before configuration
   ADC->CTRLA.bit.ENABLE = 0;
 
   // Clock prescaler, resolution, etc.
   ADC->CTRLB.reg = ADC_CTRLB_PRESCALER_DIV512 |  // Divide Clock ADC GCLK by 512 (48MHz/512 = 93.7kHz).
                    ADC_CTRLB_RESSEL_16BIT;       // Set ADC resolution to 12-bit.
   while (ADC->STATUS.bit.SYNCBUSY)
-    ;  // Wait for synchronization.
+    ;  // Wait for synchronization
 
   // Sampling time length (341.33 us)
   ADC->SAMPCTRL.reg = ADC_SAMPCTRL_SAMPLEN(64);
   // Multisampling (512 samples), average adjusts resolution by 4 bits
   ADC->AVGCTRL.reg = ADC_AVGCTRL_SAMPLENUM_512 | ADC_AVGCTRL_ADJRES(4);
   while (ADC->STATUS.bit.SYNCBUSY)
-    ;  // Wait for synchronization.
+    ;  // Wait for synchronization
 
-  // Re-enable ADC.
+  // Re-enable ADC
   ADC->CTRLA.bit.ENABLE = 1;
   while (ADC->STATUS.bit.SYNCBUSY)
-    ;  // Wait for synchronization.
+    ;  // Wait for synchronization
 
-  // Apply gain/offset error calibration.
+  // Apply gain/offset error calibration
   ADC->OFFSETCORR.reg = ADC_OFFSETCORR_OFFSETCORR(0);
   ADC->GAINCORR.reg = ADC_GAINCORR_GAINCORR(2048);
   ADC->CTRLB.bit.CORREN = true;
   while (ADC->STATUS.bit.SYNCBUSY)
-    ;  // Wait for synchronization.
+    ;  // Wait for synchronization
 }
 
 // ----------------------------------------------------------------------------
@@ -54,20 +54,21 @@ float mapFloat(float x, float in_min, float in_max,
 }
 
 // ----------------------------------------------------------------------------
-// Reads raw ADC values from PIN_VBAT, compute two forms of voltage
-// (one based on a direct 3.3/4095 scale, another factoring in the
-// 10 MΩ + 1 MΩ divider), and prints them for debugging or calibration.
+// Reads raw ADC values from PIN_VBAT and computes two voltages:
+// voltage1 — raw ADC pin voltage (direct 3.3 V / 4096 scale)
+// voltage2 — actual battery voltage (scaled through 10 MΩ + 1 MΩ divider)
 // ----------------------------------------------------------------------------
 void calibrateAdc() {
+  (void)analogRead(PIN_VBAT);  // Dummy read
   float sensorValue = analogRead(PIN_VBAT);
 
-  // Direct scaling: 3.3 V / 4095 counts.
-  float voltage1 = sensorValue * (3.3 / 4095.0);
+  // Direct scaling: raw ADC pin voltage (0–3.3 V)
+  float voltage1 = sensorValue * (3.3f / 4096.0f);
 
-  // Voltage divider-based scaling.
-  float voltage2 = sensorValue * ((10.0 + 1.0) / 1.0);  // Factor for 10 MΩ + 1 MΩ
-  voltage2 *= 3.3;                                      // 3.3 V reference
-  voltage2 /= 4096.0;                                   // Convert to voltage
+  // Voltage divider-based scaling: actual battery voltage
+  float voltage2 = sensorValue * ((10.0f + 1.0f) / 1.0f);  // Factor for 10 MΩ + 1 MΩ
+  voltage2 *= 3.3f;                                        // 3.3 V reference
+  voltage2 /= 4096.0f;                                     // Convert to voltage
 
   DEBUG_PRINTLN(F("[ADC] Info: sensorValue, voltage1, voltage2"));
   DEBUG_PRINT(F("[ADC] Info:"));

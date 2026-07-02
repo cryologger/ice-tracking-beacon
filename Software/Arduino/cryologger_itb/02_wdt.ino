@@ -2,13 +2,13 @@
   Watchdog Timer (WDT) Module
 
   This module configures the SAMD21 Watchdog Timer (WDT) to perform a system 
-  reset if the main loop() is blocked for more than 8–16 seconds. It includes 
-  functions to reset (pet) the Watchdog and an ISR to handle early warnings. 
+  reset if the main loop(). Early warning fires at 8 s; system resets after 10 
+  consecutive unserviced warnings (~80 s total). It includes functions to reset 
+  (pet) the Watchdog and an ISR to handle early warnings. 
 */
 
 // ----------------------------------------------------------------------------
 // Configure Watchdog Timer.
-// Perform a system reset if loop() blocks for more than 8–16 seconds.
 // ----------------------------------------------------------------------------
 void configureWdt() {
   /*
@@ -73,7 +73,7 @@ void resetWdt() {
 void WDT_Handler() {
   REG_WDT_INTFLAG = WDT_INTFLAG_EW;  // Clear Early Warning interrupt flag
 
-  // Perform system reset after 10 WDT interrupts.
+  // Perform system reset after 10 WDT interrupts
   if (wdtCounter < 10) {
     REG_WDT_CLEAR = WDT_CLEAR_CLEAR_KEY;  // Clear WDT and restart time-out period
     while (WDT->STATUS.bit.SYNCBUSY)

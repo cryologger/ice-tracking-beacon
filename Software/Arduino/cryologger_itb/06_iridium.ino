@@ -3,45 +3,32 @@
 
   This module configures and manages the RockBLOCK 9603 Iridium modem.
   It provides functions to set up the modem, build and transmit SBD messages,
-  handle incoming MT messages, and manage power states. Callbacks for the
-  IridiumSBD library are included for debugging and non-blocking transmission
-  or GNSS acquisition.
+  and handle incoming MT messages. Callbacks for the IridiumSBD library are 
+  included for debugging and non-blocking transmission or GNSS acquisition.
 
   Ring Buffer Design:
-  - Store messages in a RAM ring buffer (oldest-first).
-  - Each sample enqueues one SBD record (SBD_MSG_SIZE bytes).
-  - Send policy is selectable at runtime:
-      * OLDEST_FIRST: transmit up to SBD_MAX_MSGS oldest messages
-      * NEWEST_FIRST: transmit up to SBD_MAX_MSGS newest messages
-  - On success, remove exactly the number sent from the corresponding end.
+  - Store messages in a RAM ring buffer (newest-first).
+  - Each sample enqueues one SBD record (SBD_MO_SIZE bytes).
+  - On each TX, send up to SBD_MAX_MSGS newest messages, packed
+    chronologically (oldest-within-batch first) into the MO window.
+  - On success, remove exactly the number sent from the tail.
   - On failure, keep all queued messages.
 */
 
 // ----------------------------------------------------------------------------
-// Configuration knobs
+// Ring buffer storage and indices
 // ----------------------------------------------------------------------------
-
-// Selectable TX policy
-enum class SendPolicy : uint8_t { OLDEST_FIRST = 0,
-                                  NEWEST_FIRST = 1 };
-// Change default desired:
-volatile SendPolicy sendPolicy = SendPolicy::NEWEST_FIRST;  // Runtime policy
-
 #ifndef RING_BUFFER_CAPACITY
-// Max messages to hold in RAM beyond a single 340-byte Iridium window.
-// memory usage = RING_BUFFER_CAPACITY * SBD_MSG_SIZE bytes.
+// Memory usage = RING_BUFFER_CAPACITY * SBD_MO_SIZE bytes
 #define RING_BUFFER_CAPACITY 100
 #endif
 
-// ----------------------------------------------------------------------------
-// Flat storage and indices
-// ----------------------------------------------------------------------------
-static uint8_t ringStorage[RING_BUFFER_CAPACITY * SBD_MSG_SIZE];
+static uint8_t ringStorage[RING_BUFFER_CAPACITY * SBD_MO_SIZE];
 
 static uint16_t ringHead = 0;     // Index of oldest message (0..capacity-1)
 static uint16_t ringTail = 0;     // Index to write the next message
 static uint16_t ringCount = 0;    // Number of valid messages in the ring
-static uint32_t ringDropped = 0;  // How many oldest records we overwrote
+static uint32_t ringDropped = 0;  // Oldest records overwritten when full
 
 // ----------------------------------------------------------------------------
 // Ring buffer utilities
@@ -66,72 +53,58 @@ void ringBufferClear() {
   ringHead = 0;
   ringTail = 0;
   ringCount = 0;
-  // Do not reset ringDropped (useful telemetry)
+  // ringDropped is intentionally preserved — it is useful long-term telemetry.
 }
 
-// Returns pointer to the start of a slot i (0..capacity-1) in the flat array
+// Returns a pointer to the start of slot i in flat storage.
 static uint8_t* ringSlotPtr(uint16_t slotIndex) {
-  return &ringStorage[(size_t)slotIndex * (size_t)SBD_MSG_SIZE];
+  return &ringStorage[(size_t)slotIndex * (size_t)SBD_MO_SIZE];
 }
 
-// Push one message (SBD_MSG_SIZE bytes) at tail.
-// Policy: if full, overwrite oldest (advance head) and count a drop.
+// Push one message (SBD_MO_SIZE bytes) at the tail.
+// When full, overwrite the oldest message (advance head) and count the drop.
 void ringBufferPush(const uint8_t* bytes) {
   if (ringBufferFull()) {
     ringHead = (uint16_t)((ringHead + 1) % RING_BUFFER_CAPACITY);
     ringDropped++;
-    // ringCount stays at capacity
+    // ringCount stays at capacity.
   } else {
     ringCount++;
   }
-  memcpy(ringSlotPtr(ringTail), bytes, SBD_MSG_SIZE);
+  memcpy(ringSlotPtr(ringTail), bytes, SBD_MO_SIZE);
   ringTail = (uint16_t)((ringTail + 1) % RING_BUFFER_CAPACITY);
 }
 
-// Peek message at offset i from the oldest (0 = oldest). Returns false if OOR.
+// Peek at message at offset i from the oldest (0 = oldest). Returns false if out of range.
 bool ringBufferPeek(uint16_t i, uint8_t* dst) {
   if (i >= ringCount) return false;
   uint16_t slot = (uint16_t)((ringHead + i) % RING_BUFFER_CAPACITY);
-  memcpy(dst, ringSlotPtr(slot), SBD_MSG_SIZE);
+  memcpy(dst, ringSlotPtr(slot), SBD_MO_SIZE);
   return true;
 }
 
-// Pop n oldest messages (remove them). Safe if n > size (clamps to clear).
-void ringBufferPop(uint16_t n) {
-  if (n >= ringCount) {
-    ringBufferClear();
-    return;
-  }
-  ringHead = (uint16_t)((ringHead + n) % RING_BUFFER_CAPACITY);
-  ringCount -= n;
-}
-
-// ----------------------------------------------------------------------------
-// Tail-based helpers for newest-first policy
-// ----------------------------------------------------------------------------
-
-// Peek message at offset i from the newest (0 = newest). Returns false if OOR.
-bool ringBufferPeekNewest(uint16_t i, uint8_t* dst) {  // NEW
+// Peek at message at offset i from the newest (0 = newest). Returns false if out of range.
+bool ringBufferPeekNewest(uint16_t i, uint8_t* dst) {
   if (i >= ringCount) return false;
   const uint16_t cap = RING_BUFFER_CAPACITY;
   uint16_t slot = (uint16_t)((ringTail + cap - 1 - i) % cap);
-  memcpy(dst, ringSlotPtr(slot), SBD_MSG_SIZE);
+  memcpy(dst, ringSlotPtr(slot), SBD_MO_SIZE);
   return true;
 }
 
-// Pop n newest messages (remove from tail). Safe if n > size (clamps to clear).
-void ringBufferPopNewest(uint16_t n) {  // NEW
+// Pop n newest messages from the tail. Clamps safely if n >= size.
+void ringBufferPopNewest(uint16_t n) {
   if (n >= ringCount) {
     ringBufferClear();
     return;
   }
   const uint16_t cap = RING_BUFFER_CAPACITY;
-  ringTail = (uint16_t)((ringTail + cap - (n % cap)) % cap);  // move tail backward
+  ringTail = (uint16_t)((ringTail + cap - (n % cap)) % cap);
   ringCount -= n;
 }
 
 // ----------------------------------------------------------------------------
-// Ring buffer introspection & pretty-print helpers (diagnostics)
+// Ring buffer diagnostics
 // ----------------------------------------------------------------------------
 void printRingBufferStatus(const char* where) {
   const uint16_t size = ringBufferSize();
@@ -150,19 +123,16 @@ void printRingBufferStatus(const char* where) {
   DEBUG_PRINT(" | next TX: ");
   DEBUG_PRINT(willSend);
   DEBUG_PRINT(" msg (");
-  DEBUG_PRINT(willSend * SBD_MSG_SIZE);
+  DEBUG_PRINT(willSend * SBD_MO_SIZE);
   DEBUG_PRINT("/");
-  DEBUG_PRINT(SBD_BUF_BYTES);
+  DEBUG_PRINT(SBD_MO_BUF_BYTES);
   DEBUG_PRINT(" B) | dropped: ");
-  DEBUG_PRINT(ringBufferDropped());
-  DEBUG_PRINT(" | policy: ");
-  DEBUG_PRINT((sendPolicy == SendPolicy::NEWEST_FIRST) ? "NEWEST_FIRST" : "OLDEST_FIRST");
-  DEBUG_PRINTLN(".");
+  DEBUG_PRINTLN(ringBufferDropped());
 }
 
-// Compact occupancy map
-// Legend: H = head (oldest), T = tail (write position), ■ = occupied, · = empty
-// Show-all by default; pass a smaller value to crop the view
+// Compact occupancy map.
+// Legend: H = head (oldest), T = tail (write position), # = occupied, . = empty
+// Pass maxSlots >= 0 to crop the view; -1 (default) shows all slots.
 void printRingBufferMap(int16_t maxSlots = -1) {
   const uint16_t cap = ringBufferCapacity();
   const uint16_t size = ringBufferSize();
@@ -170,7 +140,7 @@ void printRingBufferMap(int16_t maxSlots = -1) {
 
   DEBUG_PRINT("[Iridium] Map: ");
   for (uint16_t i = 0; i < show; ++i) {
-    const uint16_t slot = (ringHead + i) % cap;  // Rotated view keeps H visible
+    const uint16_t slot = (ringHead + i) % cap;
     const bool occ = (i < size);
     const bool isHead = (i == 0);
     const bool isTail = (slot == ringTail);
@@ -178,7 +148,7 @@ void printRingBufferMap(int16_t maxSlots = -1) {
     if (isHead && isTail) DEBUG_PRINT("HT");
     else if (isHead) DEBUG_PRINT("H");
     else if (isTail) DEBUG_PRINT("T");
-    else DEBUG_PRINT(occ ? "■" : "·");
+    else DEBUG_PRINT(occ ? "#" : ".");
   }
 
   if (show < cap) {
@@ -189,7 +159,7 @@ void printRingBufferMap(int16_t maxSlots = -1) {
 }
 
 // ----------------------------------------------------------------------------
-// Helpers to read little-endian fields from a 34-byte record (no structs)
+// Helpers to read little-endian fields from a packed 34-byte record.
 // ----------------------------------------------------------------------------
 static inline uint16_t rd_u16(const uint8_t* p) {
   uint16_t v;
@@ -212,147 +182,86 @@ static inline int32_t rd_i32(const uint8_t* p) {
   return v;
 }
 
-// Offsets inside a 34-byte MO record
+// Byte offsets inside a 34-byte MO record (mirrors SBD_MO_MESSAGE layout).
 enum {
-  OFF_UNIX = 0,
-  OFF_TINT = 4,
-  OFF_HUM = 6,
-  OFF_PRES = 8,
-  OFF_PITCH = 10,
-  OFF_ROLL = 12,
-  OFF_HEAD = 14,
-  OFF_LAT = 16,
-  OFF_LON = 20,
-  OFF_SATS = 24,
-  OFF_HDOP = 25,
-  OFF_VBAT = 27,
-  OFF_TXDUR = 29,
-  OFF_TXRC = 31,
-  OFF_ITER = 32
+  OFF_UNIX = 0,    // uint32 — Unix epoch
+  OFF_TINT = 4,    // int16  — temperature * 100 (°C)
+  OFF_HUM = 6,     // uint16 — humidity * 100 (%)
+  OFF_PRES = 8,    // uint16 — (pressure - 850) * 100 (hPa)
+  OFF_PITCH = 10,  // int16  — pitch * 100 (°)
+  OFF_ROLL = 12,   // int16  — roll * 100 (°)
+  OFF_HEAD = 14,   // uint16 — heading (°)
+  OFF_LAT = 16,    // int32  — latitude * 1e6 (°)
+  OFF_LON = 20,    // int32  — longitude * 1e6 (°)
+  OFF_SATS = 24,   // uint8  — satellite count
+  OFF_HDOP = 25,   // uint16 — HDOP * 100
+  OFF_VBAT = 27,   // uint16 — battery voltage * 100 (V)
+  OFF_TXDUR = 29,  // uint16 — last transmit duration (s)
+  OFF_TXRC = 31,   // uint8  — last transmit return code
+  OFF_ITER = 32    // uint16 — iteration counter
 };
 
 // ----------------------------------------------------------------------------
-//  Human-readable record summaries
+// Human-readable record summary (used by queue preview).
 // ----------------------------------------------------------------------------
-static inline void decodeMoRecord(const uint8_t* src, uint8_t* out) {
-  memcpy(out, src, SBD_MSG_SIZE);
-}
-
-void printMoQueueSummary(const char* where) {
-  const uint16_t size = ringBufferSize();
-  DEBUG_PRINT("[Iridium] Info: ");
-  DEBUG_PRINT(where);
-  DEBUG_PRINT(" | queued: ");
-  DEBUG_PRINT(size);
-  DEBUG_PRINT(" msg (");
-  DEBUG_PRINT((size_t)size * (size_t)SBD_MSG_SIZE);
-  DEBUG_PRINT("/");
-  DEBUG_PRINT(SBD_BUF_BYTES);
-  DEBUG_PRINTLN(" B).");
-}
-
 void printMoRecordSummary(uint16_t logicalIndex, const uint8_t* raw) {
-  uint8_t rec[SBD_MSG_SIZE];
-  memcpy(rec, raw, SBD_MSG_SIZE);
+  uint8_t rec[SBD_MO_SIZE];
+  memcpy(rec, raw, SBD_MO_SIZE);
 
-  const uint32_t unixTime = rd_u32(&rec[OFF_UNIX]);
-  const int16_t tIntRaw = rd_i16(&rec[OFF_TINT]);    // °C * 100
-  const uint16_t hIntRaw = rd_u16(&rec[OFF_HUM]);    // % * 100
-  const uint16_t pIntRaw = rd_u16(&rec[OFF_PRES]);   // (hPa - 850) * 100
-  const int16_t pitchRaw = rd_i16(&rec[OFF_PITCH]);  // deg * 100
-  const int16_t rollRaw = rd_i16(&rec[OFF_ROLL]);    // deg * 100
-  const uint16_t headDeg = rd_u16(&rec[OFF_HEAD]);   // deg
-  const int32_t latRaw = rd_i32(&rec[OFF_LAT]);      // deg * 1e6
-  const int32_t lonRaw = rd_i32(&rec[OFF_LON]);      // deg * 1e6
-  const uint8_t sats = rec[OFF_SATS];                // count
-  const uint16_t hdopRaw = rd_u16(&rec[OFF_HDOP]);   // * 100
-  const uint16_t vbatRaw = rd_u16(&rec[OFF_VBAT]);   // V * 100
-  const uint16_t txDur = rd_u16(&rec[OFF_TXDUR]);    // s
-  const uint8_t txRC = rec[OFF_TXRC];                // return code
-  const uint16_t iter = rd_u16(&rec[OFF_ITER]);      // counter
-
-  const float lat = (float)latRaw / 1000000.0f;
-  const float lon = (float)lonRaw / 1000000.0f;
-  const float vbat = (float)vbatRaw / 100.0f;
-  const float hdop = (float)hdopRaw / 100.0f;
-  const float tInt = (float)tIntRaw / 100.0f;
-  const float hInt = (float)hIntRaw / 100.0f;
-  const float pInt = 850.0f + ((float)pIntRaw / 100.0f);
-  const float pitch = (float)pitchRaw / 100.0f;
-  const float roll = (float)rollRaw / 100.0f;
+  const float lat = (float)rd_i32(&rec[OFF_LAT]) / 1000000.0f;
+  const float lon = (float)rd_i32(&rec[OFF_LON]) / 1000000.0f;
+  const float vbat = (float)rd_u16(&rec[OFF_VBAT]) / 100.0f;
+  const float hdop = (float)rd_u16(&rec[OFF_HDOP]) / 100.0f;
+  const float tInt = (float)rd_i16(&rec[OFF_TINT]) / 100.0f;
+  const float hInt = (float)rd_u16(&rec[OFF_HUM]) / 100.0f;
+  const float pInt = 850.0f + (float)rd_u16(&rec[OFF_PRES]) / 100.0f;
+  const float pitch = (float)rd_i16(&rec[OFF_PITCH]) / 100.0f;
+  const float roll = (float)rd_i16(&rec[OFF_ROLL]) / 100.0f;
 
   DEBUG_PRINT("[Queue] #");
   DEBUG_PRINT(logicalIndex);
   DEBUG_PRINT(" | unix: ");
-  DEBUG_PRINT(unixTime);
-
+  DEBUG_PRINT(rd_u32(&rec[OFF_UNIX]));
   DEBUG_PRINT(" | lat: ");
   DEBUG_PRINT_DEC(lat, 6);
   DEBUG_PRINT(" | lon: ");
   DEBUG_PRINT_DEC(lon, 6);
-
   DEBUG_PRINT(" | Vbat: ");
   DEBUG_PRINT_DEC(vbat, 2);
   DEBUG_PRINT(" V");
-
   DEBUG_PRINT(" | sats: ");
-  DEBUG_PRINT(sats);
+  DEBUG_PRINT(rec[OFF_SATS]);
   DEBUG_PRINT(" | hdop: ");
   DEBUG_PRINT_DEC(hdop, 2);
-
   DEBUG_PRINT(" | T: ");
   DEBUG_PRINT_DEC(tInt, 2);
-  DEBUG_PRINT("°C");
+  DEBUG_PRINT(" C");
   DEBUG_PRINT(" | RH: ");
   DEBUG_PRINT_DEC(hInt, 2);
   DEBUG_PRINT("%");
   DEBUG_PRINT(" | P: ");
   DEBUG_PRINT_DEC(pInt, 2);
   DEBUG_PRINT(" hPa");
-
   DEBUG_PRINT(" | pitch: ");
   DEBUG_PRINT_DEC(pitch, 2);
-  DEBUG_PRINT("°");
+  DEBUG_PRINT(" deg");
   DEBUG_PRINT(" | roll: ");
   DEBUG_PRINT_DEC(roll, 2);
-  DEBUG_PRINT("°");
+  DEBUG_PRINT(" deg");
   DEBUG_PRINT(" | head: ");
-  DEBUG_PRINT(headDeg);
-  DEBUG_PRINT("°");
-
+  DEBUG_PRINT(rd_u16(&rec[OFF_HEAD]));
+  DEBUG_PRINT(" deg");
   DEBUG_PRINT(" | txDur: ");
-  DEBUG_PRINT(txDur);
+  DEBUG_PRINT(rd_u16(&rec[OFF_TXDUR]));
   DEBUG_PRINT(" s");
   DEBUG_PRINT(" | txRC: ");
-  DEBUG_PRINT(txRC);
+  DEBUG_PRINT(rec[OFF_TXRC]);
   DEBUG_PRINT(" | iter: ");
-  DEBUG_PRINT(iter);
-
+  DEBUG_PRINT(rd_u16(&rec[OFF_ITER]));
   DEBUG_PRINTLN();
 }
 
-// Preview first N (oldest) records
-void printRingBufferPreview(uint16_t n) {
-  const uint16_t size = ringBufferSize();
-  if (size == 0) {
-    DEBUG_PRINTLN("[Iridium] Info: Queue preview: empty.");
-    return;
-  }
-  const uint16_t take = (n > size) ? size : n;
-  DEBUG_PRINT("[Iridium] Info: Previewing ");
-  DEBUG_PRINT(take);
-  DEBUG_PRINT(" oldest record(s) out of ");
-  DEBUG_PRINT(size);
-  DEBUG_PRINTLN("...");
-
-  for (uint16_t i = 0; i < take; ++i) {
-    uint8_t tmp[SBD_MSG_SIZE];
-    ringBufferPeek(i, tmp);
-    printMoRecordSummary(i, tmp);
-  }
-}
-
-// Preview next TX content for oldest-first policy
+// Preview the next N records that will be transmitted (newest N, packed chronologically).
 void printNextTransmitPreview() {
   const uint16_t size = ringBufferSize();
   if (size == 0) {
@@ -362,42 +271,18 @@ void printNextTransmitPreview() {
   const uint16_t take = (size > SBD_MAX_MSGS) ? SBD_MAX_MSGS : size;
   DEBUG_PRINT("[Iridium] Info: Next TX will include ");
   DEBUG_PRINT(take);
-  DEBUG_PRINT(" record(s). Details:");
-  DEBUG_PRINTLN();
-
-  for (uint16_t i = 0; i < take; ++i) {
-    uint8_t tmp[SBD_MSG_SIZE];
-    ringBufferPeek(i, tmp);
-    printMoRecordSummary(i, tmp);
-  }
-}
-
-// ----------------------------------------------------------------------------
-// Preview next TX content for newest-first policy
-// Packs oldest->newest inside the selected newest block
-// ----------------------------------------------------------------------------
-void printNextTransmitPreviewNewest() {
-  const uint16_t size = ringBufferSize();
-  if (size == 0) {
-    DEBUG_PRINTLN("[Iridium] Info: Next TX preview: empty.");
-    return;
-  }
-  const uint16_t take = (size > SBD_MAX_MSGS) ? SBD_MAX_MSGS : size;
-  DEBUG_PRINT("[Iridium] Info: Next TX (newest policy) will include ");
-  DEBUG_PRINT(take);
-  DEBUG_PRINT(" record(s). Details:");
-  DEBUG_PRINTLN();
+  DEBUG_PRINTLN(" record(s):");
 
   for (uint16_t j = 0; j < take; ++j) {
-    uint16_t i_from_newest = (uint16_t)((take - 1) - j);  // Oldest within newest block first
-    uint8_t tmp[SBD_MSG_SIZE];
-    ringBufferPeekNewest(i_from_newest, tmp);
+    uint8_t tmp[SBD_MO_SIZE];
+    // Walk newest-to-oldest, but display oldest-within-batch first.
+    ringBufferPeekNewest((uint16_t)((take - 1) - j), tmp);
     printMoRecordSummary(j, tmp);
   }
 }
 
-// Dump the full 340-byte MO window (prints all bytes)
-void printMoWindowHex(const uint8_t* buf, size_t len /*=SBD_BUF_BYTES*/) {
+// Dump the full MO window as a hex table (call-site opt-in).
+void printMoWindowHex(const uint8_t* buf, size_t len) {
   DEBUG_PRINTLN("--------------------------------------------------------------------------------");
   DEBUG_PRINTLN("MO-SBD Transmit buffer (full window)");
   DEBUG_PRINTLN("--------------------------------------------------------------------------------");
@@ -413,28 +298,28 @@ void printMoWindowHex(const uint8_t* buf, size_t len /*=SBD_BUF_BYTES*/) {
 // Iridium configuration
 // ----------------------------------------------------------------------------
 void configureIridium() {
-  modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE);  // Use default battery power profile
-  modem.adjustSendReceiveTimeout(iridiumTimeout);            // Set Iridium TX/RX timeout
-  modem.adjustStartupTimeout(IridiumStartup);                // Set startup timeout
+  modem.setPowerProfile(IridiumSBD::DEFAULT_POWER_PROFILE);
+  modem.adjustSendReceiveTimeout(iridiumTimeout);
+  modem.adjustStartupTimeout(iridiumStartup);
 
-  // Sanity log
   DEBUG_PRINT("[Iridium] Info: MO msg size = ");
-  DEBUG_PRINT(SBD_MSG_SIZE);
+  DEBUG_PRINT(SBD_MO_SIZE);
   DEBUG_PRINT(" B, MO window = ");
-  DEBUG_PRINT(SBD_BUF_BYTES);
+  DEBUG_PRINT(SBD_MO_BUF_BYTES);
   DEBUG_PRINT(" B, max msgs per TX = ");
   DEBUG_PRINT(SBD_MAX_MSGS);
   DEBUG_PRINT(", ring capacity = ");
   DEBUG_PRINT(ringBufferCapacity());
   DEBUG_PRINTLN(" msgs.");
-
   DEBUG_PRINTLN("[Iridium] Info: RockBLOCK 9603 initialized.");
 }
 
 // ----------------------------------------------------------------------------
-// Build a MO payload from the oldest queued messages
+// Build the MO payload from the newest queued messages.
+// Selects up to SBD_MAX_MSGS newest records and packs them chronologically
+// (oldest-within-batch first) into dst. Returns the number of messages staged.
 // ----------------------------------------------------------------------------
-uint16_t buildMoPayloadFromQueue(uint8_t* dst, size_t dstBytes, size_t* outBytes) {
+uint16_t buildMoPayload(uint8_t* dst, size_t dstBytes, size_t* outBytes) {
   const uint16_t queued = ringBufferSize();
   if (queued == 0) {
     *outBytes = 0;
@@ -442,47 +327,17 @@ uint16_t buildMoPayloadFromQueue(uint8_t* dst, size_t dstBytes, size_t* outBytes
   }
 
   uint16_t take = (queued > SBD_MAX_MSGS) ? SBD_MAX_MSGS : queued;
-  size_t needBytes = (size_t)take * (size_t)SBD_MSG_SIZE;
+  size_t needBytes = (size_t)take * (size_t)SBD_MO_SIZE;
 
+  // Safety clamp: ensure payload fits in the destination buffer.
   if (needBytes > dstBytes) {
-    uint16_t safeTake = (uint16_t)(dstBytes / SBD_MSG_SIZE);
-    take = safeTake;
-    needBytes = (size_t)take * (size_t)SBD_MSG_SIZE;
+    take = (uint16_t)(dstBytes / SBD_MO_SIZE);
+    needBytes = (size_t)take * (size_t)SBD_MO_SIZE;
   }
 
-  // Pack oldest-first into dst
-  for (uint16_t i = 0; i < take; ++i) {
-    ringBufferPeek(i, dst + (i * SBD_MSG_SIZE));
-  }
-
-  *outBytes = needBytes;
-  return take;
-}
-
-// ----------------------------------------------------------------------------
-// Build a MO payload from the newest queued messages
-// Packs oldest->newest inside the selected newest block
-// ----------------------------------------------------------------------------
-uint16_t buildMoPayloadFromNewest(uint8_t* dst, size_t dstBytes, size_t* outBytes) {  // NEW
-  const uint16_t queued = ringBufferSize();
-  if (queued == 0) {
-    *outBytes = 0;
-    return 0;
-  }
-
-  uint16_t take = (queued > SBD_MAX_MSGS) ? SBD_MAX_MSGS : queued;
-  size_t needBytes = (size_t)take * (size_t)SBD_MSG_SIZE;
-
-  if (needBytes > dstBytes) {
-    uint16_t safeTake = (uint16_t)(dstBytes / SBD_MSG_SIZE);
-    take = safeTake;
-    needBytes = (size_t)take * (size_t)SBD_MSG_SIZE;
-  }
-
-  // Select newest take records and pack them in chronological order within the batch
+  // Pack oldest-within-batch first so the receiver sees chronological order.
   for (uint16_t j = 0; j < take; ++j) {
-    uint16_t i_from_newest = (uint16_t)((take - 1) - j);  // oldest within newest block first
-    ringBufferPeekNewest(i_from_newest, dst + (j * SBD_MSG_SIZE));
+    ringBufferPeekNewest((uint16_t)((take - 1) - j), dst + (j * SBD_MO_SIZE));
   }
 
   *outBytes = needBytes;
@@ -490,7 +345,7 @@ uint16_t buildMoPayloadFromNewest(uint8_t* dst, size_t dstBytes, size_t* outByte
 }
 
 // ----------------------------------------------------------------------------
-// Write one message into the queue (called each sampling interval)
+// Enqueue one message (called each sampling interval).
 // ----------------------------------------------------------------------------
 void writeBuffer() {
   iterationCounter++;
@@ -499,33 +354,29 @@ void writeBuffer() {
   DEBUG_PRINT("[Iridium] Info: Transmit counter ");
   DEBUG_PRINT(transmitCounter);
   DEBUG_PRINT(" of ");
-  DEBUG_PRINT(transmitInterval);
-  DEBUG_PRINTLN(".");
+  DEBUG_PRINTLN(transmitInterval);
 
-  DEBUG_PRINTLN("[Iridium] Info: Writing new MO-SBD message to queue...");
-
-  // Populate dynamic fields (global union lives elsewhere; safe to use here)
-  moSbdMessage.voltage = readBattery() * 100;
+  // Populate fields that are only known at queue-time
+  moSbdMessage.voltage = (uint16_t)lroundf(readBattery() * 100.0f);
   moSbdMessage.iterationCounter = iterationCounter;
 
-  // Enqueue serialized record
   ringBufferPush(moSbdMessage.bytes);
-
-  // Optional: print the record
   printMoSbd();
 
-  // Clear message struct after copying
+  // Clear struct so transmitStatus/transmitDuration from the previous TX cycle
+  // do not persist beyond this point (they carry forward intentionally for one
+  // cycle, then are zeroed here)
   moSbdMessage = {};
 
-  // Queue summaries after write
-  printMoQueueSummary("writeBuffer");
+
+#if DEBUG_IRIDIUM
   printRingBufferStatus("writeBuffer");
-  printRingBufferMap();  // Visual occupancy map (optional)
-  // printRingBufferPreview(3);
+  printRingBufferMap();
+#endif
 }
 
 // ----------------------------------------------------------------------------
-// Transmit messages according to selected policy
+// Transmit queued messages over Iridium SBD.
 // ----------------------------------------------------------------------------
 void transmitData() {
   if (ringBufferEmpty()) {
@@ -534,16 +385,12 @@ void transmitData() {
     return;
   }
 
-  // Stage payload (up to 10 messages = 340 bytes)
+  // Build the payload from the newest queued records
   size_t moBytes = 0;
   memset(moSbdBuffer, 0x00, sizeof(moSbdBuffer));
+  uint16_t stagedMsgs = buildMoPayload(moSbdBuffer, sizeof(moSbdBuffer), &moBytes);
 
-  uint16_t stagedMsgs = 0;
-  if (sendPolicy == SendPolicy::NEWEST_FIRST) {
-    stagedMsgs = buildMoPayloadFromNewest(moSbdBuffer, sizeof(moSbdBuffer), &moBytes);
-  } else {
-    stagedMsgs = buildMoPayloadFromQueue(moSbdBuffer, sizeof(moSbdBuffer), &moBytes);
-  }
+  printMoWindowHex(moSbdBuffer, moBytes);
 
   DEBUG_PRINT("[Iridium] Info: Staging ");
   DEBUG_PRINT(stagedMsgs);
@@ -552,16 +399,13 @@ void transmitData() {
   DEBUG_PRINTLN(" bytes) for TX.");
 
   printRingBufferStatus("transmitData(pre)");
-  if (sendPolicy == SendPolicy::NEWEST_FIRST) {
-    printNextTransmitPreviewNewest();
-  } else {
-    printNextTransmitPreview();
-  }
-  // printMoWindowHex(moSbdBuffer, SBD_BUF_BYTES);
+  printNextTransmitPreview();
 
-  // Power up modem and open port
+  // Power up modem and open serial port
   uint32_t startTime = millis();
   enable5V();
+  myDelay(100);
+  
   IRIDIUM_PORT.begin(19200);
   pinPeripheral(PIN_IRIDIUM_TX, PIO_SERCOM);
   pinPeripheral(PIN_IRIDIUM_RX, PIO_SERCOM);
@@ -584,25 +428,28 @@ void transmitData() {
       DEBUG_PRINTLN("[Iridium] Info: MO-SBD message transmission successful!");
       blinkLed(10, 250);
 
-      // Remove only what we sent from the correct end
-      if (sendPolicy == SendPolicy::NEWEST_FIRST) {
-        ringBufferPopNewest(stagedMsgs);
-      } else {
-        ringBufferPop(stagedMsgs);
-      }
+      ringBufferPopNewest(stagedMsgs);
+      transmitCounter = 0;
 
-      transmitCounter = 0;  // start a fresh window
+      // Process any inbound MT message
+      if (mtSbdBufferSize == sizeof(SBD_MT_MESSAGE)) {
+        memcpy(mtSbdMessage.bytes, mtSbdBuffer, sizeof(SBD_MT_MESSAGE));
 
-      // Process MT
-      if (mtSbdBufferSize == 7) {
         const uint8_t* b = mtSbdBuffer;
-        bool ok =
-          (b[0] <= 2) && (b[1] <= 31)
-          && (b[2] < 24) && (b[3] < 60)
-          && (b[4] >= 1 && b[4] <= 10)
-          && (b[5] <= 10) && (b[6] == 0 || b[6] == 255);
 
-        DEBUG_PRINTLN("[Iridium] Info: MT-SBD bytes received (7).");
+        bool alarmOk = false;
+        switch (b[0]) {
+          case MINUTE: alarmOk = (b[1] == 0) && (b[2] == 0) && (b[3] >= 1 && b[3] <= 59); break;
+          case HOURLY: alarmOk = (b[1] == 0) && (b[2] >= 1 && b[2] <= 23) && (b[3] == 0); break;
+          case DAILY: alarmOk = (b[1] == 1) && (b[2] == 0) && (b[3] == 0); break;
+          default: alarmOk = false; break;
+        }
+
+        const bool ok = alarmOk
+                        && (b[4] >= 1 && b[4] <= 10)
+                        && (b[5] == 0 || b[5] == 255);
+
+        DEBUG_PRINTLN("[Iridium] Info: MT-SBD message received.");
         printMtSbdBuffer();
 
         if (ok) {
@@ -611,27 +458,25 @@ void transmitData() {
           alarmIntervalHour = b[2];
           alarmIntervalMinute = b[3];
           transmitInterval = b[4];
-          transmitReattempts = b[5];
-          resetFlag = b[6];
-
+          resetFlag = b[5];
           printMtSbd();
           DEBUG_PRINTLN("[Iridium] Info: System parameters updated from MT-SBD message.");
         } else {
-          DEBUG_PRINTLN("[Iridium] Warning: Received values exceed accepted range!");
+          DEBUG_PRINTLN("[Iridium] Warning: MT-SBD values out of accepted range. Ignoring.");
         }
       }
     } else {
       DEBUG_PRINTLN("[Iridium] Warning: Transmission failed.");
       printIridiumError(rc);
       blinkLed(5, 1000);
-      transmitCounter = 0;  // Wait a full interval before next attempt
+      transmitCounter = 0;
     }
   }
 
-  // Record return code in the message struct (for telemetry)
+  // Store TX outcome for inclusion in the next queued record (intentional one-cycle lag).
   moSbdMessage.transmitStatus = rc;
 
-  // Sleep modem
+  // Put modem to sleep and power down.
   DEBUG_PRINTLN("[Iridium] Info: Putting modem to sleep...");
   rc = modem.sleep();
   if (rc != ISBD_SUCCESS) {
@@ -641,18 +486,14 @@ void transmitData() {
     DEBUG_PRINTLN("[Iridium] Info: Modem put to sleep successfully.");
   }
 
-  // Close serial and power down
   IRIDIUM_PORT.end();
   disable5V();
 
-  // Execution time
   timer.iridium = millis() - startTime;
   moSbdMessage.transmitDuration = timer.iridium / 1000;
 
-  // Print current settings
   printSettings();
 
-  // Forced reset request (from MT)
   if (resetFlag) {
     DEBUG_PRINTLN("[Iridium] Info: Forced system reset...");
     digitalWrite(LED_BUILTIN, HIGH);
@@ -683,14 +524,33 @@ void ISBDDiagsCallback(IridiumSBD* /*device*/, char c) {
 }
 #endif
 
+// ----------------------------------------------------------------------------
+// RockBLOCK sleep control
+// ----------------------------------------------------------------------------
 void IridiumSBD::setSleepPin(uint8_t enable) {
+#if ROCKBLOCK_VERSION_3F
+
+  // RockBLOCK 9603N version 3.F uses inverted logic through TN0702 N-FET
   if (enable == HIGH) {
     digitalWrite(this->sleepPin, LOW);
-    diagprint(F("Modem is awake.\r\n"));
+    diagprint(F("Modem wake requested.\r\n"));
   } else {
     digitalWrite(this->sleepPin, HIGH);
-    diagprint(F("Modem is asleep.\r\n"));
+    diagprint(F("Modem sleep requested.\r\n"));
   }
+
+#else
+
+  // Earlier RockBLOCK versions use normal logic
+  digitalWrite(this->sleepPin, enable);
+
+  if (enable == HIGH) {
+    diagprint(F("Modem wake requested.\r\n"));
+  } else {
+    diagprint(F("Modem sleep requested.\r\n"));
+  }
+
+#endif
 }
 
 void printIridiumError(int code) {
