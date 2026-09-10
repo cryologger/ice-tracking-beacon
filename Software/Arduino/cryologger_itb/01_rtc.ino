@@ -198,7 +198,6 @@ static bool syncRtcFromGnss(time_t gnssEpoch) {
   rtc.setEpoch(gnssEpoch);
 
   unixtime = rtc.getEpoch();
-  moSbdMessage.unixtime = unixtime;
 
   DEBUG_PRINT("[RTC] Info: RTC synced ");
   printDateTime();
