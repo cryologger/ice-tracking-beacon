@@ -15,9 +15,11 @@ static const uint16_t HDOP_PREFERRED_MAX = 250;   // <= 2.50 HDOP for preferred 
 static const uint8_t SATS_PREFERRED_MIN = 5;      // Minimum satellites for preferred fixes
 static const uint32_t FIELD_STALE_MS_MAX = 1500;  // NMEA field freshness gate (ms)
 
-static const uint8_t GNSS_PREFERRED_TARGET = 15;  // Exit early if this many preferred fixes collected
-static const uint8_t GNSS_SAMPLE_TARGET = 30;     // Maximum acceptable fixes to collect
+static const uint8_t GNSS_PREFERRED_TARGET = 30;  // Exit early if this many preferred fixes collected
+static const uint8_t GNSS_SAMPLE_TARGET = 45;     // Maximum acceptable fixes to collect
 static const uint8_t GNSS_SAMPLE_MIN = 1;         // Minimum fixes needed to report a position
+static const uint8_t GNSS_PREFERRED_MIN = 5;      // Minimum preferred fixes before selecting their median
+static const uint32_t GNSS_SETTLE_MS = 15000UL;   // Settling period after the first valid fix
 
 // No-fix sentinels (avoid 0,0 ambiguity in payload)
 static const int32_t GNSS_LATLON_NOVALUE = -999999999L;
@@ -209,6 +211,9 @@ void readGnss() {
   // Clear flags
   bool fixFound = false;
   bool charsSeen = false;
+  bool haveValidFix = false;
+  uint32_t firstFixMs = 0;
+  uint32_t lastFixMs = 0;
 
   // Preferred buffer: high-quality fixes only (HDOP <= HDOP_PREFERRED_MAX,
   // sats >= SATS_PREFERRED_MIN). Used for the median if enough are collected.
@@ -265,6 +270,9 @@ void readGnss() {
     // ------------------------------------------------------------------------
     if (gnss.hdop.isUpdated()) {
 
+      // Clear the update flag
+      gnss.hdop.value();
+
       bool preferred = isPreferredFix();
       bool acceptable = !preferred && isFreshValidFix();
 
@@ -278,6 +286,27 @@ void readGnss() {
         tm.Month = gnss.date.month();
         tm.Year = gnss.date.year() - 1970;
         lastEpoch = makeTime(tm);
+
+        // Start settling when the first fresh, valid fix arrives
+        if (!haveValidFix) {
+          firstFixMs = millis();
+          haveValidFix = true;
+        }
+
+        // Retain the latest valid observation as a last-resort fallback
+        latitude = gnss.location.lat();
+        longitude = gnss.location.lng();
+        satellites = gnss.satellites.value();
+        hdop = gnss.hdop.value();
+        gnssEpoch = lastEpoch;
+        lastFixMs = millis();
+
+        // During settling, keep reading GNSS data and servicing the watchdog,
+        // but do not add positions to either sample buffer.
+        if ((uint32_t)(millis() - firstFixMs) < GNSS_SETTLE_MS) {
+          ISBDCallback();
+          continue;
+        }
 
         // Store in acceptable buffer — receives all fixes including preferred
         if (acceptableCount < GNSS_SAMPLE_TARGET) {
@@ -319,7 +348,7 @@ void readGnss() {
         // Exit if the acceptable buffer is full — use preferred if any exist,
         // otherwise fall back to the full acceptable buffer
         if (!fixFound && acceptableCount >= GNSS_SAMPLE_TARGET) {
-          if (preferredCount >= GNSS_SAMPLE_MIN) {
+          if (preferredCount >= GNSS_PREFERRED_MIN) {
             computeMedianFix(preferredLatSamples, preferredLngSamples,
                              preferredSatsSamples, preferredHdopSamples,
                              preferredCount, lastEpoch);
@@ -345,10 +374,11 @@ void readGnss() {
     }
   }
 
-  // Timeout reached — use whatever was collected, preferring the preferred
-  // buffer if it has any samples, otherwise using the acceptable buffer
+  // Timeout: prefer minimum preferred samples, otherwise use any
+  // acceptable samples. If neither buffer has samples, retain the last
+  // valid observation received during settling
   if (!fixFound) {
-    if (preferredCount >= GNSS_SAMPLE_MIN) {
+    if (preferredCount >= GNSS_PREFERRED_MIN) {
       computeMedianFix(preferredLatSamples, preferredLngSamples,
                        preferredSatsSamples, preferredHdopSamples,
                        preferredCount, lastEpoch);
@@ -360,6 +390,10 @@ void readGnss() {
                        acceptableCount, lastEpoch);
       DEBUG_PRINTLN("[GNSS] Info: Timeout reached. Using acceptable median.");
       fixFound = true;
+    } else if (haveValidFix) {
+      // The latest valid observation is already saved in the globals.
+      DEBUG_PRINTLN("[GNSS] Info: Timeout reached. Using saved settling fix.");
+      fixFound = true;
     }
   }
 
@@ -367,7 +401,10 @@ void readGnss() {
 
     // Synchronize RTC from GNSS
     DEBUG_PRINTLN("[RTC] Info: Syncing RTC from median fix...");
-    syncRtcFromGnss(gnssEpoch);
+    // Account for time elapsed since the saved GNSS observation to prevent
+    // an older fallback fix from setting the RTC backwards
+    uint32_t fixAgeSeconds = (uint32_t)(millis() - lastFixMs) / 1000UL;
+    syncRtcFromGnss(gnssEpoch + fixAgeSeconds);
 
     // Store GNSS data in moSbdMessage
     moSbdMessage.latitude = (int32_t)lround(latitude * 1000000.0);
@@ -390,8 +427,8 @@ void readGnss() {
     moSbdMessage.hdop = GNSS_HDOP_NOVALUE;
 
     // Also clear globals on no-fix (so any downstream logic can detect it)
-    latitude = 0.0f;
-    longitude = 0.0f;
+    latitude = 0.0;
+    longitude = 0.0;
     satellites = 0;
     hdop = 0;
   }
