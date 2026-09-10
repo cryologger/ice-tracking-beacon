@@ -26,7 +26,7 @@ void configureAdc() {
     ;  // Wait for synchronization
 
   // Sampling time length (341.33 us)
-  ADC->SAMPCTRL.reg = ADC_SAMPCTRL_SAMPLEN(64);
+  ADC->SAMPCTRL.reg = ADC_SAMPCTRL_SAMPLEN(63);
   // Multisampling (512 samples), average adjusts resolution by 4 bits
   ADC->AVGCTRL.reg = ADC_AVGCTRL_SAMPLENUM_512 | ADC_AVGCTRL_ADJRES(4);
   while (ADC->STATUS.bit.SYNCBUSY)
