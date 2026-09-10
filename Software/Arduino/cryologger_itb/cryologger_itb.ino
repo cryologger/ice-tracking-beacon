@@ -1,8 +1,8 @@
 /*
   Title:    Cryologger Ice Tracking Beacon (ITB)
-  Date:     June 28, 2026
+  Date:     September 10, 2026
   Author:   Adam Garbo
-  Version:  4.1.0
+  Version:  4.1.1
   License:  GPLv3. See license file for more information.
   Copyright (C) 2026 Adam Garbo
 
@@ -22,7 +22,7 @@
 
   Comments:
   - TN0702 N-Channel FET required for On/Off operation with RockBLOCK v3.F and higher
-  - Sketch uses 75948 bytes (28%) of program storage space. Maximum is 262144 bytes.
+  - Sketch uses 75620 bytes (28%) of program storage space. Maximum is 262144 bytes.
 */
 
 // ----------------------------------------------------------------------------
@@ -74,7 +74,7 @@
 // ----------------------------------------------------------------------------
 // Firmware & Hardware Versions
 // ----------------------------------------------------------------------------
-#define FIRMWARE_VERSION "4.1.0"
+#define FIRMWARE_VERSION "4.1.1"
 #define HARDWARE_VERSION "3.2"
 #define ROCKBLOCK_VERSION_3F false
 
@@ -240,8 +240,8 @@ float pressureInt = 0.0f;     // Internal pressure (hPa)
 float pitch = 0.0f;           // Pitch (°)
 float roll = 0.0f;            // Roll (°)
 int heading = 0;              // Tilt-compensated heading (°)
-float latitude = 0.0f;        // GNSS latitude (DD)
-float longitude = 0.0f;       // GNSS longitude (DD)
+double latitude = 0.0;        // GNSS latitude (DD)
+double longitude = 0.0;       // GNSS longitude (DD)
 uint8_t satellites = 0;       // GNSS satellites
 uint16_t hdop = 0;            // GNSS HDOP
 float voltage = 0.0f;         // Battery voltage
